@@ -1,11 +1,18 @@
 # Noterator
 
 A JUCE notation app for macOS (Apple silicon only; Windows later) whose music
-mostly comes from the family's generators. The score is MIDI; the notation is
+mostly comes from the family's generators - Good Idea, Midi Catalogue, Midi
+Suggester, Midi Variator, Starting Blocks. The score is MIDI; the notation is
 engraved from it every time it is drawn.
+
+The user is not a developer. Explain in plain words, show screenshots of what
+changed, and make sure every change reaches them as a downloadable Mac app
+(the CI's `.dmg`).
 
 ## Where the reasons are
 
+- **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** - the shape of the app and
+  every big decision on one page. Start here.
 - **[`docs/decisions/`](docs/decisions/README.md)** - one record per choice
   someone could reasonably make the other way. Referred to by number:
   **(0006)** is `docs/decisions/0006-instruments-carry-their-context.md`. Not
@@ -13,7 +20,8 @@ engraved from it every time it is drawn.
 - **[`docs/sessions/`](docs/sessions/README.md)** - one log per working
   session: the route, the mistakes, what looked broken and was not.
 
-Write to both. A rule here without its reason gets undone.
+Write to all three when something changes. A rule here without its reason
+gets undone.
 
 ## Shape of it
 
@@ -25,35 +33,49 @@ Write to both. A rule here without its reason gets undone.
 | `Source/Core/Edit.*` | Every change the editor can make, as a function. |
 | `Source/Core/Instruments.*` | The one table of what each instrument is (0006). |
 | `Source/Core/Spelling.*`, `ScaleModel.h` | Keys, spelling, signatures. `ScaleModel.h` is ScaleView's, **unchanged**. |
-| `Source/Core/Detect.*` | Chords and keys along the score. |
-| `Source/Core/AutoCC.*` | AutoCC's curves, computed for a whole part. |
-| `Source/Core/Perform.*`, `MidiFile.*`, `ScoreFile.*` | The score as MIDI events, as a .mid, as a .noterator. |
-| `Source/Engines/` | The Lua host and what happens around a generator. Also no JUCE. |
-| `Engines/<app>/` | The family's engines, **copied unchanged** (0003). |
-| `Engines/adapters/` | The only Lua written here: one adapter per engine. |
-| `Source/App/` | The JUCE app. `Controller` owns the score; everything else asks it. |
+| `Source/Core/Detect.*` | Chords and keys along the score (0014). |
+| `Source/Core/AutoCC.*` | AutoCC's curves, computed for a whole part (0013). |
+| `Source/Core/Perform.*`, `MidiFile.*`, `ScoreFile.*` | The score as MIDI events, as a .mid, as a .noterator (JSON). |
+| `Source/Engines/LuaEngine.*` | The embedded Lua host. Speaks only to the adapters. No JUCE. |
+| `Source/Engines/Generators.*` | A generator's context, fitting to an instrument, placing a result (0011). |
+| `Engines/<app>/` | The family's engines, **copied unchanged** (0003), embedded at build time. |
+| `Engines/adapters/` | The only Lua written here: one adapter per engine, protocol in `common.lua`. |
+| `Source/App/Controller.*` | Owns the score, undo, selection, caret; every window piece asks it. |
+| `Source/App/ScoreView.*` | The page: galley, lanes, sticky names, caret, mouse. |
 | `Source/App/ScoreRenderer.*` | The ink: a layout into Bravura glyphs. Shared with `tools/RenderScore.cpp`. |
-| `Tests/` | Core tests, no JUCE. |
+| `Source/App/AudioEngine.*`, `Exporter.*` | Playback, previews, MIDI input; MIDI and WAV export (0007). |
+| `Source/App/Panels.*`, `GeneratorPanel.*`, `MainComponent.*`, `Theme.*` | Toolbar, side panels, status line, keys and menus, colours. |
+| `Tests/Test*.cpp` | Core tests (49), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (4). |
+| `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
 
 ```sh
+# core and its tests: seconds
 cmake -B build-core -G Ninja -DNOTERATOR_BUILD_APP=OFF && cmake --build build-core && ./build-core/NoteratorTests
+# the adapters, outside the app
 lua5.4 tools/try_generators.lua
+# everything (downloads JUCE 8.0.15 on first configure)
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
+./build/NoteratorAppTests_artefacts/Release/NoteratorAppTests
 ./build/NoteratorRender_artefacts/Release/NoteratorRender demo out.png 12 light
 ```
 
-- **Look at a render after any engraving change** (0010). `demo` is a page that
-  exercises most of the engraver; `generated` drops Catalogue lines into a
-  string trio. Crop and enlarge (`convert big.png -crop ...`) to see detail.
-- The app runs headless on Linux under `Xvfb :99` and can be driven with
-  `xdotool` and screenshotted with `import -window root`. There is no sound
-  device in the container; the built-in synth runs silently.
-- **The Mac app cannot be built here.** GitHub Actions builds it on every push
-  (`.github/workflows/build.yml`); check that run after touching anything
-  Apple-only (`AudioEngine.cpp`'s Audio Unit code, CMake's Apple settings).
+- **Look at a render after any engraving change** (0010). `demo` exercises
+  most of the engraver; `generated` drops Catalogue lines into a string trio.
+  Crop and enlarge (`convert big.png -crop ...`) to see detail.
+- **Drive the real app headless** for anything in the window: start `Xvfb :99`,
+  run `build/Noterator_artefacts/Release/Noterator` with `DISPLAY=:99`, click
+  and type with `xdotool`, screenshot with `import -window root`. Popup menus
+  open with the *current* item over the box, so screenshot a menu before
+  clicking into it. There is no sound device in the container.
+- **The Mac app is built and tested only on CI** (0012). After pushing, check
+  the run (GitHub MCP `actions_list` / `get_job_logs`). The Mac test log
+  should say "rendering through Apple General MIDI (built into macOS)".
+- **Commit and push early.** A session's container can restart.
 - When fixing a bug, have the test fail on the old code first.
+- Build with no warnings: JUCE's recommended flags are strict (`-Wswitch-enum`
+  wants every enum case, `-Wfloat-equal`, sign conversions).
 
 ## Rules that are easy to break
 
@@ -61,29 +83,34 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   about a note, it is a field on `Note`, not a property of the page.
 - **Never edit `Engines/<app>/*.lua`.** Fix it in that app's repository and copy
   it across (`tools/sync_engines.sh`), so the copies never drift. Record the
-  commit in `Engines/VENDORED.md`.
+  commit in `Engines/VENDORED.md`. Adapters are fair game.
 - **`ScaleModel.h` is ScaleView's file.** Chord naming changes start there.
 - **The audio thread does not allocate or lock** beyond try-locks: the
   sequence is swapped in whole (`std::atomic_store`), messages from the window
   queue under a lock the audio thread only tries.
 - **An Audio Unit is created on the message thread** - including for audio
   export, which makes its synth before starting its thread.
-- **Pointers into `score.parts` die when a part is added.** Hold ids
-  (`Generators.cpp::insertResult` crashed on this before it was written that way).
+- **Pointers into `score.parts` die when a part is added.** Hold ids.
+- **A result never overwrites the music it came from** (0011): Suggester's
+  lines go into parts silent in those bars, Variator's after the selection.
+  A line with chords never goes to a one-note instrument.
 - **The engraver must stay near-linear.** Anything per element per measure
-  goes through the by-measure buckets; the 200-bar test holds it under a
-  second.
+  goes through the by-measure buckets; the 200-bar test holds it under a second.
 - **General MIDI gets CC7 and CC11 only** from AutoCC; a .mid gets all four (0008).
 - Letters in shortcuts arrive in either case: compare them upper-cased.
+- **No references into temporaries in tests**: `f().front().x` inside
+  `CHECK_EQ` dangles. It passed with GCC and failed on the Mac.
+- Instrument ids are stored in files: never rename one.
 
 ## Colour
 
-The house scheme (Good Idea's `docs/COLOUR.md`), in `Theme.*`: a dark cool-grey
-ground, light grey controls with **dark ink on every button**, one yellow
-(`#FFF200`) for what is on - a chosen button, the selection, the sounding note,
-the caret in note input. Every grey has R < G < B. Red `#D2483F` is warnings
-only. The page is set in ink on its own paper and can be turned to black on
-white (Light page); on white the accent is the same yellow shaded down.
+The house scheme (Good Idea's `docs/COLOUR.md`), in `Theme.*` (0015): a dark
+cool-grey ground, light grey controls with **dark ink on every button and
+tab**, one yellow (`#FFF200`) for what is on - a chosen button, the
+selection, the sounding note, the caret in note input. Every grey has
+R < G < B. Red `#D2483F` is warnings only. The page is set in ink on its own
+paper and can be turned to black on white (Light page); on white the accent
+is the same yellow shaded down.
 
 ## Engraving conventions
 
@@ -92,7 +119,16 @@ written as its share of the bar where it was gated short; a duration with a
 symbol of its own is written as that symbol; rests show the beat; the key
 signature is scored; stems measure from the far head; beams lean a quarter of
 the interval, at most a space and a bit; accidentals last to the bar, carry
-across a tie and pack into columns; a crossed head's side is decided once.
-New here: every staff shares one set of columns per bar (0004); a sustained
-low note under moving music goes to the lower voice; triplets are found per
-beat by picking the coarsest grid that fits.
+across a tie and pack into columns; a crossed head's side is decided once,
+and a unison of two spellings sits side by side. New here: every staff
+shares one set of columns per bar (0004); a sustained low note under moving
+music goes to the lower voice; triplets are found per beat by picking the
+coarsest grid that fits; a drum hit is written to the next hit, at most a beat.
+
+## Where it stands
+
+Working, and tested by the user on their Mac. Not built yet, roughly in the
+order the user is likely to want them: a page view; dynamics, articulations
+and slurs; drawable CC lanes; VST3/CLAP instruments and SoundFonts; MusicXML
+export; real-time recording; Windows. Known rough edges are in the latest
+session log's "Not done yet".

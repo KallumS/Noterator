@@ -91,8 +91,10 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 ./build/NoteratorRender_artefacts/Release/NoteratorRender demo page.png 10 light
 ```
 
-[CLAUDE.md](CLAUDE.md) is the working guide, [docs/decisions](docs/decisions/README.md)
-the reasons behind it.
+[CLAUDE.md](CLAUDE.md) is the working guide, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+the shape of it and every big decision, [docs/decisions](docs/decisions/README.md)
+the reasons in full, and [docs/NEXT-SESSION.md](docs/NEXT-SESSION.md) the prompt to
+carry on in a new session.
 
 ## Credits
 

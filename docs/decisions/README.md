@@ -21,3 +21,8 @@ refers to them by number: "(decision 0006)".
 | [0009](0009-bravura-not-drawn-glyphs.md) | Bravura for the symbols, where Starting Blocks Notation drew its own | Accepted |
 | [0010](0010-verify-by-rendering.md) | Verify the engraving by rendering it | Accepted |
 | [0011](0011-selection-results-go-beside-or-after.md) | Results made from a selection go beside it or after it, never over it | Accepted |
+| [0012](0012-apple-silicon-only-built-by-ci.md) | Apple silicon only, built and tested on a Mac runner | Accepted |
+| [0013](0013-autocc-computed-for-a-whole-part.md) | AutoCC is computed for a whole part, not performed live | Accepted |
+| [0014](0014-chords-and-keys-read-from-the-score.md) | Chord and key lanes: ScaleView names, Suggester's key finder, and only real harmony named | Accepted |
+| [0015](0015-the-house-scheme-and-a-dark-page.md) | The house colour scheme, a dark page by default and a light page on request | Accepted |
+| [0016](0016-step-input-with-the-keys-people-know.md) | Step-time input, with the keys notation users already know | Accepted |

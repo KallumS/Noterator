@@ -7,4 +7,4 @@ broken and was not.
 
 | | |
 | --- | --- |
-| [2026-10-07](2026-10-07.md) | From an empty repository to a working app: engraver, generators, playback, the Mac build. |
+| [2026-10-07](2026-10-07.md) | From an empty repository to a working Mac app: engraver, generators, playback, CI, sixteen decisions. |
