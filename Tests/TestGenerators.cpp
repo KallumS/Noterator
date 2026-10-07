@@ -3,6 +3,8 @@
 #include "Generators.h"
 #include "LuaEngine.h"
 
+#include <algorithm>
+
 using namespace nt;
 
 namespace
@@ -271,4 +273,21 @@ TEST ("generators: Starting Blocks offers every chord family, one block per degr
     CHECK (pitches == (std::vector<int> { 62, 66, 69, 73 }));
     CHECK_EQ (out.results[1].detail.substr (0, 1), std::string ("D"));
     e.reset ("starting-blocks");
+}
+
+TEST ("generators: Blocks offers chords, arpeggios, runs and intervals; drums stay with Good Idea")
+{
+    auto& e = engineInstance();
+    GeneratorContext ctx;
+    e.reset ("starting-blocks");
+    std::vector<std::string> kinds;
+    for (const auto& s : e.settings ("starting-blocks", ctx))
+        if (s.id == "cat") kinds = s.names;
+    CHECK (kinds == (std::vector<std::string> { "Chord", "Arpeggio", "Run", "Melody" }));
+
+    e.reset ("good-idea");
+    std::vector<std::string> makes;
+    for (const auto& s : e.settings ("good-idea", ctx))
+        if (s.label == "Make a") makes = s.names;
+    CHECK (std::find (makes.begin(), makes.end(), "Drums") != makes.end());
 }

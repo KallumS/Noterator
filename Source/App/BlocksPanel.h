@@ -2,8 +2,9 @@
     BlocksPanel - the Starting Blocks toolbox (decision 0018).
 
     The smallest useful pieces, picked by hand rather than generated: choose
-    what kind of block (a chord, an arpeggio, a run, an interval, a bass
-    note, a drum), and every degree of the key is laid out as a button. Click
+    what kind of block (a chord, an arpeggio, a run, an interval), and every
+    degree of the key is laid out as a button (drums and bass are Good
+    Idea's, decision 0024). Click
     one to see it written and hear it; Insert (or a double-click) puts it at
     the caret and moves the caret past it, so blocks can be laid one after
     another the way Starting Blocks lays them in REAPER. With bars chosen on

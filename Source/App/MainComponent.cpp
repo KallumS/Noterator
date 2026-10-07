@@ -602,7 +602,7 @@ void MainComponent::showHelp()
         "fills the bars chosen: the tune on top, the bass below, chords between.\n"
         "Midi Suggester and Midi Variator work on the music you select.\n\n"
         "BLOCKS\n"
-        "Pick a chord, arpeggio, run, interval, bass note or drum, click a degree\n"
+        "Pick a chord, arpeggio, run or interval, click a degree\n"
         "to see and hear it, and Insert to put it at the caret - the caret moves\n"
         "on, so blocks can be laid one after another.";
     juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::InfoIcon, "Noterator - keys", text);
