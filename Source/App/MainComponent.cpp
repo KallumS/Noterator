@@ -58,6 +58,18 @@ MainComponent::MainComponent()
     };
     audio.onPlaybackFinished = [this] { controller.stop(); };
 
+    juce::PropertiesFile::Options prefs;
+    prefs.applicationName = "Noterator";
+    prefs.filenameSuffix = "settings";
+    prefs.osxLibrarySubFolder = "Application Support";
+    preferences.setStorageParameters (prefs);
+    if (auto* p = preferences.getUserSettings())
+    {
+        controller.lightPage = ! p->getBoolValue ("darkPage", false);
+        controller.zoom = static_cast<float> (juce::jlimit (5.0, 24.0, p->getDoubleValue ("zoom", controller.zoom)));
+        controller.viewChanged();
+    }
+
     controller.addChangeListener (this);
     setWantsKeyboardFocus (true);
     setSize (1440, 880);
@@ -89,6 +101,11 @@ void MainComponent::resized()
 
 void MainComponent::changeListenerCallback (juce::ChangeBroadcaster*)
 {
+    if (auto* p = preferences.getUserSettings())
+    {
+        if (p->getBoolValue ("darkPage", false) == controller.lightPage) p->setValue ("darkPage", ! controller.lightPage);
+        if (std::abs (p->getDoubleValue ("zoom", 0.0) - controller.zoom) > 0.01) p->setValue ("zoom", controller.zoom);
+    }
     updateTitle();
     menuItemsChanged();
 }
@@ -243,7 +260,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
     else if (index == 2)
     {
         m.addItem (menuNoteInput, "Note Input", true, controller.input.noteInput);
-        m.addItem (menuLightPage, "Light Page", true, controller.lightPage);
+        m.addItem (menuLightPage, "Dark Page", true, ! controller.lightPage);
         m.addItem (menuTransposed, "Transposed Score", true, controller.transposedScore);
         m.addSeparator();
         item (menuZoomIn, "Zoom In", "Cmd+=");

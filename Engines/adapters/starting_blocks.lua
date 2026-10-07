@@ -13,6 +13,7 @@ local A = {
   name = "Starting Blocks",
   description = "The smallest useful pieces - chords, arpeggios, runs, steps and leaps, bass notes, drum hits - on every degree of the key.",
   input = "none",
+  panel = "toolbox",
 }
 
 local function range(a, b) local out = {} for i = a, b do out[#out + 1] = i end return out end

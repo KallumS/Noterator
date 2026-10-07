@@ -197,6 +197,7 @@ LuaEngine::LuaEngine()
         info.name = stringField (L, a, "name");
         info.description = stringField (L, a, "description");
         info.needsSelection = stringField (L, a, "input") == "selection";
+        info.panel = stringField (L, a, "panel");
         adapterRefs[info.id] = luaL_ref (L, LUA_REGISTRYINDEX);
         infos.push_back (info);
         reset (info.id);

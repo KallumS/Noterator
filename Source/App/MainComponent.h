@@ -57,6 +57,7 @@ private:
     ScorePanel scorePanel { controller };
     StatusBar statusBar { controller };
     std::unique_ptr<juce::FileChooser> chooser;
+    juce::ApplicationProperties preferences;   // the page colour and zoom, kept between launches
     juce::File lastFolder;
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;

@@ -31,6 +31,7 @@ struct GeneratorInfo
 {
     std::string id, name, description;
     bool needsSelection = false;
+    std::string panel;              // "generate", "toolbox", or empty: not shown
 };
 
 struct GeneratorSetting

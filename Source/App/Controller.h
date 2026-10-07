@@ -54,7 +54,7 @@ public:
     Tick caret = 0;
     InputState input;
     bool transposedScore = false;
-    bool lightPage = false;
+    bool lightPage = true;        // black on white unless the user asks for dark (decision 0020)
     float zoom = 9.0f;            // pixels per staff space
 
     engrave::Layout layout;

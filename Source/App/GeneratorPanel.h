@@ -43,6 +43,7 @@ private:
     std::vector<GeneratedResult> found;
     int seed = 1;
     std::string current;
+    std::vector<std::string> listed;   // ids, in the order of the menu
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     int getNumRows() override { return static_cast<int> (found.size()); }

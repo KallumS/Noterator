@@ -13,13 +13,19 @@ GeneratorPanel::GeneratorPanel (Controller& c) : controller (c)
     settingsView.setViewedComponent (&settingsHolder, false);
     settingsView.setScrollBarsShown (true, false);
 
-    int id = 1;
-    for (const auto& g : controller.lua.generators()) generator.addItem (g.name, id++);
+    // Only the generators meant for this tab: Good Idea first, the main one,
+    // then the two that work on music already written (decision 0017).
+    for (const auto& g : controller.lua.generators())
+        if (g.panel == "generate")
+        {
+            listed.push_back (g.id);
+            generator.addItem (g.name, static_cast<int> (listed.size()));
+        }
     generator.onChange = [this]
     {
         const int i = generator.getSelectedId() - 1;
-        if (i < 0) return;
-        current = controller.lua.generators()[static_cast<size_t> (i)].id;
+        if (i < 0 || i >= static_cast<int> (listed.size())) return;
+        current = listed[static_cast<size_t> (i)];
         found.clear();
         results.updateContent();
         message.setText ({}, juce::dontSendNotification);

@@ -14,6 +14,7 @@ local A = {
   name = "Good Idea",
   description = "A motif, a phrase, eight to sixteen bars of melody, chords and bass, or a drum groove - calculated from the rules that make music sound like music.",
   input = "none",
+  panel = "generate",
 }
 
 local LIST = {}

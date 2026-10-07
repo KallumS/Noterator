@@ -9,6 +9,7 @@
        A.id, A.name, A.description
        A.input                 "none", or "selection" when it works on music
                                the user has selected
+       A.panel                 "generate", "toolbox", or nil: not shown
        A.newState()            a fresh table of settings
        A.settings(st, ctx)     the settings to show now, each
                                { id, label, names = {...}, index, hint, hints = {...}, group }
