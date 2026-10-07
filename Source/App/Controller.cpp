@@ -1,6 +1,7 @@
 #include "Controller.h"
 
 #include "MidiFile.h"
+#include "MusicXml.h"
 #include "ScoreFile.h"
 #include "Spelling.h"
 
@@ -36,6 +37,16 @@ void Controller::ensureCaretPart()
         for (const auto& n : p.notes)
             if (selection.count (n.id) != 0) alive.insert (n.id);
     selection = alive;
+    // A range keeps only the parts still there, inside the score.
+    if (range.active())
+    {
+        std::vector<uint32_t> parts;
+        for (const auto& p : score.parts)
+            if (std::find (range.parts.begin(), range.parts.end(), p.id) != range.parts.end()) parts.push_back (p.id);
+        range.parts = parts;
+        range.last = std::min (range.last, score.bars - 1);
+        if (! range.active()) range = {};
+    }
 }
 
 void Controller::edit (const juce::String& what, const std::function<void (Score&)>& fn)
@@ -201,6 +212,7 @@ void Controller::setVoice (int voice) { input.voice = std::clamp (voice, 0, 1); 
 
 void Controller::select (const Selection& s, bool preview)
 {
+    range = {};
     selection = s;
     if (preview) previewSelection();
     sendChangeMessage();
@@ -208,6 +220,7 @@ void Controller::select (const Selection& s, bool preview)
 
 void Controller::selectAll()
 {
+    range = {};
     selection.clear();
     for (const auto& p : score.parts)
         for (const auto& n : p.notes) selection.insert (n.id);
@@ -231,6 +244,7 @@ void Controller::selectNext (int direction, bool extend)
         }
     }
     if (best == nullptr) return;
+    range = {};
     if (! extend) selection.clear();
     // The whole chord at that moment.
     for (const auto& n : part->notes)
@@ -255,6 +269,7 @@ void Controller::moveSelection (int direction)
     if (selection.empty()) return;
     const auto ids = selection;
     const Tick by = direction * input.length();
+    range = {};
     bool ok = true;
     edit ("Moved", [&] (Score& s) { ok = moveNotes (s, ids, by); });
     if (! ok) undo();
@@ -307,6 +322,7 @@ void Controller::paste()
     const auto partId = caretPart;
     std::vector<uint32_t> ids;
     edit ("Pasted", [&] (Score& s) { ids = pasteNotes (s, partId, at, clipboard, span, true); });
+    range = {};
     selection = Selection (ids.begin(), ids.end());
     caret = at + span;
     sendChangeMessage();
@@ -339,8 +355,43 @@ void Controller::previewSelection()
     previewPitches (pitches, partId);
 }
 
+void Controller::selectRange (int a, int b, int fromPart, int toPart)
+{
+    if (score.parts.empty()) return;
+    const int last = static_cast<int> (score.parts.size()) - 1;
+    range = {};
+    range.first = std::clamp (std::min (a, b), 0, score.bars - 1);
+    range.last = std::clamp (std::max (a, b), 0, score.bars - 1);
+    const int p0 = std::clamp (std::min (fromPart, toPart), 0, last);
+    const int p1 = std::clamp (std::max (fromPart, toPart), 0, last);
+    for (int i = p0; i <= p1; ++i) range.parts.push_back (score.parts[static_cast<size_t> (i)].id);
+
+    const Tick from = score.barStart (range.first), to = score.barStart (range.last + 1);
+    selection.clear();
+    for (const auto pid : range.parts)
+        if (const auto* p = score.partById (pid))
+            for (const auto& n : p->notes)
+                if (n.start >= from && n.start < to) selection.insert (n.id);
+    caretPart = range.parts.front();
+    caret = from;
+    sendChangeMessage();
+}
+
+juce::String Controller::rangeText() const
+{
+    if (! range.active()) return {};
+    juce::String t = range.first == range.last ? "Bar " + juce::String (range.first + 1)
+                                               : "Bars " + juce::String (range.first + 1) + "-" + juce::String (range.last + 1);
+    const auto* top = score.partById (range.parts.front());
+    const auto* bottom = score.partById (range.parts.back());
+    if (top != nullptr) t += ", " + juce::String (top->name);
+    if (bottom != nullptr && bottom != top) t += " to " + juce::String (bottom->name);
+    return t;
+}
+
 std::pair<int, int> Controller::selectedBars() const
 {
+    if (range.active()) return { range.first, range.last };
     if (selection.empty()) { const int b = score.barAt (caret); return { b, b }; }
     int lo = score.bars, hi = 0;
     for (const auto& p : score.parts)
@@ -528,6 +579,7 @@ void Controller::newScore (const juce::String& name)
     undoStack.clear();
     redoStack.clear();
     selection.clear();
+    range = {};
     caret = 0;
     caretPart = score.parts.empty() ? 0 : score.parts.front().id;
     file = juce::File();
@@ -536,32 +588,86 @@ void Controller::newScore (const juce::String& name)
     refresh();
 }
 
-bool Controller::load (const juce::File& f, juce::String& error)
+namespace
 {
+// The text of a compressed MusicXML (.mxl): a zip whose container.xml names
+// the score inside it.
+bool readMxl (const juce::File& f, std::string& text, juce::String& error)
+{
+    juce::ZipFile zip (f);
+    juce::String path;
+    if (const auto* container = zip.getEntry ("META-INF/container.xml"))
+    {
+        std::unique_ptr<juce::InputStream> in (zip.createStreamForEntry (*container));
+        if (in != nullptr)
+            if (auto xml = juce::parseXML (in->readEntireStreamAsString()))
+                if (auto* rootfiles = xml->getChildByName ("rootfiles"))
+                    if (auto* rf = rootfiles->getChildByName ("rootfile")) path = rf->getStringAttribute ("full-path");
+    }
+    for (int i = 0; path.isEmpty() && i < zip.getNumEntries(); ++i)
+    {
+        const auto name = zip.getEntry (i)->filename;
+        if (! name.startsWith ("META-INF") && (name.endsWithIgnoreCase (".xml") || name.endsWithIgnoreCase (".musicxml"))) path = name;
+    }
+    const auto* entry = path.isEmpty() ? nullptr : zip.getEntry (path);
+    if (entry == nullptr) { error = f.getFileName() + " has no score inside it."; return false; }
+    std::unique_ptr<juce::InputStream> in (zip.createStreamForEntry (*entry));
+    if (in == nullptr) { error = "Could not unpack " + f.getFileName(); return false; }
+    juce::MemoryBlock mb;
+    in->readIntoMemoryBlock (mb);
+    text.assign (static_cast<const char*> (mb.getData()), mb.getSize());
+    return true;
+}
+} // namespace
+
+bool Controller::readScoreFile (const juce::File& f, Score& out, juce::String& error)
+{
+    if (f.hasFileExtension ("mxl;musicxml;xml"))
+    {
+        std::string text;
+        if (f.hasFileExtension ("mxl")) { if (! readMxl (f, text, error)) return false; }
+        else
+        {
+            juce::MemoryBlock mb;
+            if (! f.loadFileAsData (mb)) { error = "Could not read " + f.getFileName(); return false; }
+            text.assign (static_cast<const char*> (mb.getData()), mb.getSize());
+        }
+        auto r = readMusicXml (text);
+        if (! r.ok) { error = r.error; return false; }
+        out = std::move (r.score);
+        if (out.title.empty() || out.title == "Untitled") out.title = f.getFileNameWithoutExtension().toStdString();
+        return true;
+    }
     juce::MemoryBlock mb;
     if (! f.loadFileAsData (mb)) { error = "Could not read " + f.getFileName(); return false; }
-    Score loaded;
     if (f.hasFileExtension ("noterator"))
     {
         auto r = loadScore (mb.toString().toStdString());
         if (! r.ok) { error = r.error; return false; }
-        loaded = std::move (r.score);
-        file = f;
+        out = std::move (r.score);
+        return true;
     }
-    else
-    {
-        std::vector<uint8_t> bytes (static_cast<const uint8_t*> (mb.getData()), static_cast<const uint8_t*> (mb.getData()) + mb.getSize());
-        auto r = readMidiFile (bytes);
-        if (! r.ok) { error = r.error; return false; }
-        loaded = std::move (r.score);
-        if (loaded.title == "Imported") loaded.title = f.getFileNameWithoutExtension().toStdString();
-        file = juce::File();   // saving a MIDI file's score makes a new project
-    }
+    std::vector<uint8_t> bytes (static_cast<const uint8_t*> (mb.getData()), static_cast<const uint8_t*> (mb.getData()) + mb.getSize());
+    auto r = readMidiFile (bytes);
+    if (! r.ok) { error = r.error; return false; }
+    out = std::move (r.score);
+    if (out.title == "Imported") out.title = f.getFileNameWithoutExtension().toStdString();
+    return true;
+}
+
+bool Controller::load (const juce::File& f, juce::String& error)
+{
+    Score loaded;
+    if (! readScoreFile (f, loaded, error)) return false;
+    // Only a project saves back to where it came from; a MIDI or MusicXML
+    // file opened here becomes a new project when it is saved.
+    file = f.hasFileExtension ("noterator") ? f : juce::File();
     audio.stop();
     score = std::move (loaded);
     undoStack.clear();
     redoStack.clear();
     selection.clear();
+    range = {};
     caret = 0;
     caretPart = score.parts.empty() ? 0 : score.parts.front().id;
     dirty = false;
@@ -570,18 +676,15 @@ bool Controller::load (const juce::File& f, juce::String& error)
     return true;
 }
 
-bool Controller::importMidi (const juce::File& f, juce::String& error)
+bool Controller::importFile (const juce::File& f, juce::String& error)
 {
-    juce::MemoryBlock mb;
-    if (! f.loadFileAsData (mb)) { error = "Could not read " + f.getFileName(); return false; }
-    std::vector<uint8_t> bytes (static_cast<const uint8_t*> (mb.getData()), static_cast<const uint8_t*> (mb.getData()) + mb.getSize());
-    auto r = readMidiFile (bytes);
-    if (! r.ok) { error = r.error; return false; }
+    Score incoming;
+    if (! readScoreFile (f, incoming, error)) return false;
     const Tick at = score.barStart (score.barAt (caret));
     Selection added;
     edit ("Imported " + f.getFileName(), [&] (Score& s)
     {
-        for (auto& p : r.score.parts)
+        for (auto& p : incoming.parts)
         {
             Part np;
             np.id = s.newId();
@@ -592,6 +695,7 @@ bool Controller::importMidi (const juce::File& f, juce::String& error)
             added.insert (ids.begin(), ids.end());
         }
     });
+    range = {};
     selection = added;
     sendChangeMessage();
     return true;
@@ -611,16 +715,43 @@ bool Controller::save (const juce::File& f, juce::String& error)
 
 GeneratorContext Controller::generatorContext (bool withSelection) const
 {
-    return contextFor (score, caretPart, caret, withSelection ? selection : Selection {});
+    auto ctx = contextFor (score, caretPart, caret, withSelection ? selection : Selection {});
+    if (range.active()) ctx.rangeBars = range.bars();
+    return ctx;
 }
 
 Tick Controller::place (Score& s, const GeneratedResult& r, bool fromSelection, const std::string& generatorId,
                         InsertReport& report) const
 {
+    if (range.active())
+    {
+        // Selected bars: the music fills them (decision 0019).
+        const Tick from = s.barStart (range.first), to = s.barStart (range.last + 1);
+        if (! fromSelection)
+        {
+            report = insertIntoRange (s, r, range.parts, from, to);
+            return from;
+        }
+        if (generatorId == "midi-variator" && ! selection.empty())
+        {
+            // A variation of the bars takes their place, in the part it came from.
+            uint32_t source = range.parts.front();
+            for (const auto& p : s.parts)
+                for (const auto& n : p.notes)
+                    if (selection.count (n.id) != 0) { source = p.id; break; }
+            const auto* sp = s.partById (source);
+            InsertOptions o;
+            o.contextInstrument = sp != nullptr ? sp->instrument : std::string ("pno");
+            report = insertResult (s, fitToSpan (r, to - from), source, from, o);
+            return from;
+        }
+    }
     if (! fromSelection || selection.empty())
     {
-        // At the caret's bar, so an idea always starts on a downbeat.
-        const Tick at = s.barStart (s.barAt (caret));
+        // At the caret's bar, so an idea always starts on a downbeat - except
+        // a block from the toolbox, which is small and goes where the caret
+        // is, so blocks can be laid one after another (decision 0018).
+        const Tick at = generatorId == "starting-blocks" ? caret : s.barStart (s.barAt (caret));
         report = insertResult (s, r, caretPart, at);
         return at;
     }
@@ -652,6 +783,14 @@ void Controller::insertGenerated (const GeneratedResult& r, bool fromSelection, 
     InsertReport report;
     Tick at = 0;
     edit ("Inserted " + juce::String (r.title), [&] (Score& s) { at = place (s, r, fromSelection, generatorId, report); });
+    if (range.active() && (! fromSelection || generatorId == "midi-variator"))
+    {
+        // The bars stay selected, so another idea can go straight into them.
+        const int top = score.partIndex (range.parts.front()), bottom = score.partIndex (range.parts.back());
+        selectRange (range.first, range.last, top, bottom);
+        return;
+    }
+    range = {};
     selection = report.newNotes;
     caret = std::min (at + r.length, score.endTick());
     if (! report.newNotes.empty())
@@ -663,15 +802,18 @@ void Controller::insertGenerated (const GeneratedResult& r, bool fromSelection, 
 
 void Controller::auditionGenerated (const GeneratedResult& r, bool fromSelection, const std::string& generatorId)
 {
-    // Made from the selection: heard in place, with the music around it.
-    // Otherwise on its own, on the instruments it would go to.
-    if (fromSelection && ! selection.empty())
+    // Made from the selection, or going into selected bars: heard in place,
+    // with the music around it. Otherwise on its own, on the instruments it would go to.
+    if (range.active() || (fromSelection && ! selection.empty()))
     {
         Score temp = score;
         InsertReport report;
-        const Tick at = place (temp, r, true, generatorId, report);
+        const Tick at = place (temp, r, fromSelection, generatorId, report);
         temp.normalise();
-        audio.play (temp, at, at + std::max<Tick> (r.length, PPQ));
+        Tick length = std::max<Tick> (r.length, PPQ);
+        if (range.active() && (! fromSelection || generatorId == "midi-variator"))
+            length = score.barStart (range.last + 1) - at;
+        audio.play (temp, at, at + length);
         auditioning = true;
         sendChangeMessage();
         return;

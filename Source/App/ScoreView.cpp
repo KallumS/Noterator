@@ -74,6 +74,21 @@ int ScoreView::staffPart (int staffIndex) const
     return controller.layout.staves[static_cast<size_t> (staffIndex)].part;
 }
 
+int ScoreView::barAtX (float x) const
+{
+    const auto& lay = controller.layout;
+    if (lay.measures.empty()) return 0;
+    const int m = lay.measureAtX (toLayout ({ std::max (x, static_cast<float> (gutter)), 0.0f }).x);
+    return lay.measures[static_cast<size_t> (std::clamp (m, 0, static_cast<int> (lay.measures.size()) - 1))].bar;
+}
+
+int ScoreView::partAtY (float y) const
+{
+    const auto& lay = controller.layout;
+    if (lay.staves.empty()) return 0;
+    return staffPart (lay.staffAtY (toLayout ({ 0.0f, y }).y));
+}
+
 void ScoreView::resized()
 {
     hbar.setBounds (gutter, getHeight() - 12, getWidth() - gutter - 12, 12);
@@ -167,6 +182,7 @@ void ScoreView::paint (juce::Graphics& g)
         juce::Graphics::ScopedSaveState s (g);
         g.reduceClipRegion (area.withTop (lanesHeight).withRight (getWidth() - 12));
         ScoreRenderer::draw (g, controller.layout, controller.score, style, origin(), area.toFloat());
+        paintRange (g);
         paintCaret (g);
         paintGhost (g);
 
@@ -206,6 +222,32 @@ void ScoreView::paintCaret (juce::Graphics& g)
     g.fillRect (x, y1, input ? 2.5f : 1.5f, y2 - y1);
     // The part the caret is in, marked down the side.
     g.fillRect (static_cast<float> (gutter) + 1.0f, y1, 3.0f, y2 - y1);
+}
+
+void ScoreView::paintRange (juce::Graphics& g)
+{
+    const auto& range = controller.range;
+    const auto& lay = controller.layout;
+    if (! range.active() || lay.measures.empty()) return;
+    const auto page = controller.lightPage ? theme::lightPage() : theme::darkPage();
+    double top = 1e9, bottom = -1e9;
+    for (const auto& st : lay.staves)
+    {
+        const auto& p = controller.score.parts[static_cast<size_t> (st.part)];
+        if (std::find (range.parts.begin(), range.parts.end(), p.id) == range.parts.end()) continue;
+        top = std::min (top, st.top);
+        bottom = std::max (bottom, st.top + 4.0);
+    }
+    if (top > bottom) return;
+    const auto& m0 = lay.measures[static_cast<size_t> (std::clamp (range.first, 0, static_cast<int> (lay.measures.size()) - 1))];
+    const auto& m1 = lay.measures[static_cast<size_t> (std::clamp (range.last, 0, static_cast<int> (lay.measures.size()) - 1))];
+    const auto o = origin();
+    const juce::Rectangle<float> r (o.x + static_cast<float> (m0.x) * space(), o.y + static_cast<float> (top - 1.5) * space(),
+                                    static_cast<float> (m1.x + m1.width - m0.x) * space(), static_cast<float> (bottom - top + 3.0) * space());
+    g.setColour (page.accent.withAlpha (controller.lightPage ? 0.16f : 0.10f));
+    g.fillRect (r);
+    g.setColour (page.accent.withAlpha (0.9f));
+    g.drawRect (r, 1.5f);
 }
 
 void ScoreView::paintGhost (juce::Graphics& g)
@@ -338,6 +380,7 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
     const auto p = e.position;
     dragStart = p;
     dragging = draggingNotes = false;
+    selectingBars = allParts = false;
     rubberBand = {};
 
     // The lanes: a chord plays the harmony there, a scale plays itself.
@@ -345,6 +388,10 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
     {
         if (p.x < gutter) return;
         const Tick t = lay.tickForX (toLayout (p).x);
+        // A drag along the lanes chooses bars in every part.
+        anchorBar = barAtX (p.x);
+        anchorPart = 0;
+        allParts = true;
         if (p.y < 22)
         {
             for (const auto& k : controller.keys)
@@ -429,11 +476,27 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
-    // Empty paper: the caret goes here, and a drag selects.
-    const int staff = lay.staffAtY (lp.y);
-    const auto& part = controller.score.parts[static_cast<size_t> (staffPart (staff))];
-    if (! e.mods.isShiftDown()) controller.select ({});
-    controller.setCaret (part.id, snapTick (lay.tickForX (lp.x)));
+    // Empty paper: that bar is chosen and the caret goes where the click
+    // was; a drag chooses more bars, and more parts (decision 0019). Shift
+    // and a click stretches the bars chosen; Shift and a drag picks notes.
+    const int bar = barAtX (p.x), partIndex = partAtY (p.y);
+    const Tick at = snapTick (lay.tickForX (lp.x));
+    if (e.mods.isShiftDown())
+    {
+        if (controller.range.active())
+        {
+            controller.selectRange (anchorBar, bar, anchorPart, partIndex);
+            controller.setStatus (controller.rangeText() + " chosen");
+        }
+        return;
+    }
+    anchorBar = bar;
+    anchorPart = partIndex;
+    allParts = false;
+    selectingBars = true;
+    controller.selectRange (bar, bar, partIndex, partIndex);
+    controller.caret = at;
+    controller.setStatus (controller.rangeText() + " chosen - drag to choose more, Generate fills them");
 }
 
 void ScoreView::mouseDrag (const juce::MouseEvent& e)
@@ -454,7 +517,25 @@ void ScoreView::mouseDrag (const juce::MouseEvent& e)
         }
         return;
     }
-    if (dragStart.y < lanesHeight || dragStart.x < gutter || controller.input.noteInput) return;
+    if (dragStart.x < gutter || controller.input.noteInput) return;
+    if (selectingBars || (allParts && dragStart.y < lanesHeight))
+    {
+        const int bar = barAtX (e.position.x);
+        const int last = static_cast<int> (controller.score.parts.size()) - 1;
+        const int part = allParts ? last : partAtY (e.position.y);
+        const auto& r = controller.range;
+        const int first = std::min (anchorBar, bar), lastBar = std::max (anchorBar, bar);
+        const auto topId = controller.score.parts.empty() ? 0u : controller.score.parts[static_cast<size_t> (std::min (anchorPart, part))].id;
+        const auto bottomId = controller.score.parts.empty() ? 0u : controller.score.parts[static_cast<size_t> (std::max (anchorPart, part))].id;
+        if (! r.active() || r.first != first || r.last != lastBar || r.parts.front() != topId || r.parts.back() != bottomId)
+        {
+            controller.selectRange (anchorBar, bar, anchorPart, part);
+            controller.setStatus (controller.rangeText() + " chosen");
+        }
+        selectingBars = true;
+        return;
+    }
+    if (dragStart.y < lanesHeight) return;
     dragging = true;
     rubberBand = juce::Rectangle<float> (dragStart, e.position).toNearestInt();
     repaint();
@@ -465,6 +546,9 @@ void ScoreView::mouseUp (const juce::MouseEvent&)
     if (draggingNotes && dragSemitones != 0) controller.transposeSelection (dragSemitones);
     draggingNotes = false;
     dragSemitones = 0;
+    if (selectingBars && controller.range.active())
+        controller.setStatus (controller.rangeText() + " chosen - Generate fills them; Esc lets go");
+    selectingBars = allParts = false;
     if (dragging && ! rubberBand.isEmpty())
     {
         const auto& lay = controller.layout;

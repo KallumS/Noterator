@@ -14,6 +14,7 @@ local A = {
   name = "Midi Variator",
   description = "Small variations of the selected music, the way a score keeps returning to a motif a little different each time.",
   input = "selection",
+  panel = "generate",
 }
 
 local AMOUNTS = { 0.1, 0.2, 0.35, 0.5, 0.7, 0.9, 1.0 }

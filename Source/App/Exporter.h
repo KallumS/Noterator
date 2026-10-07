@@ -25,6 +25,10 @@ struct ExportRange
 
 bool exportMidi (const Score& score, ExportRange range, bool withAutoCC, const juce::File& file, juce::String& error);
 
+// The score, or the bars `range` covers, as MusicXML. A range is cut on bar
+// lines (it is always whole bars from the window).
+bool exportMusicXml (const Score& score, ExportRange range, const juce::File& file, juce::String& error);
+
 // Renders on the calling thread. `progress` gets 0..1 and returns false to
 // cancel. The synth is made by the caller, on the message thread, because an
 // Audio Unit has to be.

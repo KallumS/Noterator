@@ -52,6 +52,23 @@ int polyphonyOf (const std::vector<Note>& notes);
 InsertReport insertResult (Score& score, const GeneratedResult& result, uint32_t targetPartId, Tick at,
                            const InsertOptions& options = {});
 
+// A result made to last exactly `span`: repeated until it fills it, cut where
+// it ends (decision 0019).
+GeneratedResult fitToSpan (const GeneratedResult& result, Tick span);
+
+// A line of chords dealt out to `lines` parts, one note each, top note to the
+// first: the plainest orchestration of block chords. A chord with fewer notes
+// than parts doubles its lowest note in the parts left over; one with more
+// gives the extra notes to no one.
+std::vector<std::vector<Note>> spreadChords (const std::vector<Note>& notes, int lines);
+
+// Drops a result into a span of bars across chosen parts, top part first:
+// the tune goes to the top part, the bass to the bottom, chords to the parts
+// between - whole, where one of them can play chords, spread one note each
+// where none can. Only the parts that receive music are cleared.
+InsertReport insertIntoRange (Score& score, const GeneratedResult& result, const std::vector<uint32_t>& parts,
+                              Tick from, Tick to, const InsertOptions& options = {});
+
 // The instrument a generated part should be played by when it gets a part of
 // its own.
 std::string instrumentForGeneratedPart (const GeneratedPart& part, const Instrument& target);

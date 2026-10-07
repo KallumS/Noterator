@@ -12,6 +12,7 @@
 #pragma once
 
 #include "Controller.h"
+#include "SettingsList.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -33,16 +34,14 @@ private:
     juce::ComboBox generator;
     juce::Label description;
     juce::ToggleButton followKey { "Use the score's key" };
-    juce::Viewport settingsView;
-    juce::Component settingsHolder;
-    std::vector<std::unique_ptr<juce::Label>> labels;
-    std::vector<std::unique_ptr<juce::ComboBox>> boxes;
+    SettingsList settings { controller };
     juce::TextButton generateButton { "Generate" }, moreButton { "More" }, insertButton { "Insert" }, stopButton { "Stop" };
     juce::ListBox results { "Results", this };
     juce::Label message, target;
     std::vector<GeneratedResult> found;
     int seed = 1;
     std::string current;
+    std::vector<std::string> listed;   // ids, in the order of the menu
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     int getNumRows() override { return static_cast<int> (found.size()); }
@@ -52,7 +51,6 @@ private:
     juce::String getTooltipForRow (int row) override;
 
     void rebuildSettings();
-    void layoutSettings();
     void run (bool more);
     void insertSelected();
     bool needsSelection() const;

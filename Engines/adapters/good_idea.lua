@@ -14,6 +14,7 @@ local A = {
   name = "Good Idea",
   description = "A motif, a phrase, eight to sixteen bars of melody, chords and bass, or a drum groove - calculated from the rules that make music sound like music.",
   input = "none",
+  panel = "generate",
 }
 
 local LIST = {}
@@ -47,7 +48,32 @@ function A.useKey(st, root, scale)
   I.clampState(st)
 end
 
+-- With bars selected to generate into, a length left on Any becomes the one
+-- that fits them best: the longest that fits, else the shortest there is. The
+-- app then repeats or trims the idea to the selection exactly.
+local BARS_SETTING = { Motif = "motifBars", Phrase = "phraseBars", Measure = "measureBars", Drums = "drumBars" }
+
+local function fitBars(st, ctx)
+  local id = BARS_SETTING[st.kind]
+  if not id or not ctx.rangeBars or ctx.rangeBars <= 0 or st[id] ~= "Any" then return nil end
+  local best, shortest
+  for _, v in ipairs(I.BY_ID[id].values) do
+    if v <= ctx.rangeBars and (not best or v > best) then best = v end
+    if not shortest or v < shortest then shortest = v end
+  end
+  st[id] = best or shortest
+  return id
+end
+
 function A.generate(st, ctx, seed, count)
+  local fitted = fitBars(st, ctx)
+  local ok, out = pcall(A.make, st, ctx, seed, count)
+  if fitted then st[fitted] = "Any" end
+  if not ok then error(out, 0) end
+  return out
+end
+
+function A.make(st, ctx, seed, count)
   local meter = I.meter(ctx.num, ctx.den)
   local out = {}
   for k = 0, (count or 6) - 1 do

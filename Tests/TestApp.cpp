@@ -13,6 +13,8 @@
 
 #include <juce_audio_formats/juce_audio_formats.h>
 
+#include <algorithm>
+
 using namespace nt;
 
 namespace
@@ -55,6 +57,72 @@ TEST ("app: a generator writes into a viola part through the controller")
     CHECK (c.score.parts[2].notes.empty());
     c.redo();
     CHECK (! c.score.parts[2].notes.empty());
+}
+
+TEST ("app: chosen bars are filled by Good Idea, across the parts chosen")
+{
+    Controller c (audio());
+    c.newScore ("String Quartet");
+    c.setBars (8);
+    c.setCaret (c.score.parts[0].id, 0);
+    for (int letter : { 0, 2, 4, 5 }) c.typeLetter (letter, false);   // bar 1, first violin
+    c.selectRange (1, 4, 0, 3);                                       // bars 2-5, all four
+    CHECK (c.range.active());
+    CHECK_EQ (c.rangeText(), juce::String ("Bars 2-5, Violin I to Cello"));
+    const auto ctx = c.generatorContext (false);
+    CHECK_EQ (ctx.rangeBars, 4);
+    const auto out = c.lua.generate ("good-idea", ctx, 7, 3);
+    CHECK (! out.results.empty());
+    if (out.results.empty()) return;
+    c.insertGenerated (out.results.front(), false, "good-idea");
+    // Nothing outside the bars, nothing new beyond the four parts, and the
+    // bars stay chosen with the new music selected.
+    CHECK_EQ (c.score.parts.size(), size_t (4));
+    const Tick from = c.score.barStart (1), to = c.score.barStart (5);
+    int inside = 0;
+    for (const auto& p : c.score.parts)
+        for (const auto& n : p.notes)
+        {
+            if (n.start < from) continue;
+            CHECK (n.start < to);
+            CHECK (n.end() <= to);
+            ++inside;
+        }
+    CHECK (inside > 0);
+    CHECK_EQ (c.score.parts[0].notes.size() - static_cast<size_t> (std::count_if (c.score.parts[0].notes.begin(), c.score.parts[0].notes.end(),
+                                                                                   [&] (const Note& n) { return n.start >= from; })),
+              size_t (4));
+    CHECK (c.range.active());
+    CHECK_EQ (static_cast<int> (c.selection.size()), inside);
+    c.select ({});
+    CHECK (! c.range.active());
+}
+
+TEST ("app: blocks go where the caret is, one after another")
+{
+    Controller c (audio());
+    c.newScore ("Piano");
+    c.setCaret (c.score.parts[0].id, PPQ);   // beat 2, not the bar's start
+    c.lua.reset ("starting-blocks");
+    c.lua.set ("starting-blocks", "cat", 1, c.generatorContext (false));   // Arpeggio
+    const auto out = c.lua.generate ("starting-blocks", c.generatorContext (false), 1, 0);
+    CHECK_EQ (out.results.size(), size_t (7));
+    if (out.results.size() < 5) return;
+    c.insertGenerated (out.results[0], false, "starting-blocks");
+    CHECK_EQ (c.caret, PPQ + out.results[0].length);
+    c.insertGenerated (out.results[4], false, "starting-blocks");
+    std::vector<std::pair<Tick, int>> got;
+    for (const auto& n : c.score.parts[0].notes) got.push_back ({ n.start, n.pitch % 12 });
+    std::sort (got.begin(), got.end());
+    CHECK_EQ (got.size(), size_t (6));
+    if (got.size() == 6)
+    {
+        CHECK_EQ (got[0].first, PPQ);
+        CHECK_EQ (got[0].second, 0);                                // C, the I
+        CHECK_EQ (got[3].first, PPQ + out.results[0].length);
+        CHECK_EQ (got[3].second, 7);                                // G, the V
+    }
+    c.lua.reset ("starting-blocks");
 }
 
 TEST ("app: selected bars export as MIDI and read back")
@@ -115,6 +183,46 @@ TEST ("app: a project saves and opens again")
     CHECK_EQ (d.score.parts.size(), size_t (4));
     CHECK_EQ (d.score.parts[0].notes.size(), size_t (2));
     f.deleteFile();
+}
+
+TEST ("app: MusicXML out, bars at a time, and back in, plain and compressed")
+{
+    Controller c (audio());
+    c.newScore ("Piano");
+    c.setCaret (c.score.parts[0].id, 4 * PPQ);
+    for (int letter : { 0, 2, 4, 5 }) c.typeLetter (letter, false);
+    juce::String error;
+    const auto f = temp ("bars.musicxml");
+    CHECK (exportMusicXml (c.score, { 4 * PPQ, 8 * PPQ }, f, error));
+    Score back;
+    CHECK (Controller::readScoreFile (f, back, error));
+    CHECK_EQ (back.bars, 1);
+    CHECK_EQ (back.parts.size(), size_t (1));
+    if (! back.parts.empty())
+    {
+        CHECK_EQ (back.parts[0].notes.size(), size_t (4));
+        CHECK_EQ (back.parts[0].instrument, std::string ("pno"));
+    }
+
+    // The same file zipped as an .mxl, with the container that names it.
+    const auto mxl = temp ("bars.mxl");
+    mxl.deleteFile();
+    {
+        juce::ZipFile::Builder zip;
+        const auto container = temp ("container.xml");
+        container.replaceWithText ("<?xml version=\"1.0\"?><container><rootfiles><rootfile full-path=\"score/bars.musicxml\"/></rootfiles></container>");
+        zip.addFile (container, 9, "META-INF/container.xml");
+        zip.addFile (f, 9, "score/bars.musicxml");
+        juce::FileOutputStream out (mxl);
+        zip.writeToStream (out, nullptr);
+        container.deleteFile();
+    }
+    Score zipped;
+    CHECK (Controller::readScoreFile (mxl, zipped, error));
+    CHECK_EQ (zipped.parts.size(), size_t (1));
+    if (! zipped.parts.empty()) CHECK_EQ (zipped.parts[0].notes.size(), size_t (4));
+    f.deleteFile();
+    mxl.deleteFile();
 }
 
 int main (int argc, char** argv)

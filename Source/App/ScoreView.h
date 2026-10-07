@@ -49,6 +49,9 @@ private:
     double scrollX = 0, scrollY = 0;   // pixels
     juce::Rectangle<int> rubberBand;
     bool dragging = false, draggingNotes = false;
+    // Choosing bars: where the drag began, and whether it spans every part.
+    bool selectingBars = false, allParts = false;
+    int anchorBar = 0, anchorPart = 0;
     juce::Point<float> dragStart;
     int dragPitchFrom = 0, dragSemitones = 0;
     juce::Point<float> hover { -1, -1 };
@@ -66,6 +69,8 @@ private:
     int positionAt (int staff, double layoutY) const;
     Tick snapTick (Tick t) const;
     int staffPart (int staffIndex) const;
+    int barAtX (float x) const;
+    int partAtY (float y) const;
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void timerCallback() override;
@@ -73,6 +78,7 @@ private:
     void updateScrollbars();
 
     void paintLanes (juce::Graphics&);
+    void paintRange (juce::Graphics&);
     void paintGutter (juce::Graphics&);
     void paintCaret (juce::Graphics&);
     void paintGhost (juce::Graphics&);

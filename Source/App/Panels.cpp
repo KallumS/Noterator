@@ -58,7 +58,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     inputButton.setTooltip ("Note input (N): click a line or space, or type A-G, or play a MIDI keyboard");
     voiceButton.setTooltip ("Which voice notes are written in: 1 stems up, 2 stems down (V changes the selection's)");
     transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");
-    pageButton.setTooltip ("Black on white, or the dark page");
+    pageButton.setTooltip ("Set the page dark, light ink on dark paper - or back to black on white");
     settingsButton.setTooltip ("The sound, and audio and MIDI devices");
 
     newButton.onClick = [this] { if (onNew) onNew(); };
@@ -145,7 +145,7 @@ void Toolbar::refresh()
     tripletButton.setToggleState (controller.input.triplet, juce::dontSendNotification);
     voiceButton.setButtonText ("Voice " + juce::String (controller.input.voice + 1));
     transposeButton.setButtonText (controller.transposedScore ? "Transposed" : "Concert pitch");
-    pageButton.setToggleState (controller.lightPage, juce::dontSendNotification);
+    pageButton.setToggleState (! controller.lightPage, juce::dontSendNotification);
     repaint();
 }
 

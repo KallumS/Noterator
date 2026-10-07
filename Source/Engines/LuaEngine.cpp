@@ -197,6 +197,7 @@ LuaEngine::LuaEngine()
         info.name = stringField (L, a, "name");
         info.description = stringField (L, a, "description");
         info.needsSelection = stringField (L, a, "input") == "selection";
+        info.panel = stringField (L, a, "panel");
         adapterRefs[info.id] = luaL_ref (L, LUA_REGISTRYINDEX);
         infos.push_back (info);
         reset (info.id);
@@ -247,6 +248,7 @@ void LuaEngine::pushContext (const GeneratorContext& ctx)
     lua_pushstring (L, inst.id.c_str()); lua_setfield (L, -2, "inst");
     lua_pushstring (L, inst.catalogueId.c_str()); lua_setfield (L, -2, "catalogueId");
     lua_pushinteger (L, ctx.bars); lua_setfield (L, -2, "bars");
+    lua_pushinteger (L, ctx.rangeBars); lua_setfield (L, -2, "rangeBars");
     lua_createtable (L, 0, 3);
     pushNotes (L, ctx.selection);
     lua_setfield (L, -2, "notes");

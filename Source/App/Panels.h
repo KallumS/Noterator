@@ -47,7 +47,7 @@ private:
     GlyphButton tripletButton { "Triplet", smufl::tuplet0 + 3, 1.0f };
     GlyphButton restButton { "Rest", smufl::restQuarter, 0.8f };
     juce::TextButton voiceButton { "Voice 1" };
-    juce::TextButton transposeButton { "Concert pitch" }, pageButton { "Light page" };
+    juce::TextButton transposeButton { "Concert pitch" }, pageButton { "Dark page" };
     juce::TextButton zoomOut { "-" }, zoomIn { "+" };
     juce::TextButton settingsButton { "Sound" };
 

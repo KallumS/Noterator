@@ -15,6 +15,7 @@ local A = {
   name = "Midi Suggester",
   description = "Select a melody and get chord progressions to go under it, or select chords and get melodies to go over them.",
   input = "selection",
+  panel = "generate",
 }
 
 local function names(list)

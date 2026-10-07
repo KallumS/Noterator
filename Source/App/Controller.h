@@ -41,6 +41,16 @@ struct InputState
     }
 };
 
+// Whole bars across some parts, chosen by dragging over the page: where a
+// generator's music goes (decision 0019).
+struct BarRange
+{
+    int first = -1, last = -1;
+    std::vector<uint32_t> parts;   // top to bottom
+    bool active() const { return first >= 0 && last >= first && ! parts.empty(); }
+    int bars() const { return active() ? last - first + 1 : 0; }
+};
+
 class Controller : public juce::ChangeBroadcaster
 {
 public:
@@ -50,11 +60,12 @@ public:
     // State, read by everything that draws
     Score score;
     Selection selection;
+    BarRange range;               // set: the selection is everything in these bars
     uint32_t caretPart = 0;
     Tick caret = 0;
     InputState input;
     bool transposedScore = false;
-    bool lightPage = false;
+    bool lightPage = true;        // black on white unless the user asks for dark (decision 0020)
     float zoom = 9.0f;            // pixels per staff space
 
     engrave::Layout layout;
@@ -108,7 +119,12 @@ public:
     void paste();
     void toggleVoiceOfSelection();
     void previewSelection();
-    // The bars the selection covers, or the caret's bar.
+    // Bars `a` to `b` across the parts at indices `fromPart` to `toPart`,
+    // in either order; the notes in them become the selection.
+    void selectRange (int a, int b, int fromPart, int toPart);
+    // "Bars 2-5, Violin I to Cello", for whatever shows the range.
+    juce::String rangeText() const;
+    // The bars the range or the selection covers, or the caret's bar.
     std::pair<int, int> selectedBars() const;
 
     //==========================================================================
@@ -136,14 +152,18 @@ public:
     // Files
     void newScore (const juce::String& templateName);
     bool load (const juce::File& f, juce::String& error);
-    bool importMidi (const juce::File& f, juce::String& error);   // adds its parts to this score
+    // Adds a MIDI or MusicXML file's parts to this score, at the caret's bar.
+    bool importFile (const juce::File& f, juce::String& error);
+    // A project, MIDI file or MusicXML file (.musicxml, .xml, .mxl) as a score.
+    static bool readScoreFile (const juce::File& f, Score& out, juce::String& error);
     bool save (const juce::File& f, juce::String& error);
     static juce::StringArray templates();
 
     // The part a generator writes into and the context it is asked in.
     GeneratorContext generatorContext (bool withSelection) const;
     // A result from a generator that works on the selection goes beside or
-    // after it (decision 0011); any other goes into the caret's part.
+    // after it (decision 0011); any other goes into the caret's part, or
+    // fills the selected bars when there are some (decision 0019).
     void insertGenerated (const GeneratedResult& r, bool fromSelection, const std::string& generatorId);
     void auditionGenerated (const GeneratedResult& r, bool fromSelection, const std::string& generatorId);
 

@@ -11,6 +11,7 @@
 
 #include "AudioEngine.h"
 #include "Controller.h"
+#include "BlocksPanel.h"
 #include "GeneratorPanel.h"
 #include "Panels.h"
 #include "ScoreView.h"
@@ -53,10 +54,12 @@ private:
     ScoreView view { controller };
     juce::TabbedComponent tabs { juce::TabbedButtonBar::TabsAtTop };
     GeneratorPanel generatorPanel { controller };
+    BlocksPanel blocksPanel { controller };
     PartsPanel partsPanel { controller };
     ScorePanel scorePanel { controller };
     StatusBar statusBar { controller };
     std::unique_ptr<juce::FileChooser> chooser;
+    juce::ApplicationProperties preferences;   // the page colour and zoom, kept between launches
     juce::File lastFolder;
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
@@ -66,7 +69,8 @@ private:
     void openDialog();
     void saveDialog (bool saveAs, std::function<void()> then = {});
     void importDialog();
-    void exportDialog (bool audioFile, bool selectedBars);
+    enum class ExportKind { midi, audio, musicXml };
+    void exportDialog (ExportKind kind, bool selectedBars);
     void audioSettingsDialog();
     void showHelp();
     void updateTitle();
