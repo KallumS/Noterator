@@ -1,0 +1,134 @@
+/*
+    The app's own path, without a window: the controller, a generator into a
+    part, MIDI export and back, and audio rendered through each synth. On the
+    macOS runner this is what proves Apple's General MIDI synth loads and
+    sounds - nothing else can, short of opening the app on a Mac.
+*/
+
+#include "Check.h"
+
+#include "Controller.h"
+#include "Exporter.h"
+#include "MidiFile.h"
+
+#include <juce_audio_formats/juce_audio_formats.h>
+
+using namespace nt;
+
+namespace
+{
+juce::File temp (const juce::String& name)
+{
+    return juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("noterator-test-" + name);
+}
+
+double rmsOf (const juce::File& wav)
+{
+    juce::WavAudioFormat format;
+    std::unique_ptr<juce::AudioFormatReader> reader (format.createReaderFor (wav.createInputStream().release(), true));
+    if (reader == nullptr) return -1;
+    juce::AudioBuffer<float> buf (static_cast<int> (reader->numChannels), static_cast<int> (reader->lengthInSamples));
+    reader->read (&buf, 0, buf.getNumSamples(), 0, true, true);
+    return buf.getRMSLevel (0, 0, buf.getNumSamples());
+}
+
+AudioEngine& audio()
+{
+    static AudioEngine engine;
+    return engine;
+}
+} // namespace
+
+TEST ("app: a generator writes into a viola part through the controller")
+{
+    Controller c (audio());
+    c.newScore ("String Quartet");
+    CHECK_EQ (c.score.parts.size(), size_t (4));
+    c.setCaret (c.score.parts[2].id, 0);
+    const auto out = c.lua.generate ("midi-catalogue", c.generatorContext (false), 1, 3);
+    CHECK (! out.results.empty());
+    if (out.results.empty()) return;
+    c.insertGenerated (out.results.front(), false, "midi-catalogue");
+    CHECK (! c.score.parts[2].notes.empty());
+    CHECK (! c.selection.empty());
+    c.undo();
+    CHECK (c.score.parts[2].notes.empty());
+    c.redo();
+    CHECK (! c.score.parts[2].notes.empty());
+}
+
+TEST ("app: selected bars export as MIDI and read back")
+{
+    Controller c (audio());
+    c.newScore ("Piano");
+    c.setCaret (c.score.parts[0].id, 4 * PPQ);
+    for (int letter : { 0, 2, 4, 0 }) c.typeLetter (letter, false);
+    juce::String error;
+    const auto f = temp ("bars.mid");
+    CHECK (exportMidi (c.score, { 4 * PPQ, 8 * PPQ }, true, f, error));
+    juce::MemoryBlock mb;
+    f.loadFileAsData (mb);
+    const auto back = readMidiFile (std::vector<uint8_t> (static_cast<const uint8_t*> (mb.getData()),
+                                                          static_cast<const uint8_t*> (mb.getData()) + mb.getSize()));
+    CHECK (back.ok);
+    CHECK_EQ (back.score.parts.size(), size_t (1));
+    if (! back.score.parts.empty())
+    {
+        CHECK_EQ (back.score.parts[0].notes.size(), size_t (4));
+        CHECK_EQ (back.score.parts[0].notes[0].start, Tick (0));
+    }
+    f.deleteFile();
+}
+
+TEST ("app: audio renders, and is not silent, through both synths")
+{
+    Controller c (audio());
+    c.newScore ("String Quartet");
+    c.setCaret (c.score.parts[0].id, 0);
+    for (int letter : { 0, 2, 4, 5, 4, 2, 0 }) c.typeLetter (letter, false);
+    for (bool builtIn : { false, true })
+    {
+        juce::String desc, error;
+        auto synth = createSynth (builtIn, desc);
+        std::printf ("  (rendering through %s)\n", desc.toRawUTF8());
+        const auto f = temp (builtIn ? "builtin.wav" : "system.wav");
+        CHECK (renderAudio (c.score, { 0, 8 * PPQ }, *synth, f, {}, error));
+        const double rms = rmsOf (f);
+        std::printf ("  (rms %.5f)\n", rms);
+        CHECK (rms > 0.0005);
+        f.deleteFile();
+    }
+}
+
+TEST ("app: a project saves and opens again")
+{
+    Controller c (audio());
+    c.newScore ("Band");
+    c.setCaret (c.score.parts[0].id, 0);
+    c.typeLetter (0, false);
+    c.typeLetter (2, true);
+    juce::String error;
+    const auto f = temp ("song.noterator");
+    CHECK (c.save (f, error));
+    Controller d (audio());
+    CHECK (d.load (f, error));
+    CHECK_EQ (d.score.parts.size(), size_t (4));
+    CHECK_EQ (d.score.parts[0].notes.size(), size_t (2));
+    f.deleteFile();
+}
+
+int main (int argc, char** argv)
+{
+    juce::ScopedJuceInitialiser_GUI init;
+    int ran = 0;
+    for (const auto& t : check::all())
+    {
+        if (argc > 1 && std::strstr (t.name, argv[1]) == nullptr) continue;
+        check::current() = t.name;
+        t.fn();
+        ++ran;
+    }
+    if (check::failures() > 0) { std::printf ("%d failure(s) in %d tests\n", check::failures(), ran); return 1; }
+    std::printf ("%d tests passed\n", ran);
+    return 0;
+}
