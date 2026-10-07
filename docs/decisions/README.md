@@ -31,3 +31,5 @@ refers to them by number: "(decision 0006)".
 | [0019](0019-bars-can-be-chosen-and-filled.md) | Bars can be chosen on the page, and generated music fills them | Accepted |
 | [0020](0020-light-page-by-default.md) | A light page by default; dark on request | Accepted |
 | [0021](0021-musicxml-in-and-out.md) | MusicXML in and out, from the core, with a parser of our own | Accepted |
+| [0022](0022-templates-in-score-order.md) | Templates for sections and big ensembles, in the core, in score order | Accepted |
+| [0023](0023-a-synth-per-sixteen-channels.md) | A synth for every sixteen channels, so every part has its own | Accepted |

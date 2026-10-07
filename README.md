@@ -22,6 +22,10 @@ the page as real notation you can read, edit, play and export.
 - **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run, interval,
   bass note or drum; every degree of the key is a button. Click one to see and
   hear it, Insert to put it at the caret - then the next one goes after it.
+- **Start from an ensemble.** New offers small groups (string quartet, wind
+  and brass quintets, choir, band, jazz combo), whole orchestral sections
+  (strings, woodwinds, brass, percussion), a chamber or full orchestra, and a
+  big band - every instrument with a sound of its own.
 - **It knows the instruments.** A violin and a viola get different clefs,
   ranges and registers, and the generators write differently for each. Notes
   an instrument cannot play turn red; notes outside where it sounds best turn
