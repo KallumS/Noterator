@@ -136,7 +136,10 @@ public:
     // Files
     void newScore (const juce::String& templateName);
     bool load (const juce::File& f, juce::String& error);
-    bool importMidi (const juce::File& f, juce::String& error);   // adds its parts to this score
+    // Adds a MIDI or MusicXML file's parts to this score, at the caret's bar.
+    bool importFile (const juce::File& f, juce::String& error);
+    // A project, MIDI file or MusicXML file (.musicxml, .xml, .mxl) as a score.
+    static bool readScoreFile (const juce::File& f, Score& out, juce::String& error);
     bool save (const juce::File& f, juce::String& error);
     static juce::StringArray templates();
 

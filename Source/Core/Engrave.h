@@ -113,6 +113,7 @@ struct Beam
 struct Tuplet
 {
     int number = 3;
+    std::vector<int> elements;   // indices into Staff::elements, in order
     double x1 = 0, x2 = 0, y = 0;
     bool bracket = false;
     bool above = true;

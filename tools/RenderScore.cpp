@@ -5,6 +5,8 @@
         NoteratorRender demo out.png                  the built-in test page
         NoteratorRender song.mid out.png [space] [light] [bars]
         NoteratorRender song.noterator out.png
+        NoteratorRender demo out.musicxml             write MusicXML instead of a picture
+        NoteratorRender song.musicxml out.png         draw a MusicXML file
 
     `space` is pixels per staff space (default 9), `light` draws black on
     white, `bars` stops after that many bars.
@@ -15,6 +17,7 @@
 #include "Generators.h"
 #include "LuaEngine.h"
 #include "MidiFile.h"
+#include "MusicXml.h"
 #include "ScoreFile.h"
 #include "ScoreRenderer.h"
 #include "Spelling.h"
@@ -136,7 +139,13 @@ int main (int argc, char** argv)
         const juce::File f = juce::File::getCurrentWorkingDirectory().getChildFile (in);
         juce::MemoryBlock mb;
         if (! f.loadFileAsData (mb)) { std::printf ("cannot read %s\n", argv[1]); return 1; }
-        if (f.hasFileExtension ("noterator"))
+        if (f.hasFileExtension ("musicxml;xml"))
+        {
+            auto r = readMusicXml (mb.toString().toStdString());
+            if (! r.ok) { std::printf ("%s\n", r.error.c_str()); return 1; }
+            score = r.score;
+        }
+        else if (f.hasFileExtension ("noterator"))
         {
             auto r = loadScore (mb.toString().toStdString());
             if (! r.ok) { std::printf ("%s\n", r.error.c_str()); return 1; }
@@ -151,6 +160,14 @@ int main (int argc, char** argv)
         }
     }
     if (maxBars > 0 && score.bars > maxBars) score.bars = maxBars;
+
+    // A .musicxml name writes the score as MusicXML instead of drawing it.
+    if (out.hasFileExtension ("musicxml"))
+    {
+        out.replaceWithText (writeMusicXml (score));
+        std::printf ("wrote %s\n", out.getFullPathName().toRawUTF8());
+        return 0;
+    }
 
     const auto lay = engrave::layout (score);
     RenderStyle style;

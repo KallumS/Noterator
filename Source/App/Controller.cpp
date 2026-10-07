@@ -1,6 +1,7 @@
 #include "Controller.h"
 
 #include "MidiFile.h"
+#include "MusicXml.h"
 #include "ScoreFile.h"
 #include "Spelling.h"
 
@@ -536,27 +537,80 @@ void Controller::newScore (const juce::String& name)
     refresh();
 }
 
-bool Controller::load (const juce::File& f, juce::String& error)
+namespace
 {
+// The text of a compressed MusicXML (.mxl): a zip whose container.xml names
+// the score inside it.
+bool readMxl (const juce::File& f, std::string& text, juce::String& error)
+{
+    juce::ZipFile zip (f);
+    juce::String path;
+    if (const auto* container = zip.getEntry ("META-INF/container.xml"))
+    {
+        std::unique_ptr<juce::InputStream> in (zip.createStreamForEntry (*container));
+        if (in != nullptr)
+            if (auto xml = juce::parseXML (in->readEntireStreamAsString()))
+                if (auto* rootfiles = xml->getChildByName ("rootfiles"))
+                    if (auto* rf = rootfiles->getChildByName ("rootfile")) path = rf->getStringAttribute ("full-path");
+    }
+    for (int i = 0; path.isEmpty() && i < zip.getNumEntries(); ++i)
+    {
+        const auto name = zip.getEntry (i)->filename;
+        if (! name.startsWith ("META-INF") && (name.endsWithIgnoreCase (".xml") || name.endsWithIgnoreCase (".musicxml"))) path = name;
+    }
+    const auto* entry = path.isEmpty() ? nullptr : zip.getEntry (path);
+    if (entry == nullptr) { error = f.getFileName() + " has no score inside it."; return false; }
+    std::unique_ptr<juce::InputStream> in (zip.createStreamForEntry (*entry));
+    if (in == nullptr) { error = "Could not unpack " + f.getFileName(); return false; }
+    juce::MemoryBlock mb;
+    in->readIntoMemoryBlock (mb);
+    text.assign (static_cast<const char*> (mb.getData()), mb.getSize());
+    return true;
+}
+} // namespace
+
+bool Controller::readScoreFile (const juce::File& f, Score& out, juce::String& error)
+{
+    if (f.hasFileExtension ("mxl;musicxml;xml"))
+    {
+        std::string text;
+        if (f.hasFileExtension ("mxl")) { if (! readMxl (f, text, error)) return false; }
+        else
+        {
+            juce::MemoryBlock mb;
+            if (! f.loadFileAsData (mb)) { error = "Could not read " + f.getFileName(); return false; }
+            text.assign (static_cast<const char*> (mb.getData()), mb.getSize());
+        }
+        auto r = readMusicXml (text);
+        if (! r.ok) { error = r.error; return false; }
+        out = std::move (r.score);
+        if (out.title.empty() || out.title == "Untitled") out.title = f.getFileNameWithoutExtension().toStdString();
+        return true;
+    }
     juce::MemoryBlock mb;
     if (! f.loadFileAsData (mb)) { error = "Could not read " + f.getFileName(); return false; }
-    Score loaded;
     if (f.hasFileExtension ("noterator"))
     {
         auto r = loadScore (mb.toString().toStdString());
         if (! r.ok) { error = r.error; return false; }
-        loaded = std::move (r.score);
-        file = f;
+        out = std::move (r.score);
+        return true;
     }
-    else
-    {
-        std::vector<uint8_t> bytes (static_cast<const uint8_t*> (mb.getData()), static_cast<const uint8_t*> (mb.getData()) + mb.getSize());
-        auto r = readMidiFile (bytes);
-        if (! r.ok) { error = r.error; return false; }
-        loaded = std::move (r.score);
-        if (loaded.title == "Imported") loaded.title = f.getFileNameWithoutExtension().toStdString();
-        file = juce::File();   // saving a MIDI file's score makes a new project
-    }
+    std::vector<uint8_t> bytes (static_cast<const uint8_t*> (mb.getData()), static_cast<const uint8_t*> (mb.getData()) + mb.getSize());
+    auto r = readMidiFile (bytes);
+    if (! r.ok) { error = r.error; return false; }
+    out = std::move (r.score);
+    if (out.title == "Imported") out.title = f.getFileNameWithoutExtension().toStdString();
+    return true;
+}
+
+bool Controller::load (const juce::File& f, juce::String& error)
+{
+    Score loaded;
+    if (! readScoreFile (f, loaded, error)) return false;
+    // Only a project saves back to where it came from; a MIDI or MusicXML
+    // file opened here becomes a new project when it is saved.
+    file = f.hasFileExtension ("noterator") ? f : juce::File();
     audio.stop();
     score = std::move (loaded);
     undoStack.clear();
@@ -570,18 +624,15 @@ bool Controller::load (const juce::File& f, juce::String& error)
     return true;
 }
 
-bool Controller::importMidi (const juce::File& f, juce::String& error)
+bool Controller::importFile (const juce::File& f, juce::String& error)
 {
-    juce::MemoryBlock mb;
-    if (! f.loadFileAsData (mb)) { error = "Could not read " + f.getFileName(); return false; }
-    std::vector<uint8_t> bytes (static_cast<const uint8_t*> (mb.getData()), static_cast<const uint8_t*> (mb.getData()) + mb.getSize());
-    auto r = readMidiFile (bytes);
-    if (! r.ok) { error = r.error; return false; }
+    Score incoming;
+    if (! readScoreFile (f, incoming, error)) return false;
     const Tick at = score.barStart (score.barAt (caret));
     Selection added;
     edit ("Imported " + f.getFileName(), [&] (Score& s)
     {
-        for (auto& p : r.score.parts)
+        for (auto& p : incoming.parts)
         {
             Part np;
             np.id = s.newId();

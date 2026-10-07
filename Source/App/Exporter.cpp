@@ -1,6 +1,8 @@
 #include "Exporter.h"
 
+#include "Edit.h"
 #include "MidiFile.h"
+#include "MusicXml.h"
 
 namespace nt
 {
@@ -15,6 +17,24 @@ bool exportMidi (const Score& score, ExportRange range, bool withAutoCC, const j
     const auto bytes = writeMidiFile (score, o);
     file.deleteFile();
     if (! file.replaceWithData (bytes.data(), bytes.size()))
+    {
+        error = "Could not write " + file.getFullPathName();
+        return false;
+    }
+    return true;
+}
+
+bool exportMusicXml (const Score& score, ExportRange range, const juce::File& file, juce::String& error)
+{
+    Score slice = score;
+    if (range.from > 0 || range.to >= 0)
+    {
+        const int first = score.barAt (range.from);
+        const int last = range.to < 0 ? score.bars - 1 : std::max (first, score.barAt (range.to - 1));
+        if (last + 1 < slice.bars) deleteBars (slice, last + 1, slice.bars - last - 1);
+        if (first > 0) deleteBars (slice, 0, first);
+    }
+    if (! file.replaceWithText (writeMusicXml (slice), false, false, "\n"))
     {
         error = "Could not write " + file.getFullPathName();
         return false;

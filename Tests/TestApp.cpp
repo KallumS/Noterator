@@ -117,6 +117,46 @@ TEST ("app: a project saves and opens again")
     f.deleteFile();
 }
 
+TEST ("app: MusicXML out, bars at a time, and back in, plain and compressed")
+{
+    Controller c (audio());
+    c.newScore ("Piano");
+    c.setCaret (c.score.parts[0].id, 4 * PPQ);
+    for (int letter : { 0, 2, 4, 5 }) c.typeLetter (letter, false);
+    juce::String error;
+    const auto f = temp ("bars.musicxml");
+    CHECK (exportMusicXml (c.score, { 4 * PPQ, 8 * PPQ }, f, error));
+    Score back;
+    CHECK (Controller::readScoreFile (f, back, error));
+    CHECK_EQ (back.bars, 1);
+    CHECK_EQ (back.parts.size(), size_t (1));
+    if (! back.parts.empty())
+    {
+        CHECK_EQ (back.parts[0].notes.size(), size_t (4));
+        CHECK_EQ (back.parts[0].instrument, std::string ("pno"));
+    }
+
+    // The same file zipped as an .mxl, with the container that names it.
+    const auto mxl = temp ("bars.mxl");
+    mxl.deleteFile();
+    {
+        juce::ZipFile::Builder zip;
+        const auto container = temp ("container.xml");
+        container.replaceWithText ("<?xml version=\"1.0\"?><container><rootfiles><rootfile full-path=\"score/bars.musicxml\"/></rootfiles></container>");
+        zip.addFile (container, 9, "META-INF/container.xml");
+        zip.addFile (f, 9, "score/bars.musicxml");
+        juce::FileOutputStream out (mxl);
+        zip.writeToStream (out, nullptr);
+        container.deleteFile();
+    }
+    Score zipped;
+    CHECK (Controller::readScoreFile (mxl, zipped, error));
+    CHECK_EQ (zipped.parts.size(), size_t (1));
+    if (! zipped.parts.empty()) CHECK_EQ (zipped.parts[0].notes.size(), size_t (4));
+    f.deleteFile();
+    mxl.deleteFile();
+}
+
 int main (int argc, char** argv)
 {
     juce::ScopedJuceInitialiser_GUI init;

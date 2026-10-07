@@ -10,6 +10,7 @@ namespace
 enum MenuIds
 {
     menuNew = 1, menuOpen, menuImport, menuSave, menuSaveAs, menuExportMidi, menuExportMidiBars, menuExportAudio, menuExportAudioBars,
+    menuExportXml, menuExportXmlBars,
     menuUndo = 100, menuRedo, menuCut, menuCopy, menuPaste, menuDelete, menuSelectAll, menuVoice,
     menuPlay = 200, menuNoteInput, menuLightPage, menuTransposed, menuZoomIn, menuZoomOut, menuAudioSettings, menuHelp,
     menuTemplateBase = 1000
@@ -234,7 +235,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         for (int i = 0; i < names.size(); ++i) templates.addItem (menuTemplateBase + i, names[i]);
         m.addSubMenu ("New", templates);
         item (menuOpen, "Open...", "Cmd+O");
-        item (menuImport, "Import MIDI into this score...");
+        item (menuImport, "Import MIDI or MusicXML into this score...");
         m.addSeparator();
         item (menuSave, "Save", "Cmd+S");
         item (menuSaveAs, "Save As...", "Shift+Cmd+S");
@@ -243,6 +244,8 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         item (menuExportMidiBars, "Export Selected Bars as MIDI...");
         item (menuExportAudio, "Export Score as Audio (WAV)...");
         item (menuExportAudioBars, "Export Selected Bars as Audio (WAV)...");
+        item (menuExportXml, "Export Score as MusicXML...");
+        item (menuExportXmlBars, "Export Selected Bars as MusicXML...");
     }
     else if (index == 1)
     {
@@ -294,10 +297,12 @@ void MainComponent::menuItemSelected (int id, int)
         case menuImport: importDialog(); break;
         case menuSave: saveDialog (false); break;
         case menuSaveAs: saveDialog (true); break;
-        case menuExportMidi: exportDialog (false, false); break;
-        case menuExportMidiBars: exportDialog (false, true); break;
-        case menuExportAudio: exportDialog (true, false); break;
-        case menuExportAudioBars: exportDialog (true, true); break;
+        case menuExportMidi: exportDialog (ExportKind::midi, false); break;
+        case menuExportMidiBars: exportDialog (ExportKind::midi, true); break;
+        case menuExportAudio: exportDialog (ExportKind::audio, false); break;
+        case menuExportAudioBars: exportDialog (ExportKind::audio, true); break;
+        case menuExportXml: exportDialog (ExportKind::musicXml, false); break;
+        case menuExportXmlBars: exportDialog (ExportKind::musicXml, true); break;
         case menuUndo: c.undo(); break;
         case menuRedo: c.redo(); break;
         case menuCut: c.cutSelection(); break;
@@ -336,6 +341,9 @@ void MainComponent::showExportMenu()
     m.addSeparator();
     m.addItem (menuExportAudio, "Score as audio (WAV)...");
     m.addItem (menuExportAudioBars, "Selection (" + bars + ") as audio (WAV)...");
+    m.addSeparator();
+    m.addItem (menuExportXml, "Score as MusicXML (for Dorico, MuseScore, Sibelius)...");
+    m.addItem (menuExportXmlBars, "Selection (" + bars + ") as MusicXML...");
     m.showMenuAsync (juce::PopupMenu::Options(), [this] (int r) { if (r > 0) menuItemSelected (r, 0); });
 }
 
@@ -387,7 +395,8 @@ void MainComponent::openDialog()
 {
     checkSaved ([this]
     {
-        chooser = std::make_unique<juce::FileChooser> ("Open a score or a MIDI file", lastFolder, "*.noterator;*.mid;*.midi");
+        chooser = std::make_unique<juce::FileChooser> ("Open a score, a MIDI file or a MusicXML file", lastFolder,
+                                                      "*.noterator;*.mid;*.midi;*.musicxml;*.mxl;*.xml");
         chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc)
         {
             const auto f = fc.getResult();
@@ -398,13 +407,14 @@ void MainComponent::openDialog()
 
 void MainComponent::importDialog()
 {
-    chooser = std::make_unique<juce::FileChooser> ("Import a MIDI file into this score, at the caret's bar", lastFolder, "*.mid;*.midi");
+    chooser = std::make_unique<juce::FileChooser> ("Import a MIDI or MusicXML file into this score, at the caret's bar", lastFolder,
+                                                  "*.mid;*.midi;*.musicxml;*.mxl;*.xml");
     chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc)
     {
         const auto f = fc.getResult();
         if (! f.existsAsFile()) return;
         juce::String error;
-        if (! controller.importMidi (f, error))
+        if (! controller.importFile (f, error))
             juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Could not import " + f.getFileName(), error);
         lastFolder = f.getParentDirectory();
     });
@@ -434,7 +444,7 @@ void MainComponent::saveDialog (bool saveAs, std::function<void()> then)
     });
 }
 
-void MainComponent::exportDialog (bool audioFile, bool selectedBars)
+void MainComponent::exportDialog (ExportKind kind, bool selectedBars)
 {
     ExportRange range;
     juce::String suffix;
@@ -445,18 +455,26 @@ void MainComponent::exportDialog (bool audioFile, bool selectedBars)
         range.to = controller.score.barStart (b + 1);
         suffix = a == b ? " bar " + juce::String (a + 1) : " bars " + juce::String (a + 1) + "-" + juce::String (b + 1);
     }
-    const juce::String ext = audioFile ? "wav" : "mid";
+    const bool audioFile = kind == ExportKind::audio;
+    const juce::String ext = audioFile ? "wav" : kind == ExportKind::musicXml ? "musicxml" : "mid";
     const auto suggested = (lastFolder.isDirectory() ? lastFolder : juce::File::getSpecialLocation (juce::File::userDocumentsDirectory))
                                .getChildFile (juce::File::createLegalFileName (juce::String (controller.score.title) + suffix) + "." + ext);
-    chooser = std::make_unique<juce::FileChooser> (audioFile ? "Export audio" : "Export MIDI", suggested, "*." + ext);
+    chooser = std::make_unique<juce::FileChooser> (audioFile ? "Export audio" : kind == ExportKind::musicXml ? "Export MusicXML" : "Export MIDI",
+                                                   suggested, "*." + ext);
     chooser->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
-                          [this, audioFile, range, ext] (const juce::FileChooser& fc)
+                          [this, kind, audioFile, range, ext] (const juce::FileChooser& fc)
     {
         auto f = fc.getResult();
         if (f == juce::File()) return;
         f = f.withFileExtension (ext);
         lastFolder = f.getParentDirectory();
         juce::String error;
+        if (kind == ExportKind::musicXml)
+        {
+            if (exportMusicXml (controller.score, range, f, error)) controller.setStatus ("Exported " + f.getFileName());
+            else juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Could not export", error);
+            return;
+        }
         if (! audioFile)
         {
             if (exportMidi (controller.score, range, true, f, error)) controller.setStatus ("Exported " + f.getFileName());
@@ -500,7 +518,8 @@ void MainComponent::exportDialog (bool audioFile, bool selectedBars)
 bool MainComponent::isInterestedInFileDrag (const juce::StringArray& files)
 {
     for (const auto& f : files)
-        if (f.endsWithIgnoreCase (".mid") || f.endsWithIgnoreCase (".midi") || f.endsWithIgnoreCase (".noterator")) return true;
+        for (const char* ext : { ".mid", ".midi", ".noterator", ".musicxml", ".mxl", ".xml" })
+            if (f.endsWithIgnoreCase (ext)) return true;
     return false;
 }
 
@@ -510,9 +529,9 @@ void MainComponent::filesDropped (const juce::StringArray& files, int, int)
     {
         const juce::File f (path);
         if (f.hasFileExtension ("noterator")) { checkSaved ([this, f] { openFile (f); }); return; }
-        // A MIDI file dropped on a score joins it, at the caret's bar.
+        // A MIDI or MusicXML file dropped on a score joins it, at the caret's bar.
         juce::String error;
-        if (! controller.importMidi (f, error))
+        if (! controller.importFile (f, error))
             juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::WarningIcon, "Could not import " + f.getFileName(), error);
     }
 }

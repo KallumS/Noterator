@@ -67,7 +67,8 @@ private:
     void openDialog();
     void saveDialog (bool saveAs, std::function<void()> then = {});
     void importDialog();
-    void exportDialog (bool audioFile, bool selectedBars);
+    enum class ExportKind { midi, audio, musicXml };
+    void exportDialog (ExportKind kind, bool selectedBars);
     void audioSettingsDialog();
     void showHelp();
     void updateTitle();

@@ -60,6 +60,8 @@ add_library(NoteratorCore STATIC
     Source/Core/Edit.cpp
     Source/Core/Engrave.cpp
     Source/Core/ScoreFile.cpp
+    Source/Core/Xml.cpp
+    Source/Core/MusicXml.cpp
     Source/Engines/LuaEngine.cpp
     Source/Engines/Generators.cpp
     ${EMBEDDED_LUA_CPP})
@@ -78,7 +80,8 @@ if(NOTERATOR_BUILD_TESTS)
         Tests/TestEngrave.cpp
         Tests/TestDetect.cpp
         Tests/TestMidi.cpp
-        Tests/TestGenerators.cpp)
+        Tests/TestGenerators.cpp
+        Tests/TestMusicXml.cpp)
     target_link_libraries(NoteratorTests PRIVATE NoteratorCore)
     add_test(NAME Core COMMAND NoteratorTests)
 endif()
@@ -110,7 +113,7 @@ juce_add_gui_app(Noterator
     COMPANY_NAME          "kallums"
     BUNDLE_ID             "com.kallums.noterator"
     VERSION               ${PROJECT_VERSION}
-    DOCUMENT_EXTENSIONS   noterator mid midi
+    DOCUMENT_EXTENSIONS   noterator mid midi musicxml mxl
     MICROPHONE_PERMISSION_ENABLED FALSE
     ICON_BIG              ${CMAKE_CURRENT_SOURCE_DIR}/Resources/Icon.png)
 

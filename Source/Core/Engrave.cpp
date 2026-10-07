@@ -1077,6 +1077,7 @@ Layout layout (const Score& score, const Options& options)
                         ++j;
                     }
                     Tuplet t;
+                    t.elements = group;
                     const auto& a = st.elements[static_cast<size_t> (group.front())];
                     const auto& z = st.elements[static_cast<size_t> (group.back())];
                     const int beam = a.beam;
