@@ -38,6 +38,7 @@
 #include "Score.h"
 #include "Spelling.h"
 
+#include <cmath>
 #include <map>
 #include <string>
 #include <vector>
@@ -106,7 +107,7 @@ struct Beam
     struct Segment { int level; double xa, xb; };
     std::vector<Segment> segments;
     int tuplet = 0;
-    double yAt (double x) const { return x2 == x1 ? y1 : y1 + (y2 - y1) * (x - x1) / (x2 - x1); }
+    double yAt (double x) const { return std::abs (x2 - x1) < 1e-9 ? y1 : y1 + (y2 - y1) * (x - x1) / (x2 - x1); }
 };
 
 struct Tuplet

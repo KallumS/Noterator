@@ -281,7 +281,6 @@ void ScoreView::paintGutter (juce::Graphics& g)
 
 void ScoreView::paintLanes (juce::Graphics& g)
 {
-    const auto page = controller.lightPage ? theme::lightPage() : theme::darkPage();
     const auto& lay = controller.layout;
     g.setColour (theme::sunken);
     g.fillRect (0, 0, getWidth(), lanesHeight);

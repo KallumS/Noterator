@@ -37,9 +37,8 @@ bool renderAudio (const Score& score, ExportRange range, SynthBackend& synth, co
     std::unique_ptr<juce::OutputStream> stream (file.createOutputStream().release());
     if (stream == nullptr) { error = "Could not write " + file.getFullPathName(); return false; }
     juce::WavAudioFormat wav;
-    std::unique_ptr<juce::AudioFormatWriter> writer (wav.createWriterFor (stream.get(), rate, 2, 24, {}, 0));
+    auto writer = wav.createWriterFor (stream, juce::AudioFormatWriterOptions().withSampleRate (rate).withNumChannels (2).withBitsPerSample (24));
     if (writer == nullptr) { error = "Could not start a WAV file."; return false; }
-    stream.release();   // the writer owns it now
 
     synth.prepare (rate, block);
     juce::AudioBuffer<float> buffer (2, block);

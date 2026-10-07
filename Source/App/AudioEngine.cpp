@@ -107,7 +107,7 @@ private:
             v->velocity = m.getFloatVelocity();
             v->kind = kindFor (c.program, c.drums, v->note);
             v->freq = 440.0 * std::pow (2.0, (v->note - 69) / 12.0);
-            v->rng = static_cast<uint32_t> (v->note * 2654435761u + 1u);
+            v->rng = static_cast<uint32_t> (v->note) * 2654435761u + 1u;
             switch (v->kind)
             {
                 case pluck:   v->attack = 0.003f; v->decay = static_cast<float> (juce::jlimit (0.3, 3.0, 400.0 / v->freq)); v->sustain = 0.0f; v->release = 0.25f; break;

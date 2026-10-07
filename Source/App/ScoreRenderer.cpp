@@ -66,8 +66,9 @@ int clefOffset (Clef c)
         case Clef::bass: return -2;
         case Clef::alto: return -1;
         case Clef::tenor: return 1;
-        default: return 0;
+        case Clef::treble: case Clef::treble8vb: case Clef::percussion: return 0;
     }
+    return 0;
 }
 
 juce::juce_wchar clefGlyph (Clef c)
@@ -78,8 +79,9 @@ juce::juce_wchar clefGlyph (Clef c)
         case Clef::alto: case Clef::tenor: return smufl::cClef;
         case Clef::treble8vb: return smufl::gClef8vb;
         case Clef::percussion: return smufl::percussionClef;
-        default: return smufl::gClef;
+        case Clef::treble: return smufl::gClef;
     }
+    return smufl::gClef;
 }
 
 // The line the clef's origin sits on, in spaces down from the top line.
@@ -90,8 +92,9 @@ float clefLine (Clef c)
         case Clef::bass: return 1.0f;
         case Clef::alto: case Clef::percussion: return 2.0f;
         case Clef::tenor: return 1.0f;
-        default: return 3.0f;
+        case Clef::treble: case Clef::treble8vb: return 3.0f;
     }
+    return 3.0f;
 }
 
 float headY (int pos) { return 4.0f - static_cast<float> (pos) * 0.5f; }
@@ -189,7 +192,7 @@ void ScoreRenderer::drawStaffStart (juce::Graphics& g, const Staff& staff, const
     if (withTime) drawTime (g, m.meter, x + (4.4f + keyWidth (m.key)) * sp, y, sp);
 }
 
-void ScoreRenderer::draw (juce::Graphics& g, const Layout& lay, const Score& score, const RenderStyle& style,
+void ScoreRenderer::draw (juce::Graphics& g, const Layout& lay, const Score&, const RenderStyle& style,
                           juce::Point<float> origin, juce::Rectangle<float> clip)
 {
     const float sp = style.space;
