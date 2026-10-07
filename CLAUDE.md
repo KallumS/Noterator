@@ -93,7 +93,11 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **Never edit `Engines/<app>/*.lua`.** Fix it in that app's repository and copy
   it across (`tools/sync_engines.sh`), so the copies never drift. Record the
   commit in `Engines/VENDORED.md`. Adapters are fair game.
-- **`ScaleModel.h` is ScaleView's file.** Chord naming changes start there.
+- **`ScaleModel.h` is the ScaleView plugin's file, and ScaleView Pro is the
+  reference.** A chord-naming change is made and measured in ScaleView Pro
+  (`ScaleView-for-Reaper/reascripts/ScaleView Pro.lua`), ported to the
+  plugin's `Source/ScaleModel.h` with its output diffed against Pro, and
+  copied here unchanged. Never the other way round.
 - **The audio thread does not allocate or lock** beyond try-locks: the
   sequence is swapped in whole (`std::atomic_store`), messages from the window
   queue under a lock the audio thread only tries.
