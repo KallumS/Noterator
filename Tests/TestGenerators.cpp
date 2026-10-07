@@ -142,3 +142,89 @@ TEST ("generators: chords made for a tune go beside it, never over it")
     CHECK_EQ (s.parts[3].notes.size(), size_t (1));            // the bass went to the cello, which was free
     CHECK_EQ (polyphonyOf (chords.notes), 3);
 }
+
+TEST ("generators: a result fills a span exactly, repeated and cut")
+{
+    GeneratedResult r;
+    r.length = 4 * PPQ;
+    GeneratedPart p; p.name = "Melody";
+    for (int i = 0; i < 4; ++i) { Note n; n.start = i * PPQ; n.length = PPQ; n.pitch = 60 + i; p.notes.push_back (n); }
+    r.parts = { p };
+    const auto longer = fitToSpan (r, 10 * PPQ);   // two and a half times
+    CHECK_EQ (longer.length, 10 * PPQ);
+    CHECK_EQ (longer.parts[0].notes.size(), size_t (10));
+    CHECK_EQ (longer.parts[0].notes.back().start, 9 * PPQ);
+    const auto shorter = fitToSpan (r, 2 * PPQ + PPQ / 2);
+    CHECK_EQ (shorter.parts[0].notes.size(), size_t (3));
+    CHECK_EQ (shorter.parts[0].notes.back().length, PPQ / 2);
+}
+
+TEST ("generators: chords dealt out one note to a part, top note first")
+{
+    std::vector<Note> chords;
+    for (int p : { 60, 64, 67 }) { Note n; n.start = 0; n.length = PPQ; n.pitch = p; chords.push_back (n); }
+    for (int p : { 62, 65 }) { Note n; n.start = PPQ; n.length = PPQ; n.pitch = p; chords.push_back (n); }
+    const auto lines = spreadChords (chords, 3);
+    CHECK_EQ (lines.size(), size_t (3));
+    CHECK_EQ (lines[0][0].pitch, 67);
+    CHECK_EQ (lines[1][0].pitch, 64);
+    CHECK_EQ (lines[2][0].pitch, 60);
+    CHECK_EQ (lines[2][1].pitch, 62);   // two notes for three parts: the lowest doubled
+    for (const auto& l : lines) CHECK_EQ (l.size(), size_t (2));
+}
+
+TEST ("generators: a measure into four selected bars of a string quartet")
+{
+    Score s;
+    for (const char* id : { "vln1", "vln2", "vla", "vc" })
+    {
+        Part p; p.id = s.newId(); p.instrument = id; p.name = instrumentById (id).name;
+        s.parts.push_back (p);
+    }
+    writeNote (s, s.parts[1].id, 0, PPQ, 60, 0);            // something outside the span, kept
+    writeNote (s, s.parts[0].id, 5 * PPQ, PPQ, 76, 0);      // something inside it, replaced
+    GeneratedResult r;
+    r.length = 8 * PPQ;
+    GeneratedPart melody; melody.name = "Melody";
+    GeneratedPart chords; chords.name = "Chords";
+    GeneratedPart bass; bass.name = "Bass";
+    for (int bar = 0; bar < 2; ++bar)
+    {
+        { Note n; n.start = bar * 4 * PPQ; n.length = 4 * PPQ; n.pitch = 79; melody.notes.push_back (n); }
+        for (int p : { 60, 64, 67 }) { Note n; n.start = bar * 4 * PPQ; n.length = 4 * PPQ; n.pitch = p; chords.notes.push_back (n); }
+        { Note n; n.start = bar * 4 * PPQ; n.length = 4 * PPQ; n.pitch = 36; bass.notes.push_back (n); }
+    }
+    r.parts = { melody, chords, bass };
+    std::vector<uint32_t> ids;
+    for (const auto& p : s.parts) ids.push_back (p.id);
+    insertIntoRange (s, r, ids, 4 * PPQ, 20 * PPQ);         // bars 2 to 5
+    CHECK_EQ (s.parts.size(), size_t (4));                   // no new parts: everything fitted
+    // The tune twice over four bars in the first violins, the old note gone.
+    CHECK_EQ (s.parts[0].notes.size(), size_t (4));
+    for (const auto& n : s.parts[0].notes) CHECK (n.start >= 4 * PPQ && n.end() <= 20 * PPQ);
+    // Chords dealt to the second violins and violas, one note each.
+    CHECK_EQ (s.parts[1].notes.size(), size_t (5));          // its own note at the start, kept, plus four
+    CHECK_EQ (s.parts[2].notes.size(), size_t (4));
+    for (size_t i = 1; i < 3; ++i) CHECK_EQ (polyphonyOf (s.parts[i].notes), 1);
+    // The bass in the cellos.
+    CHECK_EQ (s.parts[3].notes.size(), size_t (4));
+    const auto& vc = instrumentById ("vc");
+    for (const auto& n : s.parts[3].notes) CHECK (n.pitch >= vc.low && n.pitch <= vc.high);
+}
+
+TEST ("generators: Good Idea fits its length to the selected bars")
+{
+    auto& e = engineInstance();
+    Score s;
+    Part p; p.id = s.newId(); p.instrument = "fl"; p.name = "Flute";
+    s.parts = { p };
+    auto ctx = contextFor (s, p.id, 0, {});
+    ctx.rangeBars = 3;
+    e.reset ("good-idea");
+    const auto out = e.generate ("good-idea", ctx, 1, 6);
+    CHECK (! out.results.empty());
+    for (const auto& r : out.results) CHECK (r.length <= 3 * 4 * PPQ);   // a motif or phrase of at most three bars
+    const auto settings = e.settings ("good-idea", ctx);
+    for (const auto& st : settings)
+        if (st.id == "motifBars") CHECK_EQ (st.names[static_cast<size_t> (st.index)], std::string ("Any"));   // left as it was
+}

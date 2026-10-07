@@ -49,6 +49,7 @@ struct GeneratorContext
     double bpm = 120.0;
     std::string instrument;           // the target part's instrument id
     int bars = 4;
+    int rangeBars = 0;                // bars selected to generate into, or 0
     std::vector<Note> selection;      // starts relative to the selection's first bar
     Tick selectionLength = 0;
     bool selectionIsDrums = false;

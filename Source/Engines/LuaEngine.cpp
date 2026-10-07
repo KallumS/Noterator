@@ -248,6 +248,7 @@ void LuaEngine::pushContext (const GeneratorContext& ctx)
     lua_pushstring (L, inst.id.c_str()); lua_setfield (L, -2, "inst");
     lua_pushstring (L, inst.catalogueId.c_str()); lua_setfield (L, -2, "catalogueId");
     lua_pushinteger (L, ctx.bars); lua_setfield (L, -2, "bars");
+    lua_pushinteger (L, ctx.rangeBars); lua_setfield (L, -2, "rangeBars");
     lua_createtable (L, 0, 3);
     pushNotes (L, ctx.selection);
     lua_setfield (L, -2, "notes");
