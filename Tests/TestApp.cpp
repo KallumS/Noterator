@@ -156,13 +156,40 @@ TEST ("app: audio renders, and is not silent, through both synths")
     for (int letter : { 0, 2, 4, 5, 4, 2, 0 }) c.typeLetter (letter, false);
     for (bool builtIn : { false, true })
     {
-        juce::String desc, error;
-        auto synth = createSynth (builtIn, desc);
-        std::printf ("  (rendering through %s)\n", desc.toRawUTF8());
+        juce::String error;
+        SynthRack synth (builtIn);
+        std::printf ("  (rendering through %s)\n", synth.description().toRawUTF8());
         const auto f = temp (builtIn ? "builtin.wav" : "system.wav");
-        CHECK (renderAudio (c.score, { 0, 8 * PPQ }, *synth, f, {}, error));
+        CHECK (renderAudio (c.score, { 0, 8 * PPQ }, synth, f, {}, error));
         const double rms = rmsOf (f);
         std::printf ("  (rms %.5f)\n", rms);
+        CHECK (rms > 0.0005);
+        f.deleteFile();
+    }
+}
+
+TEST ("app: the last part of a full orchestra sounds, through a second synth")
+{
+    Controller c (audio());
+    c.newScore ("Full Orchestra");
+    CHECK_EQ (c.score.parts.size(), size_t (28));
+    CHECK_EQ (banksFor (c.score), 2);
+    // Only the double basses play: their channel is in the second bank.
+    c.setCaret (c.score.parts.back().id, 0);
+    for (int letter : { 0, 4, 0, 4 }) c.typeLetter (letter, false);
+    for (bool builtIn : { false, true })
+    {
+        juce::String error;
+        SynthRack one (builtIn);
+        const auto f = temp ("orchestra.wav");
+        // A rack with one synth refuses rather than playing them silently.
+        CHECK (! renderAudio (c.score, { 0, 4 * PPQ }, one, f, {}, error));
+        SynthRack rack (builtIn);
+        rack.ensureBanks (banksFor (c.score));
+        CHECK_EQ (rack.banks(), 2);
+        CHECK (renderAudio (c.score, { 0, 4 * PPQ }, rack, f, {}, error));
+        const double rms = rmsOf (f);
+        std::printf ("  (double basses through %s, second synth: rms %.5f)\n", rack.description().toRawUTF8(), rms);
         CHECK (rms > 0.0005);
         f.deleteFile();
     }

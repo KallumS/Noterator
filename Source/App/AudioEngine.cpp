@@ -307,6 +307,59 @@ std::unique_ptr<SynthBackend> createSynth (bool preferBuiltIn, juce::String& des
     return std::make_unique<BasicSynth>();
 }
 
+//==============================================================================
+
+SynthRack::SynthRack (bool preferBuiltIn) : builtIn (preferBuiltIn)
+{
+    synths.push_back (createSynth (builtIn, desc));
+}
+
+SynthRack::~SynthRack() { release(); }
+
+void SynthRack::ensureBanks (int banks)
+{
+    banks = std::clamp (banks, 1, maxBanks);
+    while (static_cast<int> (synths.size()) < banks)
+    {
+        juce::String ignored;
+        auto s = createSynth (builtIn, ignored);
+        if (block > 0) s->prepare (rate, block);
+        synths.push_back (std::move (s));
+    }
+}
+
+void SynthRack::prepare (double sampleRate, int blockSize)
+{
+    rate = sampleRate;
+    block = blockSize;
+    scratch.setSize (2, std::max (1, blockSize) * 2);
+    for (auto& s : synths) s->prepare (rate, block);
+}
+
+void SynthRack::release()
+{
+    if (block <= 0) return;
+    for (auto& s : synths) s->release();
+    block = 0;
+}
+
+void SynthRack::render (juce::AudioBuffer<float>& buffer, BankMidi& midi)
+{
+    const int n = buffer.getNumSamples();
+    synths.front()->render (buffer, midi[0]);
+    for (size_t b = 1; b < synths.size(); ++b)
+    {
+        if (scratch.getNumSamples() < n) scratch.setSize (2, n, false, false, true);   // only if the device grew its block
+        juce::AudioBuffer<float> view (scratch.getArrayOfWritePointers(), std::min (2, buffer.getNumChannels()), n);
+        view.clear();
+        synths[b]->render (view, midi[b]);
+        for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+            buffer.addFrom (ch, 0, view, std::min (ch, view.getNumChannels() - 1), 0, n);
+    }
+}
+
+int banksFor (const Score& score) { return banksForParts (channelsForParts (score)); }
+
 std::shared_ptr<const Sequence> makeSequence (const Score& score, Tick from, Tick to, const PerformOptions& base)
 {
     auto seq = std::make_shared<Sequence>();
@@ -316,7 +369,9 @@ std::shared_ptr<const Sequence> makeSequence (const Score& score, Tick from, Tic
     const double origin = score.secondsAt (from);
     for (const auto& e : perform (score, o))
     {
-        const int ch = e.channel + 1;
+        const int bank = std::min (e.channel / channelsPerBank, maxBanks - 1);
+        const int ch = e.channel % channelsPerBank + 1;
+        seq->banks = std::max (seq->banks, bank + 1);
         juce::MidiMessage m;
         switch (e.type)
         {
@@ -326,7 +381,7 @@ std::shared_ptr<const Sequence> makeSequence (const Score& score, Tick from, Tic
             case PlayEvent::program:    m = juce::MidiMessage::programChange (ch, e.data1); break;
         }
         const double t = score.secondsAt (e.at + from) - origin;
-        seq->events.push_back ({ std::max (0.0, t), m, e.noteId, e.part });
+        seq->events.push_back ({ std::max (0.0, t), m, e.noteId, e.part, bank });
         seq->length = std::max (seq->length, t);
     }
     seq->from = from;
@@ -340,7 +395,8 @@ AudioEngine::AudioEngine()
     queue.reserve (1024);
     pending.reserve (1024);
     sounding.reserve (512);
-    synth = createSynth (false, synthDescription);
+    for (auto& m : blockMidi) m.ensureSize (8192);
+    synth = std::make_unique<SynthRack> (false);
     deviceManager.initialiseWithDefaultDevices (0, 2);
     deviceManager.addAudioCallback (this);
     openMidiInputs();
@@ -366,17 +422,24 @@ void AudioEngine::openMidiInputs()
 void AudioEngine::useBuiltInSynth (bool builtIn)
 {
     builtInOnly = builtIn;
-    juce::String desc;
-    auto fresh = createSynth (builtIn, desc);
+    auto fresh = std::make_unique<SynthRack> (builtIn);
+    fresh->ensureBanks (synth != nullptr ? synth->banks() : 1);
     if (auto* dev = deviceManager.getCurrentAudioDevice())
         fresh->prepare (dev->getCurrentSampleRate(), dev->getCurrentBufferSizeSamples());
     {
         const juce::ScopedLock sl (synthLock);
         std::swap (synth, fresh);
-        synthDescription = desc;
         previewProgram = liveProgram = -1;
     }
-    if (fresh) fresh->release();
+}
+
+void AudioEngine::ensureBanks (int banks)
+{
+    if (synth == nullptr || synth->banks() >= banks) return;
+    // Made here, on the message thread, then added while the audio thread
+    // is kept out for a moment.
+    const juce::ScopedLock sl (synthLock);
+    synth->ensureBanks (banks);
 }
 
 void AudioEngine::play (const Score& score, Tick from, Tick to)
@@ -386,6 +449,7 @@ void AudioEngine::play (const Score& score, Tick from, Tick to)
     // and volume from AutoCC, a sample library gets all four (decision 0008).
     o.autoCCControllers = { 7, 11 };
     auto seq = makeSequence (score, from, to, o);
+    ensureBanks (seq->banks);
     stop();
     std::atomic_store (&sequence, seq);
     positionSeconds.store (0.0);
@@ -402,6 +466,7 @@ void AudioEngine::update (const Score& score)
     PerformOptions o;
     o.autoCCControllers = { 7, 11 };
     auto seq = makeSequence (score, current->from, -1, o);
+    ensureBanks (seq->banks);
     std::atomic_store (&sequence, seq);
     sequenceChanged.store (true);
 }
@@ -521,7 +586,9 @@ void AudioEngine::audioDeviceIOCallbackWithContext (const float* const*, int, fl
     const juce::ScopedTryLock synthTry (synthLock);
     if (! synthTry.isLocked() || synth == nullptr) return;
 
-    juce::MidiBuffer midi;
+    for (auto& m : blockMidi) m.clear();
+    // Previews and the MIDI keyboard play on the first synth's own channels.
+    auto& midi = blockMidi[0];
     midiCollector.removeNextBlockOfMessages (midi, numSamples);
     const double blockSeconds = numSamples / sampleRate;
 
@@ -558,12 +625,13 @@ void AudioEngine::audioDeviceIOCallbackWithContext (const float* const*, int, fl
             // go of whatever was held, so nothing hangs.
             cursor = 0;
             while (cursor < seq->events.size() && seq->events[cursor].seconds < pos) ++cursor;
-            for (int ch = 1; ch <= 16; ++ch) midi.addEvent (juce::MidiMessage::allNotesOff (ch), 0);
+            for (auto& bank : blockMidi)
+                for (int ch = 1; ch <= 16; ++ch) bank.addEvent (juce::MidiMessage::allNotesOff (ch), 0);
             // Programs and levels from the top, so they hold wherever play starts.
             for (const auto& e : seq->events)
             {
                 if (e.seconds > 0.0) break;
-                if (! e.message.isNoteOn()) midi.addEvent (e.message, 0);
+                if (! e.message.isNoteOn()) blockMidi[static_cast<size_t> (e.bank)].addEvent (e.message, 0);
             }
             const juce::SpinLock::ScopedTryLockType sl (soundingLock);
             if (sl.isLocked()) sounding.clear();
@@ -574,7 +642,7 @@ void AudioEngine::audioDeviceIOCallbackWithContext (const float* const*, int, fl
         {
             const auto& e = seq->events[cursor];
             const int at = juce::jlimit (0, numSamples - 1, static_cast<int> ((e.seconds - pos) * sampleRate));
-            midi.addEvent (e.message, at);
+            blockMidi[static_cast<size_t> (e.bank)].addEvent (e.message, at);
             if (e.noteId != 0)
             {
                 const juce::SpinLock::ScopedTryLockType sl (soundingLock);
@@ -599,7 +667,7 @@ void AudioEngine::audioDeviceIOCallbackWithContext (const float* const*, int, fl
     }
 
     juce::AudioBuffer<float> buffer (outputs, std::max (1, std::min (numOuts, 2)), numSamples);
-    synth->render (buffer, midi);
+    synth->render (buffer, blockMidi);
     // A gentle ceiling, so a full orchestra does not clip.
     for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
     {

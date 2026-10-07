@@ -42,9 +42,20 @@ struct PerformOptions
     bool includeSetup = true;         // program and volume at the top of each channel
 };
 
-// The channel each part plays on: in order, skipping 10, which belongs to the
-// drums. Past fifteen pitched parts the channels are shared.
+// A synth has sixteen channels; a big score plays through more than one
+// (decision 0023). A part's channel is bank * 16 + the channel in that bank.
+constexpr int channelsPerBank = 16;
+constexpr int maxBanks = 4;
+// Channels 15 and 16 of the first bank are kept for the MIDI keyboard and for
+// previews, so a part never shares one with them.
+constexpr int liveChannel = 14, previewChannel = 15, drumChannel = 9;
+
+// The channel each part plays on: every drum part on channel 10, every other
+// part a channel of its own - through the first bank, then the next - and
+// only past maxBanks are channels shared.
 std::vector<int> channelsForParts (const Score& score);
+// How many banks (synths) those channels need.
+int banksForParts (const std::vector<int>& channels);
 
 // Events from `from` to `to`, shifted so `from` is tick 0, sorted with
 // note-offs before note-ons at the same tick.

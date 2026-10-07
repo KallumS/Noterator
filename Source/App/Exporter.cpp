@@ -42,7 +42,7 @@ bool exportMusicXml (const Score& score, ExportRange range, const juce::File& fi
     return true;
 }
 
-bool renderAudio (const Score& score, ExportRange range, SynthBackend& synth, const juce::File& file,
+bool renderAudio (const Score& score, ExportRange range, SynthRack& synth, const juce::File& file,
                   const std::function<bool (double)>& progress, juce::String& error)
 {
     constexpr double rate = 48000.0;
@@ -62,9 +62,13 @@ bool renderAudio (const Score& score, ExportRange range, SynthBackend& synth, co
 
     synth.prepare (rate, block);
     juce::AudioBuffer<float> buffer (2, block);
-    juce::MidiBuffer midi;
-    // Silence on every channel to start, whatever the synth was doing.
-    for (int ch = 1; ch <= 16; ++ch) midi.addEvent (juce::MidiMessage::allNotesOff (ch), 0);
+    // The rack must already have a synth for every bank: an Audio Unit is
+    // made on the message thread, and this runs on its own (decision 0023).
+    if (synth.banks() < seq->banks) { error = "Not enough synths were made for this score."; return false; }
+    BankMidi midi;
+    // Silence on every channel to start, whatever the synths were doing.
+    for (auto& bank : midi)
+        for (int ch = 1; ch <= 16; ++ch) bank.addEvent (juce::MidiMessage::allNotesOff (ch), 0);
     size_t cursor = 0;
     for (juce::int64 done = 0; done < total; done += block)
     {
@@ -72,10 +76,10 @@ bool renderAudio (const Score& score, ExportRange range, SynthBackend& synth, co
         while (cursor < seq->events.size() && seq->events[cursor].seconds < t1)
         {
             const auto& e = seq->events[cursor++];
-            midi.addEvent (e.message, juce::jlimit (0, block - 1, static_cast<int> ((e.seconds - t0) * rate)));
+            midi[static_cast<size_t> (e.bank)].addEvent (e.message, juce::jlimit (0, block - 1, static_cast<int> ((e.seconds - t0) * rate)));
         }
         synth.render (buffer, midi);
-        midi.clear();
+        for (auto& bank : midi) bank.clear();
         for (int ch = 0; ch < 2; ++ch)
         {
             auto* d = buffer.getWritePointer (ch);

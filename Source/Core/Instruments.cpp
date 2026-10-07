@@ -61,6 +61,9 @@ std::vector<Instrument> build()
     add (transposing (make ("cbsn", "Contrabassoon", "Cbsn.", "Woodwind", 22, 53, 26, 48, 'B', 1, 0.25, 9, true, 70, { C::bass }, S::woodwinds, "cbsn"), 12, 0, {}));
     add (transposing (make ("asax", "Alto Saxophone", "A. Sax.", "Woodwind", 49, 80, 53, 76, 'A', 1, 0.09, 12, true, 65, { C::treble }, S::woodwinds, {}), 0, 9, "in Eb"));
     add (transposing (make ("tsax", "Tenor Saxophone", "T. Sax.", "Woodwind", 44, 75, 48, 70, 'T', 1, 0.09, 12, true, 66, { C::treble8vb }, S::woodwinds, {}), 12, 2, "in Bb"));
+    // Sounds an octave and a sixth below what is written; set like the tenor,
+    // an octave up on an octave clef, so the concert score reads true.
+    add (transposing (make ("bsax", "Baritone Saxophone", "Bari. Sax.", "Woodwind", 36, 69, 40, 62, 'B', 1, 0.10, 12, true, 67, { C::treble8vb }, S::woodwinds, {}), 12, 9, "in Eb"));
 
     // Brass
     add (transposing (make ("hn", "Horn", "Hn.", "Brass",          35,  77, 48, 72, 'A', 1, 0.14,  9, true,  60, { C::treble }, S::brass, "hn"), 0, 7, "in F"));
@@ -74,6 +77,7 @@ std::vector<Instrument> build()
     add (transposing (make ("glock", "Glockenspiel", "Glock.", "Percussion", 79, 108, 79, 103, 'S', 2, 0.13, 12, false, 9, { C::treble }, S::none, "glock"), -24, 0, {}));
     add (transposing (make ("xyl", "Xylophone", "Xyl.", "Percussion", 65, 108, 67, 100, 'S', 2, 0.09, 12, false, 13, { C::treble }, S::none, "xyl"), -12, 0, {}));
     add (make ("mar",  "Marimba",       "Mar.",    "Percussion",  45,  96, 48, 88, 'A', 4, 0.09, 12, false, 12, grand,           S::none, "mar"));
+    add (make ("vib",  "Vibraphone",    "Vib.",    "Percussion",  53,  89, 55, 84, 'A', 4, 0.09, 12, false, 11, { C::treble }, S::none, {}));
     {
         auto kit = make ("kit", "Drum Kit", "Dr.", "Percussion",  35,  81, 35, 81, 'B', 4, 0.05, 127, false, 0, { C::percussion }, S::none, {});
         kit.drums = true;
@@ -95,6 +99,9 @@ std::vector<Instrument> build()
     // Band
     add (transposing (make ("gtr", "Guitar", "Gtr.", "Band",      40,  83, 45, 76, 'A', 6, 0.08, 12, false, 24, { C::treble8vb }, S::none, {}), 12, 0, {}));
     add (transposing (make ("ebass", "Bass Guitar", "Bass", "Band", 28, 67, 28, 55, 'B', 1, 0.09, 12, false, 33, { C::bass }, S::none, {}), 12, 0, {}));
+    // The jazz double bass: plucked, so General MIDI's acoustic bass, not the
+    // bowed contrabass of the orchestra.
+    add (transposing (make ("ubass", "Upright Bass", "U. Bass", "Band", 28, 67, 28, 55, 'B', 1, 0.10, 12, false, 32, { C::bass }, S::none, {}), 12, 0, {}));
 
     return list;
 }

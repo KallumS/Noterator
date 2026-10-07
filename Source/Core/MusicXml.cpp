@@ -171,7 +171,7 @@ std::string writeMusicXml (const Score& score)
             w.leaf ("instrument-name", inst.name);
             w.close();
             w.open ("midi-instrument", { { "id", id + "-I1" } });
-            w.leaf ("midi-channel", channels[pi] + 1);
+            w.leaf ("midi-channel", channels[pi] % channelsPerBank + 1);   // a file has sixteen
             w.leaf ("midi-program", inst.program + 1);
             w.leaf ("volume", static_cast<long long> (std::lround (part.volume * 100.0f)));
             w.close();
@@ -426,7 +426,8 @@ std::string instrumentForPartName (const std::string& name, int program, bool pe
         { "violins ii", "vln2" }, { "violin", "vln1" }, { "viola", "vla" }, { "piccolo", "picc" },
         { "flute", "fl" }, { "english horn", "eh" }, { "cor anglais", "eh" }, { "oboe", "ob" },
         { "bass clarinet", "bcl" }, { "clarinet", "cl" }, { "bassoon", "bsn" }, { "alto sax", "asax" },
-        { "tenor sax", "tsax" }, { "french horn", "hn" }, { "horn", "hn" }, { "trumpet", "tpt" },
+        { "tenor sax", "tsax" }, { "baritone sax", "bsax" }, { "bari sax", "bsax" }, { "vibraphone", "vib" },
+        { "upright bass", "ubass" }, { "acoustic bass", "ubass" }, { "french horn", "hn" }, { "horn", "hn" }, { "trumpet", "tpt" },
         { "bass trombone", "btbn" }, { "trombone", "tbn" }, { "tuba", "tuba" }, { "timpani", "timp" },
         { "glockenspiel", "glock" }, { "xylophone", "xyl" }, { "marimba", "mar" }, { "harp", "harp" },
         { "celesta", "cel" }, { "piano", "pno" }, { "keyboard", "pno" }, { "drum", "kit" },

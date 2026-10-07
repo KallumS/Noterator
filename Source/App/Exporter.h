@@ -32,7 +32,7 @@ bool exportMusicXml (const Score& score, ExportRange range, const juce::File& fi
 // Renders on the calling thread. `progress` gets 0..1 and returns false to
 // cancel. The synth is made by the caller, on the message thread, because an
 // Audio Unit has to be.
-bool renderAudio (const Score& score, ExportRange range, SynthBackend& synth, const juce::File& file,
+bool renderAudio (const Score& score, ExportRange range, SynthRack& synth, const juce::File& file,
                   const std::function<bool (double)>& progress, juce::String& error);
 
 } // namespace nt

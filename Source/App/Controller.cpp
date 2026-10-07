@@ -4,6 +4,7 @@
 #include "MusicXml.h"
 #include "ScoreFile.h"
 #include "Spelling.h"
+#include "Templates.h"
 
 namespace nt
 {
@@ -545,37 +546,17 @@ void Controller::previewPitches (const std::vector<int>& pitches, uint32_t partI
 
 juce::StringArray Controller::templates()
 {
-    return { "Piano", "String Quartet", "String Orchestra", "Chamber Orchestra", "Wind Quintet",
-             "Brass Quintet", "Choir", "Band", "Empty" };
+    juce::StringArray names;
+    for (const auto& t : scoreTemplates()) names.add (t.name);
+    return names;
 }
 
 void Controller::newScore (const juce::String& name)
 {
-    std::vector<std::string> ids;
-    if (name == "Piano") ids = { "pno" };
-    else if (name == "String Quartet") ids = { "vln1", "vln2", "vla", "vc" };
-    else if (name == "String Orchestra") ids = { "vln1", "vln2", "vla", "vc", "cb" };
-    else if (name == "Chamber Orchestra") ids = { "fl", "ob", "cl", "bsn", "hn", "tpt", "timp", "vln1", "vln2", "vla", "vc", "cb" };
-    else if (name == "Wind Quintet") ids = { "fl", "ob", "cl", "hn", "bsn" };
-    else if (name == "Brass Quintet") ids = { "tpt", "tpt", "hn", "tbn", "tuba" };
-    else if (name == "Choir") ids = { "sop", "alto", "ten", "bass" };
-    else if (name == "Band") ids = { "pno", "gtr", "ebass", "kit" };
+    const auto* t = templateByName (name.toStdString());
+    if (t == nullptr) t = templateByName ("Empty");
     audio.stop();
-    score = Score {};
-    score.title = name == "Empty" ? "Untitled" : name.toStdString();
-    score.tempos = { { 0, 100.0 } };
-    for (const auto& id : ids)
-    {
-        Part p;
-        p.id = score.newId();
-        p.instrument = id;
-        int same = 0;
-        for (const auto& o : score.parts) if (o.instrument == id) ++same;
-        p.name = instrumentById (id).name + (same > 0 ? " " + std::to_string (same + 1) : std::string());
-        if (same == 1) score.parts.back().name = instrumentById (id).name + " 1";
-        score.parts.push_back (p);
-    }
-    score.normalise();
+    score = scoreFromTemplate (*t);
     undoStack.clear();
     redoStack.clear();
     selection.clear();
