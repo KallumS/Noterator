@@ -159,3 +159,24 @@ target_compile_definitions(NoteratorRender PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_C
 target_link_libraries(NoteratorRender
     PRIVATE NoteratorCore NoteratorAssets juce::juce_gui_basics
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
+#==============================================================================
+# The app's own path without a window: controller, generators, export, and
+# audio through each synth. On macOS it is what proves Apple's General MIDI
+# synth loads and sounds.
+#==============================================================================
+if(NOTERATOR_BUILD_TESTS)
+    juce_add_console_app(NoteratorAppTests PRODUCT_NAME "NoteratorAppTests")
+    target_sources(NoteratorAppTests PRIVATE
+        Tests/TestApp.cpp
+        Source/App/Controller.cpp
+        Source/App/AudioEngine.cpp
+        Source/App/Exporter.cpp)
+    target_include_directories(NoteratorAppTests PRIVATE Source/App Tests)
+    target_compile_definitions(NoteratorAppTests PRIVATE
+        JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_PLUGINHOST_AU=1 JUCE_PLUGINHOST_VST3=0)
+    target_link_libraries(NoteratorAppTests
+        PRIVATE NoteratorCore juce::juce_audio_utils juce::juce_audio_processors
+        PUBLIC juce::juce_recommended_config_flags)
+    add_test(NAME App COMMAND NoteratorAppTests)
+endif()

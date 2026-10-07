@@ -37,7 +37,9 @@ jobs:
       - name: The app and the renderer compile
         run: |
           cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --target Noterator NoteratorRender
+          cmake --build build --target Noterator NoteratorRender NoteratorAppTests
+      - name: App tests (controller, export, audio)
+        run: ./build/NoteratorAppTests_artefacts/Release/NoteratorAppTests
       - name: Render the test page
         run: ./build/NoteratorRender_artefacts/Release/NoteratorRender demo engraving-test.png 10 light
       - uses: actions/upload-artifact@v4
@@ -55,9 +57,9 @@ jobs:
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64
       - name: Build
-        run: cmake --build build --target Noterator NoteratorTests
+        run: cmake --build build --target Noterator NoteratorTests NoteratorAppTests
       - name: Tests
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build --output-on-failure -V
       - name: Package
         run: |
           APP="build/Noterator_artefacts/Release/Noterator.app"
