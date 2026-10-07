@@ -33,6 +33,16 @@ all of the sections together, and a jazz big band.
   (Good Idea's "Phrase (melody)"); a melody goes to the top part of the chosen
   bars (0019). A result with chords and bass spreads across the band.
 
+## Then: Bass and Drums out of Blocks (0024)
+
+The user asked to keep drums in Good Idea and take Drums and Bass out of the
+Blocks toolbox. The adapter now offers the engine's kinds less those two (the
+engine is untouched), the four remaining kind buttons sit in one row, and a
+core test checks both halves: Blocks lists Chord, Arpeggio, Run and Melody
+(shown as Interval), and Good Idea still offers Drums. The test failed
+against the old adapter first. Every doc was then brought up to date and the
+handover prompt rewritten.
+
 ## Not done yet
 
 Everything in the earlier logs' lists, plus:

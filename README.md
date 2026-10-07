@@ -6,7 +6,7 @@ ideas around what you have, **Midi Variator** to change it, and **Starting
 Blocks** as a toolbox of chords, arpeggios, runs and intervals - and lands on
 the page as real notation you can read, edit, play and export.
 
-![The engraving test page](docs/engraving-test.png)
+![Good Idea filling chosen bars of a string quartet](docs/bar-range.png)
 
 ## What it does
 
@@ -19,9 +19,10 @@ the page as real notation you can read, edit, play and export.
   those bars, the tune on top, the bass at the bottom, the chords shared out
   between. The generators are your own engines, unchanged, with every setting
   they have in REAPER.
-- **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run, interval,
-  bass note or drum; every degree of the key is a button. Click one to see and
-  hear it, Insert to put it at the caret - then the next one goes after it.
+- **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run or interval;
+  every degree of the key is a button. Click one to see and hear it, Insert to
+  put it at the caret - then the next one goes after it. (Drum grooves come
+  from Good Idea.)
 - **Start from an ensemble.** New offers small groups (string quartet, wind
   and brass quintets, choir, band, jazz combo), whole orchestral sections
   (strings, woodwinds, brass, percussion), a chamber or full orchestra, and a
@@ -63,6 +64,8 @@ It needs a Mac with Apple silicon (M1 or later).
 
 | | |
 | --- | --- |
+| Start a score | **New**: a small group, a whole orchestral section, a chamber or full orchestra, or a big band |
+| Bring music in | **Open**, or drop a MIDI or MusicXML file (.mid, .musicxml, .xml, .mxl) on the window |
 | Put the caret in a part | click the staff, or the part's name |
 | Choose bars | click an empty bar; drag across bars and staves for more; drag along the Chords lane for every part; **Esc** lets go |
 | Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the caret's part |
@@ -73,6 +76,8 @@ It needs a Mac with Apple silicon (M1 or later).
 | Select | click a note; **Shift**-drag for several; double-click for a whole chord |
 | Change notes | **Up/Down** a semitone, **Cmd+Up/Down** an octave, drag a note up or down, **Delete** |
 | Hear | **Space** plays from the selection or the caret; click any note or chord |
+| Take it out | **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
+| Light or dark | the page is black on white; **Dark page** turns it round |
 | Undo | **Cmd+Z**, **Shift+Cmd+Z** |
 | All the keys | **H** |
 
@@ -90,6 +95,8 @@ Next, roughly in order:
 - Windows.
 
 ## For developers
+
+![The engraving test page](docs/engraving-test.png)
 
 ```sh
 # the core and its tests: no JUCE, seconds

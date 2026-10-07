@@ -1,7 +1,7 @@
 # 0018 - Starting Blocks is a toolbox of its own, not a generator
 
 - **Date:** 2026-10-07
-- **Status:** Accepted
+- **Status:** Accepted; Bass and Drums later taken out by [0024](0024-blocks-without-drums-and-bass.md)
 
 ## Context
 

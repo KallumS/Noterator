@@ -27,9 +27,10 @@ refers to them by number: "(decision 0006)".
 | [0015](0015-the-house-scheme-and-a-dark-page.md) | The house colour scheme, a dark page by default and a light page on request | Default replaced by 0020 |
 | [0016](0016-step-input-with-the-keys-people-know.md) | Step-time input, with the keys notation users already know | Accepted |
 | [0017](0017-catalogue-leaves-generate.md) | Midi Catalogue leaves the Generate tab; Good Idea leads it | Accepted |
-| [0018](0018-starting-blocks-is-a-toolbox.md) | Starting Blocks is a toolbox of its own, not a generator | Accepted |
+| [0018](0018-starting-blocks-is-a-toolbox.md) | Starting Blocks is a toolbox of its own, not a generator | Accepted; narrowed by 0024 |
 | [0019](0019-bars-can-be-chosen-and-filled.md) | Bars can be chosen on the page, and generated music fills them | Accepted |
 | [0020](0020-light-page-by-default.md) | A light page by default; dark on request | Accepted |
 | [0021](0021-musicxml-in-and-out.md) | MusicXML in and out, from the core, with a parser of our own | Accepted |
 | [0022](0022-templates-in-score-order.md) | Templates for sections and big ensembles, in the core, in score order | Accepted |
 | [0023](0023-a-synth-per-sixteen-channels.md) | A synth for every sixteen channels, so every part has its own | Accepted |
+| [0024](0024-blocks-without-drums-and-bass.md) | The Blocks toolbox offers chords, arpeggios, runs and intervals only | Accepted |
