@@ -11,7 +11,7 @@ local I = engine("good-idea/gi_idea.lua").init(T)
 
 local A = {
   id = "good-idea",
-  name = "Good Idea",
+  name = "Generate Notes",   -- Good Idea, named for what it does in the app (decision 0025)
   description = "A motif, a phrase, eight to sixteen bars of melody, chords and bass, or a drum groove - calculated from the rules that make music sound like music.",
   input = "none",
   panel = "generate",
@@ -85,7 +85,10 @@ function A.make(st, ctx, seed, count)
     end
     local detail = idea.summary or ""
     if idea.chords and idea.chords ~= "" then detail = detail .. "\n" .. idea.chords end
-    out[#out + 1] = { title = idea.block.name, detail = detail,
+    -- "Good Idea 63797 - Phrase (melody), 4 bars, C Major": the engine's
+    -- name and seed are the REAPER file name; the list wants the rest.
+    local title = idea.block.name:gsub("^Good Idea %d+ %- ", "")
+    out[#out + 1] = { title = title, detail = detail,
                       beats = idea.block.beats, parts = parts }
   end
   return { results = out }

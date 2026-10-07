@@ -43,6 +43,14 @@ core test checks both halves: Blocks lists Chord, Arpeggio, Run and Melody
 against the old adapter first. Every doc was then brought up to date and the
 handover prompt rewritten.
 
+## Then: names for what they do (0025)
+
+In the app, Good Idea became **Generate Notes**, Midi Suggester **Suggest
+Notes** and Midi Variator **Vary Notes** - display names in the adapters only.
+Good Idea's result titles began "Good Idea 63797 - ", its REAPER file name;
+the adapter now drops that, so the list reads "Motif, 2 bars, C Major". A
+core test pins the three names and checks no title says Good Idea.
+
 ## Not done yet
 
 Everything in the earlier logs' lists, plus:

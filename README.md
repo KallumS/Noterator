@@ -1,10 +1,11 @@
 # Noterator
 
 A notation app for the Mac that writes music with you. Most of the music comes
-from the family's generators - **Good Idea** first, **Midi Suggester** for
-ideas around what you have, **Midi Variator** to change it, and **Starting
-Blocks** as a toolbox of chords, arpeggios, runs and intervals - and lands on
-the page as real notation you can read, edit, play and export.
+from the family's generators - **Generate Notes** (Good Idea) first, **Suggest
+Notes** (Midi Suggester) for ideas around what you have, **Vary Notes** (Midi
+Variator) to change it, and **Starting Blocks** as a toolbox of chords,
+arpeggios, runs and intervals - and lands on the page as real notation you
+can read, edit, play and export.
 
 ![Good Idea filling chosen bars of a string quartet](docs/bar-range.png)
 
@@ -22,7 +23,7 @@ the page as real notation you can read, edit, play and export.
 - **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run or interval;
   every degree of the key is a button. Click one to see and hear it, Insert to
   put it at the caret - then the next one goes after it. (Drum grooves come
-  from Good Idea.)
+  from Generate Notes.)
 - **Start from an ensemble.** New offers small groups (string quartet, wind
   and brass quintets, choir, band, jazz combo), whole orchestral sections
   (strings, woodwinds, brass, percussion), a chamber or full orchestra, and a

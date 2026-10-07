@@ -8,13 +8,14 @@ want done; if you leave it, the session starts on the first roadmap item.
 We're continuing work on Noterator (KallumS/Noterator): a macOS notation app
 (JUCE 8, C++17, Apple silicon only) whose music mostly comes from my
 generators, which run unchanged inside it through embedded Lua:
-- Generate tab: Good Idea (the main one - motifs, phrases, measures and drum
-  grooves), Midi Suggester (ideas around chords or a tune I have), Midi
-  Variator (changes music already written).
+- Generate tab: Generate Notes (my Good Idea engine, the main one - motifs,
+  phrases, measures and drum grooves), Suggest Notes (Midi Suggester: ideas
+  around chords or a tune I have), Vary Notes (Midi Variator: changes music
+  already written). In the code they keep their engine names.
 - Blocks tab: Starting Blocks as a toolbox of chords, arpeggios, runs and
   intervals on every degree of the key, placed at the caret one after another.
-- Bars can be chosen by clicking or dragging over the page, and Good Idea
-  fills them across the chosen instruments.
+- Bars can be chosen by clicking or dragging over the page, and Generate
+  Notes fills them across the chosen instruments.
 - New scores start from templates up to a full orchestra and a big band; every
   instrument keeps its own sound through Apple's built-in General MIDI synth.
 - Scores open and export as MIDI and MusicXML; audio exports as WAV. The page
@@ -28,7 +29,7 @@ GitHub Actions.
 Before doing anything:
 1. If the work so far (branch claude/epic-hypatia-z0ya3r) is not yet in your
    branch, start your branch from it.
-2. Read CLAUDE.md, then docs/ARCHITECTURE.md (every decision, 0001-0024, on
+2. Read CLAUDE.md, then docs/ARCHITECTURE.md (every decision, 0001-0025, on
    one page), then the latest logs in docs/sessions/. Follow their rules -
    especially: never edit the vendored engines in Engines/<app>/ (adapters are
    fine), no JUCE in Source/Core, where a generated result lands is decided

@@ -34,3 +34,4 @@ refers to them by number: "(decision 0006)".
 | [0022](0022-templates-in-score-order.md) | Templates for sections and big ensembles, in the core, in score order | Accepted |
 | [0023](0023-a-synth-per-sixteen-channels.md) | A synth for every sixteen channels, so every part has its own | Accepted |
 | [0024](0024-blocks-without-drums-and-bass.md) | The Blocks toolbox offers chords, arpeggios, runs and intervals only | Accepted |
+| [0025](0025-generators-named-for-what-they-do.md) | In the app, the generators are named for what they do | Accepted |

@@ -12,7 +12,7 @@ local Mel = engine("midi-suggester/ms_melody.lua")
 
 local A = {
   id = "midi-suggester",
-  name = "Midi Suggester",
+  name = "Suggest Notes",    -- Midi Suggester (decision 0025)
   description = "Select a melody and get chord progressions to go under it, or select chords and get melodies to go over them.",
   input = "selection",
   panel = "generate",

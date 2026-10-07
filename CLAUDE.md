@@ -7,6 +7,10 @@ its own Blocks toolbox of chords, arpeggios, runs and intervals (0018, 0024),
 and Midi Catalogue loaded but not listed (0017). The score is MIDI;
 the notation is engraved from it every time it is drawn.
 
+**Names:** in the app the user sees **Generate Notes** (Good Idea), **Suggest
+Notes** (Midi Suggester) and **Vary Notes** (Midi Variator) (0025). Code, ids
+and these docs keep the engines' own names; talk to the user in the app's.
+
 The user is not a developer. Explain in plain words, show screenshots of what
 changed, and make sure every change reaches them as a downloadable Mac app
 (the CI's `.dmg`).
@@ -50,7 +54,7 @@ gets undone.
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts and Score tabs, status line, keys and menus (New is grouped by template), colours. |
-| `Tests/Test*.cpp` | Core tests (64), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
+| `Tests/Test*.cpp` | Core tests (65), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it

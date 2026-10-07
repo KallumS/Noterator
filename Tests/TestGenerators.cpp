@@ -4,6 +4,7 @@
 #include "LuaEngine.h"
 
 #include <algorithm>
+#include <map>
 
 using namespace nt;
 
@@ -290,4 +291,21 @@ TEST ("generators: Blocks offers chords, arpeggios, runs and intervals; drums st
     for (const auto& s : e.settings ("good-idea", ctx))
         if (s.label == "Make a") makes = s.names;
     CHECK (std::find (makes.begin(), makes.end(), "Drums") != makes.end());
+}
+
+TEST ("generators: the Generate tab's names say what they do")
+{
+    auto& e = engineInstance();
+    std::map<std::string, std::string> names;
+    for (const auto& g : e.generators()) names[g.id] = g.name;
+    CHECK_EQ (names["good-idea"], std::string ("Generate Notes"));
+    CHECK_EQ (names["midi-suggester"], std::string ("Suggest Notes"));
+    CHECK_EQ (names["midi-variator"], std::string ("Vary Notes"));
+
+    // Results are titled by what they are, not by the engine's name and seed.
+    GeneratorContext ctx;
+    e.reset ("good-idea");
+    const auto out = e.generate ("good-idea", ctx, 5, 2);
+    CHECK (! out.results.empty());
+    for (const auto& r : out.results) CHECK (r.title.find ("Good Idea") == std::string::npos);
 }

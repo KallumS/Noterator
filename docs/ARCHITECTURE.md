@@ -33,7 +33,7 @@ reasoning and what it costs; this page is the map.
   pitch. Nothing about the notation is stored.
 - **The page is derived.** `Engrave` turns the score into a layout in staff
   spaces; `ScoreRenderer` inks it. The same renderer draws PNGs with no window.
-- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 64 tests
+- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 65 tests
   build and run in seconds. `NoteratorAppTests` covers the JUCE side.
 - **One controller.** Every window piece reads the `Controller` and asks it for
   changes; it keeps undo, re-engraves, re-detects and re-sends to playback.
@@ -62,6 +62,7 @@ reasoning and what it costs; this page is the map.
 | [0017](decisions/0017-catalogue-leaves-generate.md) | Generate lists Good Idea, Suggester and Variator; the Catalogue stays loaded but unlisted. |
 | [0018](decisions/0018-starting-blocks-is-a-toolbox.md) | Starting Blocks is a Blocks tab: kind, degree buttons, preview; a block goes at the caret and the caret moves on. |
 | [0024](decisions/0024-blocks-without-drums-and-bass.md) | Blocks offers chords, arpeggios, runs and intervals; drums and bass are Good Idea's. |
+| [0025](decisions/0025-generators-named-for-what-they-do.md) | In the app: Generate Notes (Good Idea), Suggest Notes (Suggester), Vary Notes (Variator); code keeps the engines' names. |
 | [0019](decisions/0019-bars-can-be-chosen-and-filled.md) | Bars chosen by dragging; Good Idea fills them exactly, tune on top, bass below, chords between; Variator replaces them. |
 
 ### The page
