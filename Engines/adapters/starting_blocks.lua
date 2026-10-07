@@ -29,7 +29,18 @@ for i, b in ipairs(E.BAR_LENGTHS) do barValues[i], barNames[i] = b.bars, b.name 
 
 local LIST = {
   C.setting("cat", "Block", E.CATEGORIES),
-  C.setting("dia", "Chord", range(1, #E.DIATONIC), names(E.DIATONIC), { when = cat("Chord", "Arpeggio", "Bass") }),
+  C.setting("family", "Chords", range(1, #E.FAMILIES), E.FAMILIES, { when = cat("Chord", "Arpeggio", "Bass") }),
+  C.setting("dia", "Chord", range(1, #E.DIATONIC), names(E.DIATONIC), {
+    when = function(st) return cat("Chord", "Arpeggio", "Bass")(st) and st.family == 1 end }),
+  C.setting("chord", "Chord", {}, {}, {
+    when = function(st) return cat("Chord", "Arpeggio", "Bass")(st) and st.family > 1 end,
+    dynamic = function(st)
+      local values, shown = {}, {}
+      for i, ch in ipairs(E.CHORDS) do
+        if ch.fam == st.family then values[#values + 1], shown[#shown + 1] = i, ch.sym .. "  " .. ch.name end
+      end
+      return values, shown, {}
+    end }),
   C.setting("inv", "Inversion", range(0, 3), E.INVERSIONS, { when = cat("Chord", "Arpeggio") }),
   C.setting("chop", "Strike every", range(1, #E.RATES), names(E.RATES), { when = cat("Chord") }),
   C.setting("pattern", "Direction", range(1, #E.DIRECTIONS), E.DIRECTIONS, { when = cat("Arpeggio") }),
@@ -63,6 +74,10 @@ function A.newState() return E.newState() end
 function A.settings(st, ctx) return C.describe(LIST, st, ctx) end
 function A.set(st, id, index, ctx)
   C.set(LIST, st, id, index, ctx)
+  -- A new family starts on its first chord, so the chord shown is one of it.
+  if id == "family" and st.family > 1 and E.CHORDS[st.chord].fam ~= st.family then
+    for i, ch in ipairs(E.CHORDS) do if ch.fam == st.family then st.chord = i break end end
+  end
   E.clampState(st)
 end
 function A.useKey(st, root, scale)
@@ -81,7 +96,7 @@ function A.generate(st, ctx, seed, count)
     local block = E.generate(st)
     local title = st.cat == "Drums" and block.name
                   or ("%s  %s"):format(E.degreeNumeral(st, d), block.name)
-    out[#out + 1] = { title = title, detail = E.degreeTitle(st, d), beats = block.beats,
+    out[#out + 1] = { title = title, detail = E.noteName(st, d) .. "  " .. E.degreeTitle(st, d), beats = block.beats,
                       parts = { { name = st.cat, drums = st.cat == "Drums", notes = C.notes(block.notes) } } }
   end
   st.degree = 0

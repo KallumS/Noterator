@@ -125,6 +125,8 @@ target_sources(Noterator PRIVATE
     Source/App/ScoreView.cpp
     Source/App/Panels.cpp
     Source/App/GeneratorPanel.cpp
+    Source/App/SettingsList.cpp
+    Source/App/BlocksPanel.cpp
     Source/App/AudioEngine.cpp
     Source/App/Exporter.cpp
     ${NOTERATOR_SHARED_UI})

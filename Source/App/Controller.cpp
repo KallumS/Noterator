@@ -748,8 +748,10 @@ Tick Controller::place (Score& s, const GeneratedResult& r, bool fromSelection, 
     }
     if (! fromSelection || selection.empty())
     {
-        // At the caret's bar, so an idea always starts on a downbeat.
-        const Tick at = s.barStart (s.barAt (caret));
+        // At the caret's bar, so an idea always starts on a downbeat - except
+        // a block from the toolbox, which is small and goes where the caret
+        // is, so blocks can be laid one after another (decision 0018).
+        const Tick at = generatorId == "starting-blocks" ? caret : s.barStart (s.barAt (caret));
         report = insertResult (s, r, caretPart, at);
         return at;
     }

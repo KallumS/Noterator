@@ -228,3 +228,47 @@ TEST ("generators: Good Idea fits its length to the selected bars")
     for (const auto& st : settings)
         if (st.id == "motifBars") CHECK_EQ (st.names[static_cast<size_t> (st.index)], std::string ("Any"));   // left as it was
 }
+
+TEST ("generators: Starting Blocks offers every chord family, one block per degree")
+{
+    auto& e = engineInstance();
+    GeneratorContext ctx;
+    e.reset ("starting-blocks");
+    e.useKey ("starting-blocks", 0, 0);
+    auto find = [&] (const std::string& id) -> const GeneratorSetting*
+    {
+        static std::vector<GeneratorSetting> list;
+        list = e.settings ("starting-blocks", ctx);
+        for (const auto& s : list) if (s.id == id) return &s;
+        return nullptr;
+    };
+    const auto* family = find ("family");
+    CHECK (family != nullptr);
+    if (family == nullptr) return;
+    CHECK_EQ (family->names.size(), size_t (8));
+    CHECK (find ("dia") != nullptr);
+    CHECK (find ("chord") == nullptr);
+
+    // "6ths & 7ths": the chord menu lists that family alone, starting on its first.
+    e.set ("starting-blocks", "family", 2, ctx);
+    CHECK (find ("dia") == nullptr);
+    const auto* chord = find ("chord");
+    CHECK (chord != nullptr);
+    if (chord == nullptr) return;
+    CHECK_EQ (chord->names.size(), size_t (15));
+    CHECK_EQ (chord->names[static_cast<size_t> (chord->index)], std::string ("6  Sixth"));
+    const int maj7 = 5;
+    CHECK_EQ (chord->names[maj7], std::string ("maj7  Major Seventh"));
+    e.set ("starting-blocks", "chord", maj7, ctx);
+
+    const auto out = e.generate ("starting-blocks", ctx, 1, 0);
+    CHECK_EQ (out.results.size(), size_t (7));
+    if (out.results.size() != 7) return;
+    // The ii is a D major seventh here: the family's chords are built on the
+    // degree, not taken from the key.
+    std::vector<int> pitches;
+    for (const auto& n : out.results[1].parts[0].notes) pitches.push_back (n.pitch);
+    CHECK (pitches == (std::vector<int> { 62, 66, 69, 73 }));
+    CHECK_EQ (out.results[1].detail.substr (0, 1), std::string ("D"));
+    e.reset ("starting-blocks");
+}

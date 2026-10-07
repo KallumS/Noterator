@@ -98,6 +98,33 @@ TEST ("app: chosen bars are filled by Good Idea, across the parts chosen")
     CHECK (! c.range.active());
 }
 
+TEST ("app: blocks go where the caret is, one after another")
+{
+    Controller c (audio());
+    c.newScore ("Piano");
+    c.setCaret (c.score.parts[0].id, PPQ);   // beat 2, not the bar's start
+    c.lua.reset ("starting-blocks");
+    c.lua.set ("starting-blocks", "cat", 1, c.generatorContext (false));   // Arpeggio
+    const auto out = c.lua.generate ("starting-blocks", c.generatorContext (false), 1, 0);
+    CHECK_EQ (out.results.size(), size_t (7));
+    if (out.results.size() < 5) return;
+    c.insertGenerated (out.results[0], false, "starting-blocks");
+    CHECK_EQ (c.caret, PPQ + out.results[0].length);
+    c.insertGenerated (out.results[4], false, "starting-blocks");
+    std::vector<std::pair<Tick, int>> got;
+    for (const auto& n : c.score.parts[0].notes) got.push_back ({ n.start, n.pitch % 12 });
+    std::sort (got.begin(), got.end());
+    CHECK_EQ (got.size(), size_t (6));
+    if (got.size() == 6)
+    {
+        CHECK_EQ (got[0].first, PPQ);
+        CHECK_EQ (got[0].second, 0);                                // C, the I
+        CHECK_EQ (got[3].first, PPQ + out.results[0].length);
+        CHECK_EQ (got[3].second, 7);                                // G, the V
+    }
+    c.lua.reset ("starting-blocks");
+}
+
 TEST ("app: selected bars export as MIDI and read back")
 {
     Controller c (audio());

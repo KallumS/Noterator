@@ -35,6 +35,7 @@ MainComponent::MainComponent()
     tabs.setTabBarDepth (30);
     tabs.setOutline (0);
     tabs.addTab ("Generate", theme::control, &generatorPanel, false);
+    tabs.addTab ("Blocks", theme::control, &blocksPanel, false);
     tabs.addTab ("Parts", theme::control, &partsPanel, false);
     tabs.addTab ("Score", theme::control, &scorePanel, false);
     tabs.setColour (juce::TabbedComponent::backgroundColourId, theme::ground);
@@ -563,7 +564,9 @@ void MainComponent::showHelp()
         "A MIDI keyboard writes in note input, and always plays.\n\n"
         "EDITING\n"
         "Click a note to select and hear it; double-click for its whole chord\n"
-        "Drag across the page to select several; drag a note up or down to move it\n"
+        "Click an empty bar to choose it; drag across bars and parts to choose more\n"
+        "(drag along the Chords lane for every part; Shift+click stretches the choice)\n"
+        "Shift+drag picks out notes; drag a note up or down to move it\n"
         "Up / Down  a semitone     Cmd+Up / Down  an octave\n"
         "Left / Right  the next note (Shift extends)     Alt+Left / Right  move the selection\n"
         "[ and ]  halve or double     V  swap voice     Delete  remove\n"
@@ -572,9 +575,14 @@ void MainComponent::showHelp()
         "Space  play from the selection or the caret, or stop\n"
         "Click a chord in the Chords lane to hear it, or the Scale lane to hear the scale\n\n"
         "GENERATING\n"
-        "Put the caret in a part, choose a generator, press Generate,\n"
-        "click a result to hear it, and Insert to put it in at the caret's bar.\n"
-        "Midi Suggester and Midi Variator work on the music you select.";
+        "Choose some bars (or put the caret in a part), choose a generator, press\n"
+        "Generate, click a result to hear it, and Insert to put it in. Good Idea\n"
+        "fills the bars chosen: the tune on top, the bass below, chords between.\n"
+        "Midi Suggester and Midi Variator work on the music you select.\n\n"
+        "BLOCKS\n"
+        "Pick a chord, arpeggio, run, interval, bass note or drum, click a degree\n"
+        "to see and hear it, and Insert to put it at the caret - the caret moves\n"
+        "on, so blocks can be laid one after another.";
     juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::InfoIcon, "Noterator - keys", text);
 }
 

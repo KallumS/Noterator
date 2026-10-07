@@ -7,11 +7,11 @@ namespace nt
 
 GeneratorPanel::GeneratorPanel (Controller& c) : controller (c)
 {
-    for (auto* comp : std::initializer_list<juce::Component*> { &generator, &description, &followKey, &settingsView, &generateButton,
+    for (auto* comp : std::initializer_list<juce::Component*> { &generator, &description, &followKey, &settings, &generateButton,
                                                                  &moreButton, &insertButton, &stopButton, &results, &message, &target })
         addAndMakeVisible (comp);
-    settingsView.setViewedComponent (&settingsHolder, false);
-    settingsView.setScrollBarsShown (true, false);
+    settings.context = [this] { return controller.generatorContext (needsSelection()); };
+    settings.onChange = [this] { resized(); };
 
     // Only the generators meant for this tab: Good Idea first, the main one,
     // then the two that work on music already written (decision 0017).
@@ -84,8 +84,8 @@ void GeneratorPanel::resized()
     description.setBounds (r.removeFromTop (52));
     followKey.setBounds (r.removeFromTop (24));
     r.removeFromTop (4);
-    const int settingsH = std::min (static_cast<int> (boxes.size()) * 30 + 4, std::max (120, r.getHeight() / 2 - 40));
-    settingsView.setBounds (r.removeFromTop (settingsH));
+    const int settingsH = std::min (settings.contentHeight(), std::max (120, r.getHeight() / 2 - 40));
+    settings.setBounds (r.removeFromTop (settingsH));
     r.removeFromTop (8);
     target.setBounds (r.removeFromTop (20));
     r.removeFromTop (4);
@@ -99,64 +99,17 @@ void GeneratorPanel::resized()
     message.setBounds (r.removeFromBottom (54));
     r.removeFromBottom (4);
     results.setBounds (r);
-    layoutSettings();
 }
 
 void GeneratorPanel::rebuildSettings()
 {
     const auto ctx = controller.generatorContext (needsSelection());
     if (followKey.getToggleState()) controller.lua.useKey (current, ctx.root, ctx.scale);
-    const auto settings = controller.lua.settings (current, ctx);
     for (const auto& g : controller.lua.generators())
         if (g.id == current) description.setText (g.description, juce::dontSendNotification);
-
-    labels.clear();
-    boxes.clear();
-    for (const auto& s : settings)
-    {
-        // The key and scale settings are the score's while the toggle is on.
-        if (followKey.getToggleState() && (s.label == "Key" || s.label == "Scale")) continue;
-        auto label = std::make_unique<juce::Label> (s.id, s.label);
-        label->setFont (juce::FontOptions (13.0f));
-        label->setColour (juce::Label::textColourId, theme::stepNumber);
-        auto box = std::make_unique<juce::ComboBox> (s.id);
-        for (size_t i = 0; i < s.names.size(); ++i)
-        {
-            box->addItem (s.names[i], static_cast<int> (i) + 1);
-        }
-        box->setSelectedId (s.index + 1, juce::dontSendNotification);
-        juce::String tip = s.hint;
-        if (s.index >= 0 && s.index < static_cast<int> (s.hints.size()) && ! s.hints[static_cast<size_t> (s.index)].empty())
-            tip = (tip.isEmpty() ? juce::String() : tip + "\n") + s.hints[static_cast<size_t> (s.index)];
-        box->setTooltip (tip);
-        label->setTooltip (tip);
-        const std::string settingId = s.id;
-        auto* raw = box.get();
-        box->onChange = [this, settingId, raw]
-        {
-            controller.lua.set (current, settingId, raw->getSelectedId() - 1, controller.generatorContext (needsSelection()));
-            // Showing or hiding one setting can depend on another.
-            juce::MessageManager::callAsync ([this] { rebuildSettings(); });
-        };
-        settingsHolder.addAndMakeVisible (*label);
-        settingsHolder.addAndMakeVisible (*box);
-        labels.push_back (std::move (label));
-        boxes.push_back (std::move (box));
-    }
+    // The key and scale settings are the score's while the toggle is on.
+    settings.show (current, followKey.getToggleState() ? std::set<std::string> { "Key", "Scale" } : std::set<std::string> {});
     resized();
-}
-
-void GeneratorPanel::layoutSettings()
-{
-    const int w = settingsView.getWidth() - settingsView.getScrollBarThickness() - 2;
-    int y = 2;
-    for (size_t i = 0; i < boxes.size(); ++i)
-    {
-        labels[i]->setBounds (0, y, w * 2 / 5, 26);
-        boxes[i]->setBounds (w * 2 / 5, y, w - w * 2 / 5, 26);
-        y += 30;
-    }
-    settingsHolder.setSize (w, y);
 }
 
 void GeneratorPanel::changeListenerCallback (juce::ChangeBroadcaster*)
