@@ -104,6 +104,26 @@ std::string instrumentForGeneratedPart (const GeneratedPart& part, const Instrum
     return target.id;
 }
 
+int polyphonyOf (const std::vector<Note>& notes)
+{
+    std::vector<std::pair<Tick, int>> edges;
+    for (const auto& n : notes) { edges.push_back ({ n.start, 1 }); edges.push_back ({ n.end(), -1 }); }
+    std::sort (edges.begin(), edges.end(), [] (const auto& a, const auto& b) { return a.first != b.first ? a.first < b.first : a.second < b.second; });
+    int now = 0, most = 0;
+    for (const auto& [t, d] : edges) { now += d; most = std::max (most, now); }
+    return most;
+}
+
+namespace
+{
+bool silentIn (const Part& p, Tick from, Tick to)
+{
+    for (const auto& n : p.notes)
+        if (n.start < to && n.end() > from) return false;
+    return true;
+}
+} // namespace
+
 InsertReport insertResult (Score& score, const GeneratedResult& result, uint32_t targetPartId, Tick at,
                            const InsertOptions& options)
 {
@@ -112,11 +132,11 @@ InsertReport insertResult (Score& score, const GeneratedResult& result, uint32_t
     // Ids and names only: the parts list grows below, which would leave a
     // pointer into it dangling.
     uint32_t targetId = 0;
-    std::string targetInstrument = "pno";
+    std::string targetInstrument = options.contextInstrument;
     if (const auto* t = score.partById (targetPartId)) { targetId = t->id; targetInstrument = t->instrument; }
-    else if (! score.parts.empty()) { targetId = score.parts.front().id; targetInstrument = score.parts.front().instrument; }
     const auto& targetInst = instrumentById (targetInstrument);
     const Tick span = result.length > 0 ? result.length : 0;
+    std::vector<uint32_t> used;
 
     for (size_t i = 0; i < result.parts.size(); ++i)
     {
@@ -133,8 +153,11 @@ InsertReport insertResult (Score& score, const GeneratedResult& result, uint32_t
         else
         {
             instrument = instrumentForGeneratedPart (gp, targetInst);
+            if (instrumentById (instrument).poly < polyphonyOf (gp.notes)) instrument = "pno";
+            const Tick to = at + std::max<Tick> (span, 1);
             for (const auto& p : score.parts)
-                if (p.instrument == instrument && (p.name == gp.name || p.name == instrumentById (instrument).name))
+                if (p.instrument == instrument && silentIn (p, at, to)
+                    && std::find (used.begin(), used.end(), p.id) == used.end())
                     { partId = p.id; break; }
             if (partId == 0)
             {
@@ -150,6 +173,7 @@ InsertReport insertResult (Score& score, const GeneratedResult& result, uint32_t
                 report.newParts.push_back (partId);
             }
         }
+        used.push_back (partId);
         auto notes = gp.notes;
         if (options.fitToInstrument) notes = fitToInstrument (notes, instrumentById (instrument));
         const auto ids = pasteNotes (score, partId, at, notes, options.replace ? span : 0, options.replace);

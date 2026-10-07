@@ -159,8 +159,13 @@ void GeneratorPanel::changeListenerCallback (juce::ChangeBroadcaster*)
     if (const auto* p = controller.caretPartPtr())
         into += juce::String (p->name) + ", from bar " + juce::String (controller.score.barAt (controller.caret) + 1);
     if (needsSelection())
+    {
+        const auto [a, b] = controller.selectedBars();
+        const juce::String bars = "bar" + juce::String (a == b ? " " : "s ") + juce::String (a + 1) + (a == b ? juce::String() : "-" + juce::String (b + 1));
         into = controller.selection.empty() ? juce::String ("Select some music in the score for this one")
-                                            : juce::String (static_cast<int> (controller.selection.size())) + " notes selected  |  " + into;
+             : juce::String (static_cast<int> (controller.selection.size())) + " notes in " + bars
+               + (current == "midi-variator" ? "  |  goes after them" : "  |  goes beside them");
+    }
     target.setText (into, juce::dontSendNotification);
     insertButton.setEnabled (results.getSelectedRow() >= 0);
 }
@@ -194,7 +199,7 @@ void GeneratorPanel::insertSelected()
     const int row = results.getSelectedRow();
     if (row < 0 || row >= static_cast<int> (found.size())) return;
     controller.stop();
-    controller.insertGenerated (found[static_cast<size_t> (row)]);
+    controller.insertGenerated (found[static_cast<size_t> (row)], needsSelection(), current);
 }
 
 void GeneratorPanel::paintListBoxItem (int row, juce::Graphics& g, int width, int height, bool selected)
@@ -226,7 +231,7 @@ void GeneratorPanel::paintListBoxItem (int row, juce::Graphics& g, int width, in
 void GeneratorPanel::selectedRowsChanged (int row)
 {
     insertButton.setEnabled (row >= 0);
-    if (row >= 0 && row < static_cast<int> (found.size())) controller.auditionGenerated (found[static_cast<size_t> (row)]);
+    if (row >= 0 && row < static_cast<int> (found.size())) controller.auditionGenerated (found[static_cast<size_t> (row)], needsSelection(), current);
 }
 
 void GeneratorPanel::listBoxItemDoubleClicked (int row, const juce::MouseEvent&)

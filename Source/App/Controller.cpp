@@ -614,21 +614,68 @@ GeneratorContext Controller::generatorContext (bool withSelection) const
     return contextFor (score, caretPart, caret, withSelection ? selection : Selection {});
 }
 
-void Controller::insertGenerated (const GeneratedResult& r)
+Tick Controller::place (Score& s, const GeneratedResult& r, bool fromSelection, const std::string& generatorId,
+                        InsertReport& report) const
 {
-    // At the caret's bar, so an idea always starts on a downbeat.
-    const Tick at = score.barStart (score.barAt (caret));
+    if (! fromSelection || selection.empty())
+    {
+        // At the caret's bar, so an idea always starts on a downbeat.
+        const Tick at = s.barStart (s.barAt (caret));
+        report = insertResult (s, r, caretPart, at);
+        return at;
+    }
+    const auto [first, last] = selectedBars();
+    uint32_t source = caretPart;
+    for (const auto& p : s.parts)
+        for (const auto& n : p.notes)
+            if (selection.count (n.id) != 0) source = p.id;
+    const auto* sp = s.partById (source);
+    InsertOptions o;
+    o.contextInstrument = sp != nullptr ? sp->instrument : std::string ("pno");
+
+    if (generatorId == "midi-variator")
+    {
+        // A variation follows its original, in the same part.
+        const Tick at = s.barStart (last + 1);
+        report = insertResult (s, r, source, at, o);
+        return at;
+    }
+    // Anything else made from the selection goes with it, never over it:
+    // chords under a tune, a tune over chords.
+    const Tick at = s.barStart (first);
+    report = insertResult (s, r, 0, at, o);
+    return at;
+}
+
+void Controller::insertGenerated (const GeneratedResult& r, bool fromSelection, const std::string& generatorId)
+{
     InsertReport report;
-    const auto target = caretPart;
-    edit ("Inserted " + juce::String (r.title), [&] (Score& s) { report = insertResult (s, r, target, at); });
+    Tick at = 0;
+    edit ("Inserted " + juce::String (r.title), [&] (Score& s) { at = place (s, r, fromSelection, generatorId, report); });
     selection = report.newNotes;
     caret = std::min (at + r.length, score.endTick());
+    if (! report.newNotes.empty())
+        for (const auto& p : score.parts)
+            for (const auto& n : p.notes)
+                if (report.newNotes.count (n.id) != 0) { caretPart = p.id; break; }
     sendChangeMessage();
 }
 
-void Controller::auditionGenerated (const GeneratedResult& r)
+void Controller::auditionGenerated (const GeneratedResult& r, bool fromSelection, const std::string& generatorId)
 {
-    // The result on its own, played by the instruments it would go into.
+    // Made from the selection: heard in place, with the music around it.
+    // Otherwise on its own, on the instruments it would go to.
+    if (fromSelection && ! selection.empty())
+    {
+        Score temp = score;
+        InsertReport report;
+        const Tick at = place (temp, r, true, generatorId, report);
+        temp.normalise();
+        audio.play (temp, at, at + std::max<Tick> (r.length, PPQ));
+        auditioning = true;
+        sendChangeMessage();
+        return;
+    }
     Score temp;
     temp.tempos = score.tempos;
     temp.meters = { score.meterAtBar (score.barAt (caret)) };

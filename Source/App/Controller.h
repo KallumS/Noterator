@@ -142,8 +142,10 @@ public:
 
     // The part a generator writes into and the context it is asked in.
     GeneratorContext generatorContext (bool withSelection) const;
-    void insertGenerated (const GeneratedResult& r);
-    void auditionGenerated (const GeneratedResult& r);
+    // A result from a generator that works on the selection goes beside or
+    // after it (decision 0011); any other goes into the caret's part.
+    void insertGenerated (const GeneratedResult& r, bool fromSelection, const std::string& generatorId);
+    void auditionGenerated (const GeneratedResult& r, bool fromSelection, const std::string& generatorId);
 
     const Part* caretPartPtr() const { return score.partById (caretPart); }
     int keyRootAt (Tick t) const { return score.keyAtBar (score.barAt (t)).root; }
@@ -160,6 +162,8 @@ private:
     Tick midiChordAt = -1;
 
     void refresh();               // relayout, re-detect, re-send to playback
+    // Puts a result into `s` where it belongs; returns where it starts.
+    Tick place (Score& s, const GeneratedResult& r, bool fromSelection, const std::string& generatorId, InsertReport& report) const;
     void ensureCaretPart();
 };
 

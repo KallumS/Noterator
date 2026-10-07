@@ -31,6 +31,9 @@ struct InsertOptions
 {
     bool fitToInstrument = true;
     bool replace = true;          // clear what the target parts had in the span first
+    // With no target part, every line gets a part of its own, chosen as if
+    // it were going beside a part playing this instrument.
+    std::string contextInstrument = "pno";
 };
 
 struct InsertReport
@@ -39,9 +42,13 @@ struct InsertReport
     std::vector<uint32_t> newParts;
 };
 
+// The most notes a line sounds at once.
+int polyphonyOf (const std::vector<Note>& notes);
+
 // Drops a result into the score at `at`. Its first part goes into the target
-// part; any others go into parts of their own, reused when the score already
-// has one by that name and instrument, created otherwise.
+// part (none: 0); the others into parts of their own - an existing part on the
+// right instrument that is silent in that span, or a new one. A line with
+// chords never goes to an instrument that plays one note at a time.
 InsertReport insertResult (Score& score, const GeneratedResult& result, uint32_t targetPartId, Tick at,
                            const InsertOptions& options = {});
 

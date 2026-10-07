@@ -114,3 +114,31 @@ TEST ("generators: fitting moves by octaves only")
         CHECK (fitted[i].pitch >= vc.sweetLow && fitted[i].pitch <= vc.sweetHigh);
     }
 }
+
+TEST ("generators: chords made for a tune go beside it, never over it")
+{
+    // A string quartet with a tune in the first violin.
+    Score s;
+    for (const char* id : { "vln1", "vln2", "vla", "vc" })
+    {
+        Part p; p.id = s.newId(); p.instrument = id; p.name = instrumentById (id).name;
+        s.parts.push_back (p);
+    }
+    writeNote (s, s.parts[0].id, 0, 4 * PPQ, 72, 0);
+    GeneratedResult r;
+    r.length = 4 * PPQ;
+    GeneratedPart chords; chords.name = "Chords";
+    for (int p : { 60, 64, 67 }) { Note n; n.start = 0; n.length = 4 * PPQ; n.pitch = p; chords.notes.push_back (n); }
+    GeneratedPart bass; bass.name = "Bass";
+    { Note n; n.start = 0; n.length = 4 * PPQ; n.pitch = 36; bass.notes.push_back (n); }
+    r.parts = { chords, bass };
+    InsertOptions o;
+    o.contextInstrument = "vln1";
+    insertResult (s, r, 0, 0, o);
+    CHECK_EQ (s.parts[0].notes.size(), size_t (1));            // the tune is untouched
+    CHECK_EQ (s.parts[0].notes[0].pitch, 72);
+    CHECK_EQ (s.parts.size(), size_t (5));
+    CHECK_EQ (s.parts[4].instrument, std::string ("pno"));    // three notes at once: not a one-line string part
+    CHECK_EQ (s.parts[3].notes.size(), size_t (1));            // the bass went to the cello, which was free
+    CHECK_EQ (polyphonyOf (chords.notes), 3);
+}

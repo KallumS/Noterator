@@ -20,3 +20,4 @@ refers to them by number: "(decision 0006)".
 | [0008](0008-general-midi-gets-two-cc-lanes.md) | General MIDI playback gets AutoCC's CC7 and CC11 only; files get all four | Accepted |
 | [0009](0009-bravura-not-drawn-glyphs.md) | Bravura for the symbols, where Starting Blocks Notation drew its own | Accepted |
 | [0010](0010-verify-by-rendering.md) | Verify the engraving by rendering it | Accepted |
+| [0011](0011-selection-results-go-beside-or-after.md) | Results made from a selection go beside it or after it, never over it | Accepted |

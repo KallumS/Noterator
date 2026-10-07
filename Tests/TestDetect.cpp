@@ -105,7 +105,9 @@ TEST ("detect: the key signature settles a near tie")
     CHECK_EQ (leaning.front().label, std::string ("C major"));
     // A clear minor tune is still heard as minor, whatever the signature says.
     const auto minor = withChords ({ { 45, 57, 60, 64 }, { 52, 56, 59, 64 }, { 45, 57, 60, 64 } }, 4 * PPQ);
-    CHECK_EQ (detectKeys (minor, true).front().label, std::string ("A minor"));
+    const auto minorKeys = detectKeys (minor, true);   // kept: a reference into a temporary would dangle
+    CHECK (! minorKeys.empty());
+    if (! minorKeys.empty()) CHECK_EQ (minorKeys.front().label, std::string ("A minor"));
 }
 
 TEST ("detect: a tune on its own is not named as chords")
