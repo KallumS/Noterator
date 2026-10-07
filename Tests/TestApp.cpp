@@ -13,6 +13,8 @@
 
 #include <juce_audio_formats/juce_audio_formats.h>
 
+#include <algorithm>
+
 using namespace nt;
 
 namespace
@@ -55,6 +57,45 @@ TEST ("app: a generator writes into a viola part through the controller")
     CHECK (c.score.parts[2].notes.empty());
     c.redo();
     CHECK (! c.score.parts[2].notes.empty());
+}
+
+TEST ("app: chosen bars are filled by Good Idea, across the parts chosen")
+{
+    Controller c (audio());
+    c.newScore ("String Quartet");
+    c.setBars (8);
+    c.setCaret (c.score.parts[0].id, 0);
+    for (int letter : { 0, 2, 4, 5 }) c.typeLetter (letter, false);   // bar 1, first violin
+    c.selectRange (1, 4, 0, 3);                                       // bars 2-5, all four
+    CHECK (c.range.active());
+    CHECK_EQ (c.rangeText(), juce::String ("Bars 2-5, Violin I to Cello"));
+    const auto ctx = c.generatorContext (false);
+    CHECK_EQ (ctx.rangeBars, 4);
+    const auto out = c.lua.generate ("good-idea", ctx, 7, 3);
+    CHECK (! out.results.empty());
+    if (out.results.empty()) return;
+    c.insertGenerated (out.results.front(), false, "good-idea");
+    // Nothing outside the bars, nothing new beyond the four parts, and the
+    // bars stay chosen with the new music selected.
+    CHECK_EQ (c.score.parts.size(), size_t (4));
+    const Tick from = c.score.barStart (1), to = c.score.barStart (5);
+    int inside = 0;
+    for (const auto& p : c.score.parts)
+        for (const auto& n : p.notes)
+        {
+            if (n.start < from) continue;
+            CHECK (n.start < to);
+            CHECK (n.end() <= to);
+            ++inside;
+        }
+    CHECK (inside > 0);
+    CHECK_EQ (c.score.parts[0].notes.size() - static_cast<size_t> (std::count_if (c.score.parts[0].notes.begin(), c.score.parts[0].notes.end(),
+                                                                                   [&] (const Note& n) { return n.start >= from; })),
+              size_t (4));
+    CHECK (c.range.active());
+    CHECK_EQ (static_cast<int> (c.selection.size()), inside);
+    c.select ({});
+    CHECK (! c.range.active());
 }
 
 TEST ("app: selected bars export as MIDI and read back")

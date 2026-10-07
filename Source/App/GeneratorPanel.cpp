@@ -164,7 +164,14 @@ void GeneratorPanel::changeListenerCallback (juce::ChangeBroadcaster*)
     juce::String into = "Into: ";
     if (const auto* p = controller.caretPartPtr())
         into += juce::String (p->name) + ", from bar " + juce::String (controller.score.barAt (controller.caret) + 1);
-    if (needsSelection())
+    if (controller.range.active() && (! needsSelection() || current == "midi-variator"))
+    {
+        into = "Into: " + controller.rangeText();
+        if (needsSelection())
+            into = controller.selection.empty() ? juce::String ("There is no music in the chosen bars to vary")
+                 : controller.rangeText() + "  |  the variation replaces it";
+    }
+    else if (needsSelection())
     {
         const auto [a, b] = controller.selectedBars();
         const juce::String bars = "bar" + juce::String (a == b ? " " : "s ") + juce::String (a + 1) + (a == b ? juce::String() : "-" + juce::String (b + 1));
