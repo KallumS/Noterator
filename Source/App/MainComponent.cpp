@@ -106,7 +106,10 @@ bool MainComponent::keyPressed (const juce::KeyPress& k)
 {
     auto& c = controller;
     const auto mods = k.getModifiers();
-    const int code = k.getKeyCode();
+    // Letters can arrive as either case depending on the platform and the
+    // modifiers held; compare them as capitals.
+    const int rawCode = k.getKeyCode();
+    const int code = (rawCode >= 'a' && rawCode <= 'z') ? rawCode - 'a' + 'A' : rawCode;
     const auto ch = k.getTextCharacter();
     const bool cmd = mods.isCommandDown();
 

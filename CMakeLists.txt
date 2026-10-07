@@ -6,9 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(APPLE)
-    # Every Mac still receiving updates, Intel and Apple silicon in one app.
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum macOS version")
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build a universal binary")
+    # Apple silicon only: no Intel build is wanted. macOS 11 is the first
+    # release that runs on it.
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version")
+    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Apple silicon")
 endif()
 
 option(NOTERATOR_BUILD_APP   "Build the app (downloads JUCE)" ON)
@@ -104,7 +105,6 @@ set(NOTERATOR_SHARED_UI
     Source/App/ScoreRenderer.cpp
     Source/App/Theme.cpp)
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/Source/App/Main.cpp)
 juce_add_gui_app(Noterator
     PRODUCT_NAME          "Noterator"
     COMPANY_NAME          "kallums"
@@ -147,7 +147,6 @@ target_link_libraries(Noterator
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
-endif()
 
 #==============================================================================
 # Renders a score - a .mid or a .noterator - to a PNG with no window, which is
