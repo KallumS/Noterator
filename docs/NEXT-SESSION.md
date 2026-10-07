@@ -7,9 +7,11 @@ want done; if you leave it, the session starts on the first roadmap item.
 ```text
 We're continuing work on Noterator (KallumS/Noterator): a macOS notation app
 (JUCE 8, C++17, Apple silicon only) whose music mostly comes from my
-generators - Good Idea, Midi Catalogue, Midi Suggester, Midi Variator and
-Starting Blocks - which run unchanged inside it through embedded Lua. The
-first version works; I have tested it on my Mac.
+generators, which run unchanged inside it through embedded Lua: Good Idea
+(the main one), Midi Suggester and Midi Variator in the Generate tab, and
+Starting Blocks as its own Blocks toolbox. Bars can be chosen by dragging and
+generated into; scores open and save as MIDI and MusicXML. It works; I have
+tested it on my Mac.
 
 I'm not technical: explain things in plain words, show me screenshots of what
 changed, and make sure each change reaches me as the downloadable Mac app from
@@ -28,14 +30,14 @@ Before doing anything:
 
 This session:
 <what I want next - for example: "a page view", "dynamics and articulations",
-"drawable CC lanes", "VST3 instruments per part", "MusicXML export", or a list
+"drawable CC lanes", "VST3 instruments per part", or a list
 of things I noticed while testing>
 
 The roadmap, in the order I'm most likely to want it: a page view (systems on
 pages, title); dynamics, articulations and slurs, with articulation switching
-for sample libraries; drawable CC lanes seeded by AutoCC; VST3 and CLAP
-instruments per part and SoundFonts through the Mac's General MIDI synth;
-MusicXML export; real-time MIDI recording; Windows.
+for sample libraries (and carried in MusicXML); drawable CC lanes seeded by
+AutoCC; VST3 and CLAP instruments per part and SoundFonts through the Mac's
+General MIDI synth; real-time MIDI recording; Windows.
 
 When you finish: write the session log in docs/sessions/, add a decision
 record in docs/decisions/ (and a line in docs/ARCHITECTURE.md) for any choice

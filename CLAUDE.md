@@ -1,9 +1,10 @@
 # Noterator
 
 A JUCE notation app for macOS (Apple silicon only; Windows later) whose music
-mostly comes from the family's generators - Good Idea, Midi Catalogue, Midi
-Suggester, Midi Variator, Starting Blocks. The score is MIDI; the notation is
-engraved from it every time it is drawn.
+mostly comes from the family's generators: Good Idea (the main one), Midi
+Suggester and Midi Variator under Generate, Starting Blocks as its own Blocks
+toolbox, and Midi Catalogue loaded but not listed (0017). The score is MIDI;
+the notation is engraved from it every time it is drawn.
 
 The user is not a developer. Explain in plain words, show screenshots of what
 changed, and make sure every change reaches them as a downloadable Mac app
@@ -93,7 +94,16 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **Pointers into `score.parts` die when a part is added.** Hold ids.
 - **A result never overwrites the music it came from** (0011): Suggester's
   lines go into parts silent in those bars, Variator's after the selection.
-  A line with chords never goes to a one-note instrument.
+  A line with chords never goes to a one-note instrument. The exception is
+  bars the user chose (0019): Good Idea fills them, Variator replaces them.
+- **Where a result lands is decided in `Controller::place`**, in this order:
+  chosen bars (0019), a block at the caret (0018), the selection (0011), the
+  caret's bar. Change it there, not in the panels.
+- **Selecting notes clears the chosen bars** (`select`, `selectAll`,
+  `selectNext`, moving, pasting). Code that sets `selection` directly must
+  decide whether `range` still holds.
+- **The core reads and writes MusicXML itself** (0021, `Xml.*`): no JUCE XML
+  in `Source/Core`. Only `.mxl` unzipping is in the app.
 - **The engraver must stay near-linear.** Anything per element per measure
   goes through the by-measure buckets; the 200-bar test holds it under a second.
 - **General MIDI gets CC7 and CC11 only** from AutoCC; a .mid gets all four (0008).
@@ -109,8 +119,8 @@ cool-grey ground, light grey controls with **dark ink on every button and
 tab**, one yellow (`#FFF200`) for what is on - a chosen button, the
 selection, the sounding note, the caret in note input. Every grey has
 R < G < B. Red `#D2483F` is warnings only. The page is set in ink on its own
-paper and can be turned to black on white (Light page); on white the accent
-is the same yellow shaded down.
+paper: black on white by default, white on dark with **Dark page** (0020,
+remembered between launches); on white the accent is the yellow shaded down.
 
 ## Engraving conventions
 
@@ -127,8 +137,9 @@ coarsest grid that fits; a drum hit is written to the next hit, at most a beat.
 
 ## Where it stands
 
-Working, and tested by the user on their Mac. Not built yet, roughly in the
-order the user is likely to want them: a page view; dynamics, articulations
-and slurs; drawable CC lanes; VST3/CLAP instruments and SoundFonts; MusicXML
-export; real-time recording; Windows. Known rough edges are in the latest
+Working, and tested by the user on their Mac; MusicXML in and out, chosen
+bars and the Blocks toolbox since. Not built yet, roughly in the order the
+user is likely to want them: a page view; dynamics, articulations and slurs;
+drawable CC lanes; VST3/CLAP instruments and SoundFonts; real-time
+recording; Windows. Known rough edges are in the latest
 session log's "Not done yet".

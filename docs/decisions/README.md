@@ -24,5 +24,10 @@ refers to them by number: "(decision 0006)".
 | [0012](0012-apple-silicon-only-built-by-ci.md) | Apple silicon only, built and tested on a Mac runner | Accepted |
 | [0013](0013-autocc-computed-for-a-whole-part.md) | AutoCC is computed for a whole part, not performed live | Accepted |
 | [0014](0014-chords-and-keys-read-from-the-score.md) | Chord and key lanes: ScaleView names, Suggester's key finder, and only real harmony named | Accepted |
-| [0015](0015-the-house-scheme-and-a-dark-page.md) | The house colour scheme, a dark page by default and a light page on request | Accepted |
+| [0015](0015-the-house-scheme-and-a-dark-page.md) | The house colour scheme, a dark page by default and a light page on request | Default replaced by 0020 |
 | [0016](0016-step-input-with-the-keys-people-know.md) | Step-time input, with the keys notation users already know | Accepted |
+| [0017](0017-catalogue-leaves-generate.md) | Midi Catalogue leaves the Generate tab; Good Idea leads it | Accepted |
+| [0018](0018-starting-blocks-is-a-toolbox.md) | Starting Blocks is a toolbox of its own, not a generator | Accepted |
+| [0019](0019-bars-can-be-chosen-and-filled.md) | Bars can be chosen on the page, and generated music fills them | Accepted |
+| [0020](0020-light-page-by-default.md) | A light page by default; dark on request | Accepted |
+| [0021](0021-musicxml-in-and-out.md) | MusicXML in and out, from the core, with a parser of our own | Accepted |

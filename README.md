@@ -1,9 +1,10 @@
 # Noterator
 
 A notation app for the Mac that writes music with you. Most of the music comes
-from the family's generators - **Good Idea**, **Midi Catalogue**, **Midi
-Suggester**, **Midi Variator** and **Starting Blocks** - and lands on the page
-as real notation you can read, edit, play and export.
+from the family's generators - **Good Idea** first, **Midi Suggester** for
+ideas around what you have, **Midi Variator** to change it, and **Starting
+Blocks** as a toolbox of chords, arpeggios, runs and intervals - and lands on
+the page as real notation you can read, edit, play and export.
 
 ![The engraving test page](docs/engraving-test.png)
 
@@ -13,9 +14,14 @@ as real notation you can read, edit, play and export.
   stems, accidentals, ties, triplets and rests are worked out from the notes
   automatically, set in Bravura, the standard music font. Notes that sound
   together line up across every instrument.
-- **Generators built in.** Choose a generator, press Generate, click a result
-  to hear it, press Insert. The generators are your own engines, unchanged,
-  with every setting they have in REAPER.
+- **Generators built in.** Drag across some bars, choose a generator, press
+  Generate, click a result to hear it, press Insert: the music fills exactly
+  those bars, the tune on top, the bass at the bottom, the chords shared out
+  between. The generators are your own engines, unchanged, with every setting
+  they have in REAPER.
+- **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run, interval,
+  bass note or drum; every degree of the key is a button. Click one to see and
+  hear it, Insert to put it at the caret - then the next one goes after it.
 - **It knows the instruments.** A violin and a viola get different clefs,
   ranges and registers, and the generators write differently for each. Notes
   an instrument cannot play turn red; notes outside where it sounds best turn
@@ -29,8 +35,10 @@ as real notation you can read, edit, play and export.
 - **Hear it.** Plays through the General MIDI orchestra built into macOS - no
   sounds to install - with AutoCC's swells on strings, wind and brass.
 - **Take it with you.** Export the whole score or the selected bars as MIDI
-  (with all four AutoCC lanes, for sample libraries) or as WAV audio. Drop a
-  MIDI file onto the window to bring one in.
+  (with all four AutoCC lanes, for sample libraries), as MusicXML for Dorico,
+  Sibelius, MuseScore or Finale, or as WAV audio. Open or drop in a MIDI or
+  MusicXML file (.musicxml, .xml, .mxl) to bring one in.
+- **Black on white**, or a dark page if you prefer (the **Dark page** button).
 
 ## Installing on a Mac
 
@@ -52,11 +60,13 @@ It needs a Mac with Apple silicon (M1 or later).
 | | |
 | --- | --- |
 | Put the caret in a part | click the staff, or the part's name |
-| Generate | right-hand panel: choose a generator, **Generate**, click a result to hear it, **Insert** |
+| Choose bars | click an empty bar; drag across bars and staves for more; drag along the Chords lane for every part; **Esc** lets go |
+| Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the caret's part |
+| Blocks | **Blocks** tab: choose a kind, click a degree to see and hear it, **Insert** at the caret |
 | Write notes | **N** for note input, then click the staff, type **A-G**, or play a MIDI keyboard |
 | Note values | **1-7** (5 is a quarter, 6 a half, 4 an eighth), **.** dot, **T** triplet, **0** rest |
 | Add to a chord | **Shift** + letter, or Shift-click |
-| Select | click a note; drag across the page for several; double-click for a whole chord |
+| Select | click a note; **Shift**-drag for several; double-click for a whole chord |
 | Change notes | **Up/Down** a semitone, **Cmd+Up/Down** an octave, drag a note up or down, **Delete** |
 | Hear | **Space** plays from the selection or the caret; click any note or chord |
 | Undo | **Cmd+Z**, **Shift+Cmd+Z** |
@@ -73,7 +83,6 @@ Next, roughly in order:
 - dynamics, articulations and slurs, and articulation switching for sample libraries;
 - CC lanes you can draw on, beside the automatic ones;
 - VST3 and CLAP instruments per part, and SoundFonts through the Mac's synth;
-- MusicXML export, to take a score into Dorico, Sibelius or MuseScore;
 - Windows.
 
 ## For developers

@@ -1,7 +1,7 @@
 # 0015 - The house colour scheme, a dark page by default and a light page on request
 
 - **Date:** 2026-10-07
-- **Status:** Accepted
+- **Status:** Accepted; the dark default is replaced by [0020](0020-light-page-by-default.md)
 
 ## Context
 

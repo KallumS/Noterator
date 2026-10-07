@@ -19,21 +19,21 @@ reasoning and what it costs; this page is the map.
                       +--> Engrave --> Layout (staff spaces) |
                       +--> Detect  --> chord and key lanes  <-+
                       +--> Perform --> MIDI events <-- AutoCC
-                      +--> MidiFile, ScoreFile
+                      +--> MidiFile, ScoreFile, MusicXml (own Xml reader/writer)
                           |
                           v
   Source/App/       Controller (owns the score, undo, selection, caret)
    (JUCE)             |-- ScoreView + ScoreRenderer (Bravura)  -- the page
-                      |-- Toolbar, Parts, Score, Generate panels, status line
+                      |-- Toolbar; Generate, Blocks, Parts, Score panels; status line
                       |-- AudioEngine (Apple GM Audio Unit / built-in synth)
-                      `-- Exporter (MIDI, WAV)
+                      `-- Exporter (MIDI, WAV, MusicXML)
 ```
 
 - **The score is MIDI.** Parts of notes in ticks (960 a quarter), sounding
   pitch. Nothing about the notation is stored.
 - **The page is derived.** `Engrave` turns the score into a layout in staff
   spaces; `ScoreRenderer` inks it. The same renderer draws PNGs with no window.
-- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 49 tests
+- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 59 tests
   build and run in seconds. `NoteratorAppTests` covers the JUCE side.
 - **One controller.** Every window piece reads the `Controller` and asks it for
   changes; it keeps undo, re-engraves, re-detects and re-sends to playback.
@@ -58,6 +58,9 @@ reasoning and what it costs; this page is the map.
 | --- | --- |
 | [0003](decisions/0003-run-the-lua-engines-unchanged.md) | The five Lua engines run unchanged through embedded Lua 5.4, each behind a small adapter. |
 | [0011](decisions/0011-selection-results-go-beside-or-after.md) | Results made from a selection go beside it (Suggester) or after it (Variator), never over it. |
+| [0017](decisions/0017-catalogue-leaves-generate.md) | Generate lists Good Idea, Suggester and Variator; the Catalogue stays loaded but unlisted. |
+| [0018](decisions/0018-starting-blocks-is-a-toolbox.md) | Starting Blocks is a Blocks tab: kind, degree buttons, preview; a block goes at the caret and the caret moves on. |
+| [0019](decisions/0019-bars-can-be-chosen-and-filled.md) | Bars chosen by dragging; Good Idea fills them exactly, tune on top, bass below, chords between; Variator replaces them. |
 
 ### The page
 | | |
@@ -66,7 +69,8 @@ reasoning and what it costs; this page is the map.
 | [0009](decisions/0009-bravura-not-drawn-glyphs.md) | Bravura draws every symbol, calibrated so a notehead is one staff space. |
 | [0010](decisions/0010-verify-by-rendering.md) | Engraving changes are checked by rendering them to PNG. |
 | [0014](decisions/0014-chords-and-keys-read-from-the-score.md) | Chord lane: ScaleView's names on beat-by-beat segments, only real harmony named. Key lane: Suggester's finder, the signature breaking ties. |
-| [0015](decisions/0015-the-house-scheme-and-a-dark-page.md) | The family's colour scheme; a dark page by default, a light page on request. |
+| [0015](decisions/0015-the-house-scheme-and-a-dark-page.md) | The family's colour scheme (its dark-page default replaced by 0020). |
+| [0020](decisions/0020-light-page-by-default.md) | Black on white by default; Dark page on request, remembered. |
 
 ### Input and sound
 | | |
@@ -75,6 +79,11 @@ reasoning and what it costs; this page is the map.
 | [0007](decisions/0007-one-performance-and-the-macs-own-orchestra.md) | One performance feeds playback, WAV and .mid; sound from Apple's General MIDI Audio Unit, a built-in synth elsewhere. |
 | [0008](decisions/0008-general-midi-gets-two-cc-lanes.md) | General MIDI gets AutoCC's CC7 and CC11; a .mid gets all four lanes. |
 | [0013](decisions/0013-autocc-computed-for-a-whole-part.md) | AutoCC's presets and envelope, ported and computed once per part. |
+
+### Files
+| | |
+| --- | --- |
+| [0021](decisions/0021-musicxml-in-and-out.md) | MusicXML import (.musicxml, .xml, .mxl) and export, in the core with its own XML parser; export written from the layout. |
 
 ## Borrowed from the family, unchanged
 
@@ -92,4 +101,4 @@ reasoning and what it costs; this page is the map.
 Roughly in order: a page view; dynamics, articulations and slurs (with
 articulation switching for sample libraries); drawable CC lanes seeded by
 AutoCC; VST3 and CLAP instruments per part and SoundFonts through the Mac's
-synth; MusicXML export; real-time MIDI recording; Windows.
+synth; real-time MIDI recording; Windows.
