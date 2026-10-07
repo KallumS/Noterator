@@ -11,7 +11,7 @@ local V = engine("midi-variator/mv_vary.lua")
 
 local A = {
   id = "midi-variator",
-  name = "Midi Variator",
+  name = "Vary Notes",       -- Midi Variator (decision 0025)
   description = "Small variations of the selected music, the way a score keeps returning to a motif a little different each time.",
   input = "selection",
   panel = "generate",

@@ -60,6 +60,7 @@ add_library(NoteratorCore STATIC
     Source/Core/Edit.cpp
     Source/Core/Engrave.cpp
     Source/Core/ScoreFile.cpp
+    Source/Core/Templates.cpp
     Source/Core/Xml.cpp
     Source/Core/MusicXml.cpp
     Source/Engines/LuaEngine.cpp
@@ -81,7 +82,8 @@ if(NOTERATOR_BUILD_TESTS)
         Tests/TestDetect.cpp
         Tests/TestMidi.cpp
         Tests/TestGenerators.cpp
-        Tests/TestMusicXml.cpp)
+        Tests/TestMusicXml.cpp
+        Tests/TestTemplates.cpp)
     target_link_libraries(NoteratorTests PRIVATE NoteratorCore)
     add_test(NAME Core COMMAND NoteratorTests)
 endif()

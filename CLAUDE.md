@@ -1,10 +1,15 @@
 # Noterator
 
 A JUCE notation app for macOS (Apple silicon only; Windows later) whose music
-mostly comes from the family's generators: Good Idea (the main one), Midi
-Suggester and Midi Variator under Generate, Starting Blocks as its own Blocks
-toolbox, and Midi Catalogue loaded but not listed (0017). The score is MIDI;
+mostly comes from the family's generators: Good Idea (the main one, drums
+included), Midi Suggester and Midi Variator under Generate, Starting Blocks as
+its own Blocks toolbox of chords, arpeggios, runs and intervals (0018, 0024),
+and Midi Catalogue loaded but not listed (0017). The score is MIDI;
 the notation is engraved from it every time it is drawn.
+
+**Names:** in the app the user sees **Generate Notes** (Good Idea), **Suggest
+Notes** (Midi Suggester) and **Vary Notes** (Midi Variator) (0025). Code, ids
+and these docs keep the engines' own names; talk to the user in the app's.
 
 The user is not a developer. Explain in plain words, show screenshots of what
 changed, and make sure every change reaches them as a downloadable Mac app
@@ -33,10 +38,12 @@ gets undone.
 | `Source/Core/Engrave.*` | Notes in, a laid-out page out, in staff spaces. Decides; draws nothing. |
 | `Source/Core/Edit.*` | Every change the editor can make, as a function. |
 | `Source/Core/Instruments.*` | The one table of what each instrument is (0006). |
+| `Source/Core/Templates.*` | The ensembles a new score starts from, in score order (0022). |
 | `Source/Core/Spelling.*`, `ScaleModel.h` | Keys, spelling, signatures. `ScaleModel.h` is ScaleView's, **unchanged**. |
 | `Source/Core/Detect.*` | Chords and keys along the score (0014). |
 | `Source/Core/AutoCC.*` | AutoCC's curves, computed for a whole part (0013). |
-| `Source/Core/Perform.*`, `MidiFile.*`, `ScoreFile.*` | The score as MIDI events, as a .mid, as a .noterator (JSON). |
+| `Source/Core/Perform.*`, `MidiFile.*`, `ScoreFile.*` | The score as MIDI events (channels in banks, 0023), as a .mid, as a .noterator (JSON). |
+| `Source/Core/Xml.*`, `MusicXml.*` | MusicXML in and out with our own small XML reader/writer (0021). |
 | `Source/Engines/LuaEngine.*` | The embedded Lua host. Speaks only to the adapters. No JUCE. |
 | `Source/Engines/Generators.*` | A generator's context, fitting to an instrument, placing a result (0011). |
 | `Engines/<app>/` | The family's engines, **copied unchanged** (0003), embedded at build time. |
@@ -44,9 +51,10 @@ gets undone.
 | `Source/App/Controller.*` | Owns the score, undo, selection, caret; every window piece asks it. |
 | `Source/App/ScoreView.*` | The page: galley, lanes, sticky names, caret, mouse. |
 | `Source/App/ScoreRenderer.*` | The ink: a layout into Bravura glyphs. Shared with `tools/RenderScore.cpp`. |
-| `Source/App/AudioEngine.*`, `Exporter.*` | Playback, previews, MIDI input; MIDI and WAV export (0007). |
-| `Source/App/Panels.*`, `GeneratorPanel.*`, `MainComponent.*`, `Theme.*` | Toolbar, side panels, status line, keys and menus, colours. |
-| `Tests/Test*.cpp` | Core tests (49), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (4). |
+| `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
+| `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
+| `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts and Score tabs, status line, keys and menus (New is grouped by template), colours. |
+| `Tests/Test*.cpp` | Core tests (65), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -107,6 +115,10 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **The engraver must stay near-linear.** Anything per element per measure
   goes through the by-measure buckets; the 200-bar test holds it under a second.
 - **General MIDI gets CC7 and CC11 only** from AutoCC; a .mid gets all four (0008).
+- **A part's channel is bank x 16 + channel** (0023). Never assume 0-15: files
+  take `% 16`, the audio thread routes by `Sequence::Event::bank`, and
+  channels 15 and 16 of bank 0 belong to the keyboard and previews. A new
+  synth for a bank is made on the message thread, before it is needed.
 - Letters in shortcuts arrive in either case: compare them upper-cased.
 - **No references into temporaries in tests**: `f().front().x` inside
   `CHECK_EQ` dangles. It passed with GCC and failed on the Mac.
@@ -137,8 +149,9 @@ coarsest grid that fits; a drum hit is written to the next hit, at most a beat.
 
 ## Where it stands
 
-Working, and tested by the user on their Mac; MusicXML in and out, chosen
-bars and the Blocks toolbox since. Not built yet, roughly in the order the
+Working, and tested by the user on their Mac; since then MusicXML in and out,
+chosen bars, the Blocks toolbox, and templates up to full orchestra and big
+band. Not built yet, roughly in the order the
 user is likely to want them: a page view; dynamics, articulations and slurs;
 drawable CC lanes; VST3/CLAP instruments and SoundFonts; real-time
 recording; Windows. Known rough edges are in the latest

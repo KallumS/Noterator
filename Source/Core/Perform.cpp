@@ -9,20 +9,31 @@ namespace nt
 
 std::vector<int> channelsForParts (const Score& score)
 {
+    // The channels a pitched part may have, in the order they are handed out.
+    std::vector<int> free;
+    for (int bank = 0; bank < maxBanks; ++bank)
+        for (int ch = 0; ch < channelsPerBank; ++ch)
+        {
+            if (ch == drumChannel) continue;
+            if (bank == 0 && (ch == liveChannel || ch == previewChannel)) continue;
+            free.push_back (bank * channelsPerBank + ch);
+        }
     std::vector<int> channels;
-    int next = 0;
+    size_t next = 0;
     for (const auto& part : score.parts)
     {
-        if (instrumentById (part.instrument).drums)
-        {
-            channels.push_back (9);
-            continue;
-        }
-        channels.push_back (next);
-        next = (next + 1) % 16;
-        if (next == 9) next = 10;
+        if (instrumentById (part.instrument).drums) { channels.push_back (drumChannel); continue; }
+        channels.push_back (free[next]);
+        next = (next + 1) % free.size();
     }
     return channels;
+}
+
+int banksForParts (const std::vector<int>& channels)
+{
+    int banks = 1;
+    for (int ch : channels) banks = std::max (banks, ch / channelsPerBank + 1);
+    return banks;
 }
 
 bool partAudible (const Score& score, size_t partIndex)

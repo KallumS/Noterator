@@ -14,7 +14,7 @@ reasoning and what it costs; this page is the map.
   Source/Engines/   LuaEngine  ---  Generators (context in, results placed)
                           |
                           v
-  Source/Core/      Score  <-- Edit (every change)        Instruments (one table)
+  Source/Core/      Score  <-- Edit (every change)        Instruments (one table), Templates
    (no JUCE)          |                                     |
                       +--> Engrave --> Layout (staff spaces) |
                       +--> Detect  --> chord and key lanes  <-+
@@ -25,7 +25,7 @@ reasoning and what it costs; this page is the map.
   Source/App/       Controller (owns the score, undo, selection, caret)
    (JUCE)             |-- ScoreView + ScoreRenderer (Bravura)  -- the page
                       |-- Toolbar; Generate, Blocks, Parts, Score panels; status line
-                      |-- AudioEngine (Apple GM Audio Unit / built-in synth)
+                      |-- AudioEngine (a rack of Apple GM Audio Units / built-in synths)
                       `-- Exporter (MIDI, WAV, MusicXML)
 ```
 
@@ -33,7 +33,7 @@ reasoning and what it costs; this page is the map.
   pitch. Nothing about the notation is stored.
 - **The page is derived.** `Engrave` turns the score into a layout in staff
   spaces; `ScoreRenderer` inks it. The same renderer draws PNGs with no window.
-- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 59 tests
+- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 65 tests
   build and run in seconds. `NoteratorAppTests` covers the JUCE side.
 - **One controller.** Every window piece reads the `Controller` and asks it for
   changes; it keeps undo, re-engraves, re-detects and re-sends to playback.
@@ -52,6 +52,7 @@ reasoning and what it costs; this page is the map.
 | [0002](decisions/0002-the-score-is-midi-shaped.md) | The score is MIDI; notation is worked out from it every time. Generators' output goes in unconverted. |
 | [0005](decisions/0005-edits-are-functions-undo-is-a-copy.md) | Every edit is a pure function; undo keeps a copy of the score. Note input overwrites. |
 | [0006](decisions/0006-instruments-carry-their-context.md) | One instrument table (Midi Catalogue's numbers plus clefs, transposition, sound, AutoCC shape) read by everything. |
+| [0022](decisions/0022-templates-in-score-order.md) | Templates (sections, full orchestra, big band) are data in the core, in score order, numbered where repeated. |
 
 ### The generators
 | | |
@@ -60,6 +61,8 @@ reasoning and what it costs; this page is the map.
 | [0011](decisions/0011-selection-results-go-beside-or-after.md) | Results made from a selection go beside it (Suggester) or after it (Variator), never over it. |
 | [0017](decisions/0017-catalogue-leaves-generate.md) | Generate lists Good Idea, Suggester and Variator; the Catalogue stays loaded but unlisted. |
 | [0018](decisions/0018-starting-blocks-is-a-toolbox.md) | Starting Blocks is a Blocks tab: kind, degree buttons, preview; a block goes at the caret and the caret moves on. |
+| [0024](decisions/0024-blocks-without-drums-and-bass.md) | Blocks offers chords, arpeggios, runs and intervals; drums and bass are Good Idea's. |
+| [0025](decisions/0025-generators-named-for-what-they-do.md) | In the app: Generate Notes (Good Idea), Suggest Notes (Suggester), Vary Notes (Variator); code keeps the engines' names. |
 | [0019](decisions/0019-bars-can-be-chosen-and-filled.md) | Bars chosen by dragging; Good Idea fills them exactly, tune on top, bass below, chords between; Variator replaces them. |
 
 ### The page
@@ -78,6 +81,7 @@ reasoning and what it costs; this page is the map.
 | [0016](decisions/0016-step-input-with-the-keys-people-know.md) | Step-time input with MuseScore's keys; letters start in the instrument's register; MIDI keys write chords. |
 | [0007](decisions/0007-one-performance-and-the-macs-own-orchestra.md) | One performance feeds playback, WAV and .mid; sound from Apple's General MIDI Audio Unit, a built-in synth elsewhere. |
 | [0008](decisions/0008-general-midi-gets-two-cc-lanes.md) | General MIDI gets AutoCC's CC7 and CC11; a .mid gets all four lanes. |
+| [0023](decisions/0023-a-synth-per-sixteen-channels.md) | A synth per sixteen channels (up to four), so every part of a big score has a channel and a sound of its own. |
 | [0013](decisions/0013-autocc-computed-for-a-whole-part.md) | AutoCC's presets and envelope, ported and computed once per part. |
 
 ### Files

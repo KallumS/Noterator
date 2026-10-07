@@ -18,8 +18,6 @@ const Kind kindList[] = {
     { "Arpeggio", "Arpeggio", "The chord on each degree, one note at a time" },
     { "Run", "Run", "The scale from each degree, up, down or both" },
     { "Melody", "Interval", "A step or a leap from each degree: a 2nd, a 3rd, up to an octave" },
-    { "Bass", "Bass", "The root, third, fifth or seventh of each degree's chord, repeated" },
-    { "Drums", "Drums", "One drum, at a rate" },
 };
 
 // The block placed alone, as it would go into the caret's part: what the
@@ -195,7 +193,6 @@ void BlocksPanel::remake()
         // "ii  D Minor I Chord Triad": the numeral, then the note it stands on.
         b->numeral = title.upToFirstOccurrenceOf ("  ", false, false);
         b->name = juce::String (blocks[i].detail).upToFirstOccurrenceOf ("  ", false, false);
-        if (blocks.size() == 1) { b->numeral = title; b->name = {}; }
         b->setTooltip (title + "\n" + juce::String (blocks[i].detail).fromFirstOccurrenceOf ("  ", false, false));
         b->onClick = [this, i] { choose (static_cast<int> (i), true); };
         b->onDoubleClick = [this, i] { choose (static_cast<int> (i), false); insertChosen(); };
@@ -235,20 +232,18 @@ void BlocksPanel::resized()
     auto r = getLocalBounds().reduced (10);
     key.setBounds (r.removeFromTop (20));
     r.removeFromTop (6);
-    // The kinds, three to a row.
-    for (int row = 0; row < 2; ++row)
+    // The kinds, in one row.
     {
         auto line = r.removeFromTop (28);
-        const int w = (line.getWidth() - 8) / 3;
-        for (int col = 0; col < 3; ++col)
+        const int n = std::max (1, kinds.size());
+        const int w = (line.getWidth() - 4 * (n - 1)) / n;
+        for (auto* k : kinds)
         {
-            const int i = row * 3 + col;
-            if (i < kinds.size()) kinds[i]->setBounds (line.removeFromLeft (w));
+            k->setBounds (line.removeFromLeft (w));
             line.removeFromLeft (4);
         }
-        r.removeFromTop (4);
     }
-    r.removeFromTop (6);
+    r.removeFromTop (10);
 
     // The degrees, four to a row.
     const int perRow = 4, gap = 4;

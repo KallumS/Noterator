@@ -1,6 +1,7 @@
 #include "MainComponent.h"
 
 #include "Exporter.h"
+#include "Templates.h"
 
 namespace nt
 {
@@ -231,10 +232,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
     };
     if (index == 0)
     {
-        juce::PopupMenu templates;
-        const auto names = Controller::templates();
-        for (int i = 0; i < names.size(); ++i) templates.addItem (menuTemplateBase + i, names[i]);
-        m.addSubMenu ("New", templates);
+        m.addSubMenu ("New", templateMenu());
         item (menuOpen, "Open...", "Cmd+O");
         item (menuImport, "Import MIDI or MusicXML into this score...");
         m.addSeparator();
@@ -324,11 +322,33 @@ void MainComponent::menuItemSelected (int id, int)
     }
 }
 
+juce::PopupMenu MainComponent::templateMenu()
+{
+    // Grouped under headings, each with how many parts it starts with.
+    juce::PopupMenu m;
+    std::string group = "-";
+    const auto& list = scoreTemplates();
+    for (size_t i = 0; i < list.size(); ++i)
+    {
+        const auto& t = list[i];
+        if (t.group != group)
+        {
+            if (t.group.empty()) m.addSeparator();
+            else m.addSectionHeader (t.group);
+            group = t.group;
+        }
+        juce::PopupMenu::Item item (t.name);
+        item.itemID = menuTemplateBase + static_cast<int> (i);
+        const auto n = t.instruments.size();
+        if (n > 1) item.shortcutKeyDescription = juce::String (static_cast<int> (n)) + " parts";
+        m.addItem (item);
+    }
+    return m;
+}
+
 void MainComponent::showNewMenu()
 {
-    juce::PopupMenu m;
-    const auto names = Controller::templates();
-    for (int i = 0; i < names.size(); ++i) m.addItem (menuTemplateBase + i, names[i]);
+    auto m = templateMenu();
     m.showMenuAsync (juce::PopupMenu::Options(), [this] (int r) { if (r > 0) menuItemSelected (r, 0); });
 }
 
@@ -486,7 +506,7 @@ void MainComponent::exportDialog (ExportKind kind, bool selectedBars)
         // The window owns itself until it finishes.
         struct Render : public juce::ThreadWithProgressWindow
         {
-            Render (const Score& s, ExportRange r, std::unique_ptr<SynthBackend> sy, juce::String d, juce::File fl, Controller& c)
+            Render (const Score& s, ExportRange r, std::unique_ptr<SynthRack> sy, juce::String d, juce::File fl, Controller& c)
                 : juce::ThreadWithProgressWindow ("Exporting audio...", true, true),
                   score (s), range (r), synth (std::move (sy)), desc (std::move (d)), file (fl), controller (c) {}
             void run() override
@@ -502,15 +522,17 @@ void MainComponent::exportDialog (ExportKind kind, bool selectedBars)
             }
             Score score;
             ExportRange range;
-            std::unique_ptr<SynthBackend> synth;
+            std::unique_ptr<SynthRack> synth;
             juce::String desc;
             juce::File file;
             Controller& controller;
             bool ok = false;
             juce::String error;
         };
-        juce::String desc;
-        auto synth = createSynth (audio.usingBuiltInSynth(), desc);
+        // Every synth the score needs is made here, on the message thread.
+        auto synth = std::make_unique<SynthRack> (audio.usingBuiltInSynth());
+        synth->ensureBanks (banksFor (controller.score));
+        const auto desc = synth->description();
         audio.stop();
         (new Render (controller.score, range, std::move (synth), desc, f, controller))->launchThread();
     });
@@ -576,11 +598,11 @@ void MainComponent::showHelp()
         "Click a chord in the Chords lane to hear it, or the Scale lane to hear the scale\n\n"
         "GENERATING\n"
         "Choose some bars (or put the caret in a part), choose a generator, press\n"
-        "Generate, click a result to hear it, and Insert to put it in. Good Idea\n"
-        "fills the bars chosen: the tune on top, the bass below, chords between.\n"
-        "Midi Suggester and Midi Variator work on the music you select.\n\n"
+        "Generate, click a result to hear it, and Insert to put it in.\n"
+        "Generate Notes fills the bars chosen: the tune on top, the bass below,\n"
+        "chords between. Suggest Notes and Vary Notes work on the music you select.\n\n"
         "BLOCKS\n"
-        "Pick a chord, arpeggio, run, interval, bass note or drum, click a degree\n"
+        "Pick a chord, arpeggio, run or interval, click a degree\n"
         "to see and hear it, and Insert to put it at the caret - the caret moves\n"
         "on, so blocks can be laid one after another.";
     juce::AlertWindow::showMessageBoxAsync (juce::MessageBoxIconType::InfoIcon, "Noterator - keys", text);

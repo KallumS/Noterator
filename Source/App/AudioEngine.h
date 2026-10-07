@@ -1,8 +1,9 @@
 /*
     AudioEngine - playback, previews and MIDI input.
 
-    Everything that sounds goes through one synth. On a Mac that is Apple's
-    own General MIDI instrument set (the DLSMusicDevice Audio Unit every Mac
+    Everything that sounds goes through one synth - or a rack of them, one
+    per sixteen channels, for a big score (decision 0023). On a Mac that is
+    Apple's own General MIDI instrument set (the DLSMusicDevice Audio Unit every Mac
     has), so a score plays with a real orchestra the moment the app opens and
     nothing has to be downloaded. Anywhere it cannot be loaded, a small synth
     built in here stands in (decision 0007). VST3 and CLAP instruments per part
@@ -22,6 +23,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>
 
+#include <array>
 #include <atomic>
 #include <memory>
 
@@ -42,13 +44,49 @@ public:
 // `preferBuiltIn` skips the search.
 std::unique_ptr<SynthBackend> createSynth (bool preferBuiltIn, juce::String& description);
 
+// MIDI for each bank of sixteen channels.
+using BankMidi = std::array<juce::MidiBuffer, maxBanks>;
+
+// Synths side by side, one for each bank of sixteen channels, so a score of
+// more than fifteen instruments gives each its own channel (decision 0023).
+class SynthRack
+{
+public:
+    explicit SynthRack (bool preferBuiltIn);
+    ~SynthRack();
+
+    // Makes synths until there are `banks`. On the message thread only: an
+    // Audio Unit is made there. A rack in use is swapped in under a lock.
+    void ensureBanks (int banks);
+    int banks() const { return static_cast<int> (synths.size()); }
+    const juce::String& description() const { return desc; }
+
+    void prepare (double sampleRate, int blockSize);
+    void release();
+    // Each bank's MIDI through its own synth, mixed into `buffer`. MIDI for a
+    // bank with no synth is dropped.
+    void render (juce::AudioBuffer<float>& buffer, BankMidi& midi);
+
+private:
+    bool builtIn;
+    juce::String desc;
+    std::vector<std::unique_ptr<SynthBackend>> synths;
+    juce::AudioBuffer<float> scratch;
+    double rate = 0;
+    int block = 0;
+};
+
+// The banks a score needs to play every part on a channel of its own.
+int banksFor (const Score& score);
+
 // The score as timed MIDI messages, in seconds from `from`.
 struct Sequence
 {
-    struct Event { double seconds; juce::MidiMessage message; uint32_t noteId; int part; };
+    struct Event { double seconds; juce::MidiMessage message; uint32_t noteId; int part; int bank; };
     std::vector<Event> events;
     double length = 0;
     Tick from = 0;
+    int banks = 1;
 };
 
 std::shared_ptr<const Sequence> makeSequence (const Score& score, Tick from, Tick to, const PerformOptions& options);
@@ -61,7 +99,7 @@ public:
     ~AudioEngine() override;
 
     juce::AudioDeviceManager& devices() { return deviceManager; }
-    juce::String synthName() const { return synthDescription; }
+    juce::String synthName() const { return synth != nullptr ? synth->description() : juce::String(); }
     void useBuiltInSynth (bool builtIn);
     bool usingBuiltInSynth() const { return builtInOnly; }
 
@@ -92,8 +130,7 @@ public:
 
 private:
     juce::AudioDeviceManager deviceManager;
-    std::unique_ptr<SynthBackend> synth;
-    juce::String synthDescription;
+    std::unique_ptr<SynthRack> synth;
     bool builtInOnly = false;
     juce::CriticalSection synthLock;   // held only while swapping the synth, never by the audio thread for long
 
@@ -111,6 +148,7 @@ private:
     std::vector<Scheduled> queue;
     std::vector<Scheduled> pending;               // audio thread's own, from the queue
     juce::MidiMessageCollector midiCollector;
+    BankMidi blockMidi;                           // the audio thread's, kept to save allocating
 
     mutable juce::SpinLock soundingLock;
     std::vector<uint32_t> sounding;
@@ -125,6 +163,7 @@ private:
     void handleIncomingMidiMessage (juce::MidiInput*, const juce::MidiMessage&) override;
 
     void schedule (double delaySeconds, const juce::MidiMessage& m);
+    void ensureBanks (int banks);
     void openMidiInputs();
 };
 

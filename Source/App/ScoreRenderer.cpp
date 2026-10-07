@@ -428,7 +428,16 @@ void ScoreRenderer::drawNames (juce::Graphics& g, const Layout& lay, const Score
         const auto& last = lay.staves[i + static_cast<size_t> (st.staffCount) - 1];
         const float y1 = originY + static_cast<float> (st.top) * sp;
         const float y2 = originY + static_cast<float> (last.top + 4.0) * sp;
-        juce::String name = shortNames ? juce::String (inst.shortName) : juce::String (part.name);
+        // A name too long for the margin is shortened the way a printed score
+        // shortens it, keeping its number: Tenor Saxophone 2 is T. Sax. 2.
+        const juce::String full (part.name);
+        juce::String name = full;
+        if (full.startsWith (inst.name))
+        {
+            const juce::String shortened = juce::String (inst.shortName) + full.substring (static_cast<int> (inst.name.size()));
+            const float width = juce::GlyphArrangement::getStringWidth (g.getCurrentFont(), full);
+            if (shortNames || width > right - 4.0f) name = shortened;
+        }
         g.setColour (style.page.ink);
         g.drawFittedText (name, juce::Rectangle<float> (0, y1, right, y2 - y1).toNearestInt(),
                           juce::Justification::centredRight, 2);

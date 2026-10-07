@@ -64,6 +64,7 @@ private:
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void showNewMenu();
+    juce::PopupMenu templateMenu();
     void showExportMenu();
     void showSettingsMenu();
     void openDialog();
