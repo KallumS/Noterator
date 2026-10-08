@@ -92,6 +92,17 @@ TEST ("detect: naming what sounds at one moment")
     CHECK_EQ (nameSounding ({ 62, 65, 69, 72 }, 0, 0), std::string ("Dmin7"));
 }
 
+//  ScaleView Pro, the reference, October 2026: an altered dominant on its own
+//  root keeps its alterations, and a draw goes to the reading with no slash.
+//  Arrives through ScaleModel.h, unchanged from the plugin, which ports Pro.
+TEST ("detect: ScaleView Pro's altered dominants and no-slash draws")
+{
+    CHECK_EQ (nameSounding ({ 48, 64, 68, 70, 73 }, 0, 0), std::string ("Caug7b9"));   // C7#5b9
+    CHECK_EQ (nameSounding ({ 48, 64, 66, 70, 75 }, 0, 0), std::string ("C7b5#9"));
+    CHECK_EQ (nameSounding ({ 48, 62, 67, 70 }, 0, 0), std::string ("C7sus2"));        // was GminAdd11/C
+    CHECK_EQ (nameSounding ({ 55, 57, 62, 65, 67 }, 0, 0), std::string ("G7sus2"));    // was DminAdd11/G
+}
+
 TEST ("detect: the key signature settles a near tie")
 {
     // C E A G: as much A minor as C major.
