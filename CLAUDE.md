@@ -165,8 +165,12 @@ coarsest grid that fits; a drum hit is written to the next hit, at most a beat.
 ## Where it stands
 
 Working, and tested by the user on their Mac; since then MusicXML in and out,
-chosen bars, the Blocks toolbox, and templates up to full orchestra and big
-band. Not built yet, roughly in the order the
+chosen bars, the Blocks toolbox, templates up to full orchestra and big band,
+and Follow: the page scrolls smoothly with the music as it plays, or turns a
+page at a time (0033, 0034). Follow is on the branch `ccr-ac8da7d9-3sbl5x`,
+not yet merged into `main`, and not yet tried by the user on a Mac.
+Miderator (KallumS/Miderator), this app with a piano roll, was copied from
+here the same day and shares the music code. Not built yet, roughly in the order the
 user is likely to want them: a page view; dynamics, articulations and slurs;
 drawable CC lanes; VST3/CLAP instruments and SoundFonts; real-time
 recording; Windows. Known rough edges are in the latest

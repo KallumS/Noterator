@@ -40,6 +40,9 @@ can read, edit, play and export.
   numbers (note values), or play a MIDI keyboard.
 - **Hear it.** Plays through the General MIDI orchestra built into macOS - no
   sounds to install - with AutoCC's swells on strings, wind and brass.
+- **Follow the music.** While it plays, the page scrolls smoothly along with
+  it, the playhead a third of the way across so you see what is coming. Or
+  turn a page at a time, or keep the page still (the **Follow** button).
 - **Take it with you.** Export the whole score or the selected bars as MIDI
   (with all four AutoCC lanes, for sample libraries), as MusicXML for Dorico,
   Sibelius, MuseScore or Finale, or as WAV audio. Open or drop in a MIDI or
@@ -117,6 +120,13 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 the shape of it and every big decision, [docs/decisions](docs/decisions/README.md)
 the reasons in full, and [docs/NEXT-SESSION.md](docs/NEXT-SESSION.md) the prompt to
 carry on in a new session.
+
+**Miderator** ([KallumS/Miderator](https://github.com/KallumS/Miderator)) is
+this app with the notation replaced by a piano roll, as Cubase and Ableton
+show music. It shares this repository's music code byte for byte - the
+score, instruments, templates, generators, playback, files and the core
+tests - and copies changes across with its `tools/sync_from_noterator.sh`.
+A fix to any of those is made here first.
 
 ## Credits
 

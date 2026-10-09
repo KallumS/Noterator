@@ -33,10 +33,17 @@ reasoning and what it costs; this page is the map.
   pitch. Nothing about the notation is stored.
 - **The page is derived.** `Engrave` turns the score into a layout in staff
   spaces; `ScoreRenderer` inks it. The same renderer draws PNGs with no window.
-- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 65 tests
+- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 74 tests
   build and run in seconds. `NoteratorAppTests` covers the JUCE side.
 - **One controller.** Every window piece reads the `Controller` and asks it for
   changes; it keeps undo, re-engraves, re-detects and re-sends to playback.
+- **The page follows the music** (`Follow.h`): smoothly by default, a page
+  at a time on request, the playhead on a steady clock of its own.
+- **Shared with Miderator.** Miderator (KallumS/Miderator) is this app with a
+  piano roll for a page; `Source/Core` (but its `Roll.*`), `Source/Engines`,
+  the engines and the core tests are the same files in both. Changes are made
+  here and copied there. Decisions 0026-0032 are Miderator's; the two apps
+  number decisions in one sequence.
 
 ## The decisions
 

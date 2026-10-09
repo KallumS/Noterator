@@ -20,25 +20,34 @@ generators, which run unchanged inside it through embedded Lua:
   instrument keeps its own sound through Apple's built-in General MIDI synth.
 - Scores open and export as MIDI and MusicXML; audio exports as WAV. The page
   is black on white by default, with a Dark page option.
-It works; I have tested it on my Mac.
+- Follow: while it plays, the page scrolls smoothly with the music, or turns
+  a page at a time (Play menu).
+It works; I have tested it on my Mac (Follow not yet).
+
+There is a sister app, Miderator (KallumS/Miderator): this app with a piano
+roll instead of notation. It shares this repository's music code byte for
+byte (Source/Core except its Roll.*, Source/Engines, the engines, the core
+tests), copied across with its tools/sync_from_noterator.sh. A change to the
+shared code is made here first; tell me if it should go to Miderator too.
 
 I'm not technical: explain things in plain words, show me screenshots of what
 changed, and make sure each change reaches me as the downloadable Mac app from
 GitHub Actions.
 
 Before doing anything:
-1. If the work so far (branch claude/epic-hypatia-z0ya3r) is not yet in your
-   branch, start your branch from it.
-2. Read CLAUDE.md, then docs/ARCHITECTURE.md (every decision, 0001-0025, on
-   one page), then the latest logs in docs/sessions/. Follow their rules -
-   especially: never edit the vendored engines in Engines/<app>/ (adapters are
-   fine), no JUCE in Source/Core, where a generated result lands is decided
-   only in Controller::place, a part's MIDI channel can be above 16 (banks),
-   look at a render after any engraving change, and commit and push early.
+1. If the branch ccr-ac8da7d9-3sbl5x (Follow, decisions 0033 and 0034) is
+   not yet merged into main, start your branch from it.
+2. Read CLAUDE.md, then docs/ARCHITECTURE.md (every decision on one page),
+   then the latest logs in docs/sessions/. Follow their rules - especially:
+   never edit the vendored engines in Engines/<app>/ (adapters are fine),
+   no JUCE in Source/Core, where a generated result lands is decided only in
+   Controller::place, a part's MIDI channel can be above 16 (banks), look at
+   a render after any engraving change, and commit and push early.
 3. Build and run the tests (core, app tests, tools/try_generators.lua), and
    render the demo page, to confirm everything is green before changing
    anything. For anything in the window, run the app headless under Xvfb and
-   look at screenshots.
+   look at screenshots; for playback, CLAUDE.md says how to fake a sound
+   card so the playhead moves.
 
 This session:
 <what I want next - for example: "a page view", "dynamics and articulations",
@@ -56,21 +65,22 @@ recording; Windows. Known rough edges are in the latest session log's
 When you finish: write the session log in docs/sessions/ (and its line in
 docs/sessions/README.md), add a decision record in docs/decisions/ (with its
 line in docs/decisions/README.md and docs/ARCHITECTURE.md) for any choice
-someone could reasonably make the other way, update CLAUDE.md and README.md
-if what the app does or a rule changed, rewrite docs/NEXT-SESSION.md, push,
-check that the GitHub Actions run is green on both Linux and macOS (the Mac
-test log should say it rendered through Apple General MIDI), and tell me
-where to download the new app.
+someone could reasonably make the other way - numbered after the highest in
+either Noterator or Miderator - update CLAUDE.md and README.md if what the
+app does or a rule changed, rewrite docs/NEXT-SESSION.md, push, check that
+the GitHub Actions run is green on both Linux and macOS (the Mac test log
+should say it rendered through Apple General MIDI), and tell me where to
+download the new app.
 ```
 
 ## Things worth knowing before you paste it
 
 - The other repositories (Good-Idea, Midi-Catalogue, ScaleView and so on) are
   only needed if the session has to copy an engine update across; it will ask
-  for them if so.
+  for them if so. Miderator is needed when a change to the shared music code
+  should reach it too.
 - If you want the app to open with a normal double-click, the session can set
   up Apple Developer ID signing - it needs your Apple Developer account, added
   to the repository as secrets.
-- The work so far is all on the branch `claude/epic-hypatia-z0ya3r`. If you
-  would like it on the main branch first, ask the session to open a pull
-  request for you to merge.
+- The latest work (Follow) is on the branch `ccr-ac8da7d9-3sbl5x`. To put it
+  on the main branch, ask a session to open a pull request for you to merge.
