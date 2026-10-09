@@ -79,7 +79,8 @@ It needs a Mac with Apple silicon (M1 or later).
 | Add to a chord | **Shift** + letter, or Shift-click |
 | Select | click a note; **Shift**-drag for several; double-click for a whole chord |
 | Change notes | **Up/Down** a semitone, **Cmd+Up/Down** an octave, drag a note up or down, **Delete** |
-| Hear | **Space** plays from the selection or the caret; click any note or chord |
+| Hear | **Space** plays from bar 1; **Shift+Space** (or **Play**) plays from the caret; click any note or chord |
+| Start and end | **\|◀** beside Play (or **Home**) goes back to bar 1; **▶\|** (or **End**) to the end of the music |
 | Follow the music | **Follow** (beside Play) scrolls the page along with the music as it plays, the playhead a third of the way across; click it to keep the page still. To turn a page at a time instead: **Play** menu, **Turn a Page at a Time** |
 | Take it out | **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
 | Light or dark | the page is black on white; **Dark page** turns it round |

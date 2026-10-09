@@ -4,7 +4,8 @@
 
     Keys follow the notation programs people already know: letters write
     notes, numbers choose note values (MuseScore's: 5 is a quarter), the
-    arrows move and transpose, Space plays.
+    arrows move and transpose, Space plays from bar 1 and Shift+Space from
+    the caret, Home and End go to the start and the end.
 */
 
 #pragma once
@@ -74,6 +75,8 @@ private:
     void exportDialog (ExportKind kind, bool selectedBars);
     void audioSettingsDialog();
     void showHelp();
+    void returnToStart();
+    void skipToEnd();
     void updateTitle();
 };
 

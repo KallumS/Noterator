@@ -127,6 +127,14 @@ void ScoreView::scrollToTick (Tick t)
     repaint();
 }
 
+void ScoreView::scrollToTickAt (Tick t, double fraction)
+{
+    const double x = controller.layout.xForTick (t) * space();
+    scrollX = std::max (0.0, x - musicArea().getWidth() * fraction);
+    updateScrollbars();
+    repaint();
+}
+
 void ScoreView::zoomBy (float factor)
 {
     controller.zoom = juce::jlimit (5.0f, 24.0f, controller.zoom * factor);

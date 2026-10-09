@@ -13,7 +13,7 @@ enum MenuIds
     menuNew = 1, menuOpen, menuImport, menuSave, menuSaveAs, menuExportMidi, menuExportMidiBars, menuExportAudio, menuExportAudioBars,
     menuExportXml, menuExportXmlBars,
     menuUndo = 100, menuRedo, menuCut, menuCopy, menuPaste, menuDelete, menuSelectAll, menuVoice,
-    menuPlay = 200, menuFollow, menuFollowSmooth, menuFollowPage, menuNoteInput, menuLightPage, menuTransposed, menuZoomIn, menuZoomOut, menuAudioSettings, menuHelp,
+    menuPlay = 200, menuPlayCaret, menuToStart, menuToEnd, menuFollow, menuFollowSmooth, menuFollowPage, menuNoteInput, menuLightPage, menuTransposed, menuZoomIn, menuZoomOut, menuAudioSettings, menuHelp,
     menuTemplateBase = 1000
 };
 
@@ -47,6 +47,8 @@ MainComponent::MainComponent()
     toolbar.onExport = [this] { showExportMenu(); };
     toolbar.onSettings = [this] { showSettingsMenu(); };
     scorePanel.onAudioSettings = [this] { audioSettingsDialog(); };
+    toolbar.onStart = [this] { returnToStart(); };
+    toolbar.onEnd = [this] { skipToEnd(); };
 
     // A MIDI keyboard writes in note input, and is always heard.
     audio.onMidiInput = [this] (const juce::MidiMessage& m)
@@ -157,7 +159,10 @@ bool MainComponent::keyPressed (const juce::KeyPress& k)
         return false;
     }
 
-    if (code == juce::KeyPress::spaceKey) { c.togglePlay(); return true; }
+    // Space from bar 1, Shift+Space from the caret (decision 0035).
+    if (code == juce::KeyPress::spaceKey) { c.togglePlay (! mods.isShiftDown()); return true; }
+    if (code == juce::KeyPress::homeKey) { returnToStart(); return true; }
+    if (code == juce::KeyPress::endKey) { skipToEnd(); return true; }
     if (code == juce::KeyPress::escapeKey)
     {
         if (c.audio.isPlaying()) c.stop();
@@ -275,7 +280,15 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
     }
     else if (index == 3)
     {
-        item (menuPlay, controller.audio.isPlaying() ? "Stop" : "Play", "Space");
+        if (controller.audio.isPlaying()) item (menuPlay, "Stop", "Space");
+        else
+        {
+            item (menuPlay, "Play from the Start", "Space");
+            item (menuPlayCaret, "Play from the Caret", "Shift+Space");
+        }
+        item (menuToStart, "Return to Start", "Home");
+        item (menuToEnd, "Skip to End", "End");
+        m.addSeparator();
         m.addItem (menuFollow, "Follow the Playhead", true, controller.followPlayback);
         m.addItem (menuFollowSmooth, "    Scroll Along with the Music", true, controller.followPlayback && controller.followStyle == FollowStyle::smooth);
         m.addItem (menuFollowPage, "    Turn a Page at a Time", true, controller.followPlayback && controller.followStyle == FollowStyle::page);
@@ -323,7 +336,10 @@ void MainComponent::menuItemSelected (int id, int)
         case menuTransposed: c.transposedScore = ! c.transposedScore; c.viewChanged(); break;
         case menuZoomIn: view.zoomBy (1.15f); break;
         case menuZoomOut: view.zoomBy (1.0f / 1.15f); break;
-        case menuPlay: c.togglePlay(); break;
+        case menuPlay: c.togglePlay (true); break;
+        case menuPlayCaret: c.togglePlay (false); break;
+        case menuToStart: returnToStart(); break;
+        case menuToEnd: skipToEnd(); break;
         case menuFollow: c.toggleFollow(); break;
         case menuFollowSmooth: c.setFollowStyle (FollowStyle::smooth); break;
         case menuFollowPage: c.setFollowStyle (FollowStyle::page); break;
@@ -586,6 +602,19 @@ void MainComponent::audioSettingsDialog()
     o.launchAsync();
 }
 
+void MainComponent::returnToStart()
+{
+    controller.returnToStart();
+    view.scrollToTickAt (0, 0.0);
+}
+
+void MainComponent::skipToEnd()
+{
+    controller.skipToEnd();
+    // The end near the right, so the last bars are in view.
+    view.scrollToTickAt (controller.caret, 0.8);
+}
+
 void MainComponent::showHelp()
 {
     const juce::String text =
@@ -605,7 +634,8 @@ void MainComponent::showHelp()
         "[ and ]  halve or double     V  swap voice     Delete  remove\n"
         "Cmd+C / X / V  copy, cut, paste at the caret     Cmd+Z  undo\n\n"
         "LISTENING\n"
-        "Space  play from the selection or the caret, or stop\n"
+        "Space  play from bar 1, or stop     Shift+Space  play from the caret\n"
+        "Home  back to the start     End  on to the end of the music\n"
         "Follow (toolbar, Play menu)  the page scrolls along with the music as it plays\n"
         "(or turns a page at a time: Play menu)\n"
         "Click a chord in the Chords lane to hear it, or the Scale lane to hear the scale\n\n"

@@ -22,6 +22,8 @@ generators, which run unchanged inside it through embedded Lua:
   is black on white by default, with a Dark page option.
 - Follow: while it plays, the page scrolls smoothly with the music, or turns
   a page at a time (Play menu).
+- Space plays from bar 1, Shift+Space and Play from the caret; buttons
+  beside Play go to the start and the end (Home, End).
 It works; I have tested it on my Mac (Follow not yet).
 
 There is a sister app, Miderator (KallumS/Miderator): this app with a piano
@@ -35,8 +37,8 @@ changed, and make sure each change reaches me as the downloadable Mac app from
 GitHub Actions.
 
 Before doing anything:
-1. If the branch ccr-ac8da7d9-3sbl5x (Follow, decisions 0033 and 0034) is
-   not yet merged into main, start your branch from it.
+1. If the branch ccr-ac8da7d9-3sbl5x (the latest work) is not yet merged
+   into main, start your branch from it; if it is, start from main.
 2. Read CLAUDE.md, then docs/ARCHITECTURE.md (every decision on one page),
    then the latest logs in docs/sessions/. Follow their rules - especially:
    never edit the vendored engines in Engines/<app>/ (adapters are fine),
@@ -82,5 +84,5 @@ download the new app.
 - If you want the app to open with a normal double-click, the session can set
   up Apple Developer ID signing - it needs your Apple Developer account, added
   to the repository as secrets.
-- The latest work (Follow) is on the branch `ccr-ac8da7d9-3sbl5x`. To put it
-  on the main branch, ask a session to open a pull request for you to merge.
+- The latest work is on the branch `ccr-ac8da7d9-3sbl5x` until you merge it.
+  To put it on the main branch, ask a session to open a pull request.

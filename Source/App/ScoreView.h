@@ -41,6 +41,8 @@ public:
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
 
     void scrollToTick (Tick t);
+    // Scrolls so `t` sits `fraction` of the way across the page.
+    void scrollToTickAt (Tick t, double fraction);
     void zoomBy (float factor);
 
 private:

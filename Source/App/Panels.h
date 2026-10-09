@@ -26,6 +26,19 @@ private:
     float scale;
 };
 
+// Return to start (|<) and skip to end (>|), drawn rather than typed, so
+// they look the same whatever fonts the Mac has (decision 0035).
+class TransportButton : public juce::Button
+{
+public:
+    enum class Kind { start, end };
+    TransportButton (const juce::String& name, Kind k) : juce::Button (name), kind (k) {}
+    void paintButton (juce::Graphics&, bool highlighted, bool down) override;
+
+private:
+    Kind kind;
+};
+
 class Toolbar : public juce::Component, private juce::ChangeListener
 {
 public:
@@ -34,13 +47,16 @@ public:
     void resized() override;
     void paint (juce::Graphics&) override;
 
-    std::function<void()> onNew, onOpen, onSave, onExport, onSettings;
+    std::function<void()> onNew, onOpen, onSave, onExport, onSettings, onStart, onEnd;
 
 private:
     Controller& controller;
     juce::TextButton newButton { "New" }, openButton { "Open" }, saveButton { "Save" }, exportButton { "Export" };
     juce::TextButton undoButton { "Undo" }, redoButton { "Redo" };
-    juce::TextButton playButton { "Play" }, followButton { "Follow" };
+    TransportButton startButton { "Return to start", TransportButton::Kind::start };
+    juce::TextButton playButton { "Play" };
+    TransportButton endButton { "Skip to end", TransportButton::Kind::end };
+    juce::TextButton followButton { "Follow" };
     juce::TextButton inputButton { "Note input" };
     std::vector<std::unique_ptr<GlyphButton>> durations;
     GlyphButton dotButton { "Dot", smufl::augmentationDot, 1.6f };

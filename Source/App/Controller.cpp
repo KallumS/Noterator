@@ -507,13 +507,31 @@ void Controller::deleteSelectedBars()
 
 //==============================================================================
 
-void Controller::togglePlay()
+void Controller::togglePlay (bool fromStart)
 {
     if (audio.isPlaying()) { stop(); return; }
-    // From the selection if there is one, else from the caret's bar.
-    Tick from = score.barStart (score.barAt (caret));
-    if (! selection.empty()) from = score.barStart (selectedBars().first);
-    playFrom (from);
+    playFrom (fromStart ? 0 : caret);
+}
+
+void Controller::returnToStart()
+{
+    caret = 0;
+    setStatus ("Back to bar 1");
+    if (audio.isPlaying() && ! auditioning) playFrom (0);
+}
+
+Tick Controller::musicEnd() const
+{
+    const Tick last = score.lastNoteEnd();
+    if (last <= 0) return score.endTick();
+    return score.barStart (score.barAt (last - 1) + 1);
+}
+
+void Controller::skipToEnd()
+{
+    if (audio.isPlaying()) stop();
+    caret = musicEnd();
+    setStatus ("To the end of the music: bar " + juce::String (score.barAt (caret) + 1));
 }
 
 void Controller::toggleFollow()
