@@ -432,12 +432,12 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
         return;
     }
 
-    // The names: a click puts the caret in that part.
+    // The names: a click puts the caret in that part (decision 0044).
     if (p.x < gutter)
     {
         if (lay.staves.empty()) return;
         const int staff = lay.staffAtY (toLayout (p).y);
-        controller.setCaret (controller.score.parts[static_cast<size_t> (staffPart (staff))].id, controller.caret);
+        controller.choosePart (controller.score.parts[static_cast<size_t> (staffPart (staff))].id);
         return;
     }
 

@@ -96,6 +96,10 @@ public:
     //==========================================================================
     // Writing
     void setCaret (uint32_t partId, Tick t);
+    // A part's name clicked: the caret goes to that part, and bars chosen in
+    // other parts are let go, so the next idea goes to the part clicked
+    // (decision 0044). Bars chosen that include it stay chosen.
+    void choosePart (uint32_t partId);
     void moveCaret (int direction);
     void caretToPart (int direction);
     void typeLetter (int letter, bool addToChord);   // 0..6 is C..B
