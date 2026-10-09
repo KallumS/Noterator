@@ -33,7 +33,7 @@ reasoning and what it costs; this page is the map.
   pitch. Nothing about the notation is stored.
 - **The page is derived.** `Engrave` turns the score into a layout in staff
   spaces; `ScoreRenderer` inks it. The same renderer draws PNGs with no window.
-- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 74 tests
+- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 78 tests
   build and run in seconds. `NoteratorAppTests` covers the JUCE side.
 - **One controller.** Every window piece reads the `Controller` and asks it for
   changes; it keeps undo, re-engraves, re-detects and re-sends to playback.
@@ -65,6 +65,7 @@ reasoning and what it costs; this page is the map.
 | | |
 | --- | --- |
 | [0003](decisions/0003-run-the-lua-engines-unchanged.md) | The five Lua engines run unchanged through embedded Lua 5.4, each behind a small adapter. |
+| [0036](decisions/0036-one-note-at-a-time-for-one-note-instruments.md) | Every generated line is fitted to the part it lands in: no more notes at once than the instrument plays - the top line kept, or the bottom for a bass. Blocks go in as they are. |
 | [0011](decisions/0011-selection-results-go-beside-or-after.md) | Results made from a selection go beside it (Suggester) or after it (Variator), never over it. |
 | [0017](decisions/0017-catalogue-leaves-generate.md) | Generate lists Good Idea, Suggester and Variator; the Catalogue stays loaded but unlisted. |
 | [0018](decisions/0018-starting-blocks-is-a-toolbox.md) | Starting Blocks is a Blocks tab: kind, degree buttons, preview; a block goes at the caret and the caret moves on. |
@@ -86,6 +87,7 @@ reasoning and what it costs; this page is the map.
 | | |
 | --- | --- |
 | [0033](decisions/0033-follow-the-playhead-switchable.md) | While it plays, the page follows the playhead; Follow switches it, remembered. |
+| [0037](decisions/0037-a-file-menu-button.md) | New, Open, Save and Export under one File button. |
 | [0035](decisions/0035-space-plays-from-the-start.md) | Space plays from bar 1, Shift+Space and Play from the caret; |◀ and ▶| (Home, End) go to the start and the end of the music. |
 | [0034](decisions/0034-follow-scrolls-smoothly.md) | Following scrolls smoothly by default, the playhead a third of the way across, on a steady clock; turning pages is a choice in the Play menu. |
 | [0016](decisions/0016-step-input-with-the-keys-people-know.md) | Step-time input with MuseScore's keys; letters start in the instrument's register; MIDI keys write chords. |

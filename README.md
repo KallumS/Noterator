@@ -19,7 +19,8 @@ can read, edit, play and export.
   Generate, click a result to hear it, press Insert: the music fills exactly
   those bars, the tune on top, the bass at the bottom, the chords shared out
   between. The generators are your own engines, unchanged, with every setting
-  they have in REAPER.
+  they have in REAPER. Every instrument gets only what it can play: a violin
+  never gets chords, only their top line.
 - **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run or interval;
   every degree of the key is a button. Click one to see and hear it, Insert to
   put it at the caret - then the next one goes after it. (Drum grooves come
@@ -68,8 +69,8 @@ It needs a Mac with Apple silicon (M1 or later).
 
 | | |
 | --- | --- |
-| Start a score | **New**: a small group, a whole orchestral section, a chamber or full orchestra, or a big band |
-| Bring music in | **Open**, or drop a MIDI or MusicXML file (.mid, .musicxml, .xml, .mxl) on the window |
+| Start a score | **File** > **New**: a small group, a whole orchestral section, a chamber or full orchestra, or a big band |
+| Bring music in | **File** > **Open**, or drop a MIDI or MusicXML file (.mid, .musicxml, .xml, .mxl) on the window |
 | Put the caret in a part | click the staff, or the part's name |
 | Choose bars | click an empty bar; drag across bars and staves for more; drag along the Chords lane for every part; **Esc** lets go |
 | Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the caret's part |
@@ -82,7 +83,7 @@ It needs a Mac with Apple silicon (M1 or later).
 | Hear | **Space** plays from bar 1; **Shift+Space** (or **Play**) plays from the caret; click any note or chord |
 | Start and end | **\|◀** beside Play (or **Home**) goes back to bar 1; **▶\|** (or **End**) to the end of the music |
 | Follow the music | **Follow** (beside Play) scrolls the page along with the music as it plays, the playhead a third of the way across; click it to keep the page still. To turn a page at a time instead: **Play** menu, **Turn a Page at a Time** |
-| Take it out | **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
+| Take it out | **File** > **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
 | Light or dark | the page is black on white; **Dark page** turns it round |
 | Undo | **Cmd+Z**, **Shift+Cmd+Z** |
 | All the keys | **H** |

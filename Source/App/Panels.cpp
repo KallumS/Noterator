@@ -68,14 +68,11 @@ const Duration durationList[] = {
 Toolbar::Toolbar (Controller& c) : controller (c)
 {
     for (auto* b : std::initializer_list<juce::Button*> { &startButton, &endButton }) addAndMakeVisible (b);
-    for (auto* b : { &newButton, &openButton, &saveButton, &exportButton, &undoButton, &redoButton, &playButton, &followButton,
+    for (auto* b : { &fileButton, &undoButton, &redoButton, &playButton, &followButton,
                      &inputButton, &voiceButton, &transposeButton, &pageButton, &zoomOut, &zoomIn, &settingsButton })
         addAndMakeVisible (b);
 
-    newButton.setTooltip ("A new score, from a template");
-    openButton.setTooltip ("Open a Noterator project or a MIDI file (Cmd+O)");
-    saveButton.setTooltip ("Save the project (Cmd+S)");
-    exportButton.setTooltip ("Export the score, or the selected bars, as MIDI or audio");
+    fileButton.setTooltip ("New, Open, Save and Export (Cmd+N, Cmd+O, Cmd+S, Cmd+E)");
     undoButton.setTooltip ("Undo (Cmd+Z)");
     redoButton.setTooltip ("Redo (Shift+Cmd+Z)");
     playButton.setTooltip ("Play from the caret, or stop (Shift+Space; Space plays from bar 1)");
@@ -88,10 +85,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     pageButton.setTooltip ("Set the page dark, light ink on dark paper - or back to black on white");
     settingsButton.setTooltip ("The sound, and audio and MIDI devices");
 
-    newButton.onClick = [this] { if (onNew) onNew(); };
-    openButton.onClick = [this] { if (onOpen) onOpen(); };
-    saveButton.onClick = [this] { if (onSave) onSave(); };
-    exportButton.onClick = [this] { if (onExport) onExport(); };
+    fileButton.onClick = [this] { if (onFile) onFile(); };
     settingsButton.onClick = [this] { if (onSettings) onSettings(); };
     undoButton.onClick = [this] { controller.undo(); };
     redoButton.onClick = [this] { controller.redo(); };
@@ -140,7 +134,7 @@ void Toolbar::resized()
 {
     auto r = getLocalBounds().reduced (8, 7);
     auto place = [&r] (juce::Component& c, int w, int gap = 4) { c.setBounds (r.removeFromLeft (w)); r.removeFromLeft (gap); };
-    place (newButton, 52); place (openButton, 56); place (saveButton, 52); place (exportButton, 62, 14);
+    place (fileButton, 52, 14);
     place (undoButton, 52); place (redoButton, 52, 14);
     place (startButton, 30, 2);
     place (playButton, 60, 2);

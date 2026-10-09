@@ -38,6 +38,8 @@ refers to them by number: "(decision 0006)".
 | [0033](0033-follow-the-playhead-switchable.md) | The page follows the playhead, a page at a time, and can be switched off | Accepted; default changed by 0034 |
 | [0034](0034-follow-scrolls-smoothly.md) | Following the playhead scrolls smoothly, by default | Accepted |
 | [0035](0035-space-plays-from-the-start.md) | Space plays from bar 1, Shift+Space from the caret; buttons to the start and the end | Accepted |
+| [0036](0036-one-note-at-a-time-for-one-note-instruments.md) | Generated music gives an instrument no more notes at once than it plays | Accepted |
+| [0037](0037-a-file-menu-button.md) | New, Open, Save and Export under one File button | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one

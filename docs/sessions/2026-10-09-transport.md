@@ -32,3 +32,26 @@ from bar 1 and Shift+Space from the current location - in both apps.
 - **Shift+Space from a chosen bar started mid-bar**: a click on an empty bar
   chooses the bar and puts the caret where the click was. "The current
   location" is the caret (0035).
+
+## Then: one note at a time, and a File button (0036, 0037)
+
+The user found chords generated for one-note instruments, and the toolbar
+cluttered.
+
+- **Measured first.** A probe put Good Idea's results (7 kinds, 12 seeds,
+  2 each) into a string quartet, with the caret in the first violin and with
+  bars chosen across all four. Chord phrases gave the violin chords 24 times
+  in 24 (the first line always went to the caret's part, unchecked), and a
+  string part two notes at once in 30 of 48 across bars (the chords were
+  dealt out, but held notes ran into the next chord). Everything else was
+  already clean.
+- **`fitToPolyphony`** in `Generators.*`, used by `insertResult` and
+  `insertIntoRange` for every line: the top notes kept (the bottom for a
+  bass), held notes cut to the next, drums untouched. Blocks pass
+  `fitPolyphony = false` in `Controller::place`. The status line names the
+  parts that were thinned. Four core tests failed on the old code and pass
+  now (78), one of them over real Good Idea chord phrases; an app test
+  covers the controller (10). The probe afterwards: 0 everywhere.
+- **File**: New (the templates), Open, Import, Save, Save As, Export (the
+  same sub-menu as before) under one button; tried in the window - New >
+  Piano made a piano score, Export opened its list.
