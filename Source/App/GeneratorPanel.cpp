@@ -120,12 +120,12 @@ void GeneratorPanel::changeListenerCallback (juce::ChangeBroadcaster*)
     const juce::String bar = "from bar " + juce::String (controller.score.barAt (controller.caret) + 1);
     const auto* line = controller.score.partById (controller.lineTarget());
     const juce::String lineName = line != nullptr ? juce::String (line->name) : juce::String();
-    if (controller.score.parts.size() > 1) into += bar + " - chords across every part, a single line into " + lineName;
+    if (controller.score.parts.size() > 1) into += bar + " - chords to every part, one line to " + lineName;
     else into += lineName + ", " + bar;
     if (controller.range.active() && (! needsSelection() || current == "midi-variator"))
     {
         into = "Into: " + controller.rangeText();
-        if (! needsSelection() && controller.range.parts.size() > 1) into += " - a single line into " + lineName;
+        if (! needsSelection() && controller.range.parts.size() > 1) into += " - one line to " + lineName;
         if (needsSelection())
             into = controller.selection.empty() ? juce::String ("There is no music in the chosen bars to vary")
                  : controller.rangeText() + "  |  the variation replaces it";
