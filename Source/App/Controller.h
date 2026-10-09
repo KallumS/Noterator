@@ -126,6 +126,9 @@ public:
     // in either order; the notes in them become the selection.
     void selectRange (int a, int b, int fromPart, int toPart);
     // "Bars 2-5, Violin I to Cello", for whatever shows the range.
+    // The part a single line of music goes to (decision 0042): the caret's,
+    // or with bars chosen the caret's among them, else the top one.
+    uint32_t lineTarget() const;
     juce::String rangeText() const;
     // The bars the range or the selection covers, or the caret's bar.
     std::pair<int, int> selectedBars() const;
@@ -137,6 +140,9 @@ public:
     void movePart (uint32_t partId, int direction);
     void setPartInstrument (uint32_t partId, const std::string& instrumentId);
     void setKeyAt (int bar, int root, int scale);
+    // The key signature at the caret's bar becomes the scale the Scale lane
+    // shows there; false, with a message, when there is nothing to hear yet.
+    bool useHeardKey();
     void setMeterAt (int bar, int num, int den);
     void setTempo (double bpm);
     void setBars (int bars);
@@ -145,7 +151,15 @@ public:
 
     //==========================================================================
     // Sound
-    void togglePlay();
+    // Space plays from bar 1; Shift+Space and the Play button play from the
+    // caret. Either stops it if it is playing (decision 0035).
+    void togglePlay (bool fromStart = false);
+    // Back to bar 1 - playing on from there if it was playing.
+    void returnToStart();
+    // To the end of the music, the bar line after its last note; playing stops.
+    void skipToEnd();
+    // That bar line, or the end of the score when there are no notes.
+    Tick musicEnd() const;
     void toggleFollow();
     void setFollowStyle (FollowStyle style);
     void playFrom (Tick t);

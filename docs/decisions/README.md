@@ -37,6 +37,14 @@ refers to them by number: "(decision 0006)".
 | [0025](0025-generators-named-for-what-they-do.md) | In the app, the generators are named for what they do | Accepted |
 | [0033](0033-follow-the-playhead-switchable.md) | The page follows the playhead, a page at a time, and can be switched off | Accepted; default changed by 0034 |
 | [0034](0034-follow-scrolls-smoothly.md) | Following the playhead scrolls smoothly, by default | Accepted |
+| [0035](0035-space-plays-from-the-start.md) | Space plays from bar 1, Shift+Space from the caret; buttons to the start and the end | Accepted |
+| [0036](0036-one-note-at-a-time-for-one-note-instruments.md) | Generated music gives an instrument no more notes at once than it plays | Accepted |
+| [0037](0037-a-file-menu-button.md) | New, Open, Save and Export under one File button | Accepted |
+| [0038](0038-the-score-tab-moves-into-file.md) | The Score tab's settings move into the File menu | Accepted |
+| [0039](0039-undo-sound-input-and-look-into-file.md) | Undo, Redo, Sound, the input mode and the look move into the File menu | Accepted |
+| [0040](0040-generated-music-orchestrated-across-chosen-parts.md) | Generated music is orchestrated across the chosen parts | Accepted |
+| [0041](0041-where-generated-music-goes.md) | Where generated music goes: every part, one part, or the parts chosen | Accepted |
+| [0042](0042-a-single-line-to-one-part-and-a-span-filled-once.md) | A single line goes to one part; chosen bars are filled once | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one

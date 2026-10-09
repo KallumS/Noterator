@@ -33,6 +33,29 @@ void GlyphButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
 
 //==============================================================================
 
+void TransportButton::paintButton (juce::Graphics& g, bool highlighted, bool down)
+{
+    getLookAndFeel().drawButtonBackground (g, *this, findColour (juce::TextButton::buttonColourId), highlighted, down);
+    // A bar and a triangle pointing at it: back to the start, or on to the end.
+    const auto r = getLocalBounds().toFloat().withSizeKeepingCentre (14.0f, 12.0f);
+    const bool start = kind == Kind::start;
+    juce::Path p;
+    if (start)
+    {
+        p.addRectangle (r.getX(), r.getY(), 2.5f, r.getHeight());
+        p.addTriangle (r.getRight(), r.getY(), r.getRight(), r.getBottom(), r.getX() + 3.5f, r.getCentreY());
+    }
+    else
+    {
+        p.addRectangle (r.getRight() - 2.5f, r.getY(), 2.5f, r.getHeight());
+        p.addTriangle (r.getX(), r.getY(), r.getX(), r.getBottom(), r.getRight() - 3.5f, r.getCentreY());
+    }
+    g.setColour (isEnabled() ? theme::ink : theme::ink.withAlpha (0.4f));
+    g.fillPath (p);
+}
+
+//==============================================================================
+
 namespace
 {
 struct Duration { const char* name; Tick ticks; juce::juce_wchar glyph; const char* key; };
@@ -44,37 +67,26 @@ const Duration durationList[] = {
 
 Toolbar::Toolbar (Controller& c) : controller (c)
 {
-    for (auto* b : { &newButton, &openButton, &saveButton, &exportButton, &undoButton, &redoButton, &playButton, &followButton,
-                     &inputButton, &voiceButton, &transposeButton, &pageButton, &zoomOut, &zoomIn, &settingsButton })
+    for (auto* b : std::initializer_list<juce::Button*> { &startButton, &endButton }) addAndMakeVisible (b);
+    for (auto* b : { &fileButton, &playButton, &followButton,
+                     &voiceButton, &transposeButton, &zoomOut, &zoomIn })
         addAndMakeVisible (b);
 
-    newButton.setTooltip ("A new score, from a template");
-    openButton.setTooltip ("Open a Noterator project or a MIDI file (Cmd+O)");
-    saveButton.setTooltip ("Save the project (Cmd+S)");
-    exportButton.setTooltip ("Export the score, or the selected bars, as MIDI or audio");
-    undoButton.setTooltip ("Undo (Cmd+Z)");
-    redoButton.setTooltip ("Redo (Shift+Cmd+Z)");
-    playButton.setTooltip ("Play from the caret or the selection, or stop (Space)");
+    fileButton.setTooltip ("New, Open, Save, Export, Undo and Redo, the score's settings, the sound, note input and the dark page");
+    playButton.setTooltip ("Play from the caret, or stop (Shift+Space; Space plays from bar 1)");
+    startButton.setTooltip ("Return to the start (Home) - if it is playing, it plays on from bar 1");
+    endButton.setTooltip ("Skip to the end of the music (End)");
     followButton.setTooltip ("Follow: while it plays, the page scrolls along with the music (or turns a page at a time - Play menu)");
-    inputButton.setTooltip ("Note input (N): click a line or space, or type A-G, or play a MIDI keyboard");
     voiceButton.setTooltip ("Which voice notes are written in: 1 stems up, 2 stems down (V changes the selection's)");
     transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");
-    pageButton.setTooltip ("Set the page dark, light ink on dark paper - or back to black on white");
-    settingsButton.setTooltip ("The sound, and audio and MIDI devices");
 
-    newButton.onClick = [this] { if (onNew) onNew(); };
-    openButton.onClick = [this] { if (onOpen) onOpen(); };
-    saveButton.onClick = [this] { if (onSave) onSave(); };
-    exportButton.onClick = [this] { if (onExport) onExport(); };
-    settingsButton.onClick = [this] { if (onSettings) onSettings(); };
-    undoButton.onClick = [this] { controller.undo(); };
-    redoButton.onClick = [this] { controller.redo(); };
+    fileButton.onClick = [this] { if (onFile) onFile(); };
     playButton.onClick = [this] { controller.togglePlay(); };
+    startButton.onClick = [this] { if (onStart) onStart(); };
+    endButton.onClick = [this] { if (onEnd) onEnd(); };
     followButton.onClick = [this] { controller.toggleFollow(); };
-    inputButton.onClick = [this] { controller.toggleNoteInput(); };
     voiceButton.onClick = [this] { controller.setVoice (1 - controller.input.voice); };
     transposeButton.onClick = [this] { controller.transposedScore = ! controller.transposedScore; controller.viewChanged(); };
-    pageButton.onClick = [this] { controller.lightPage = ! controller.lightPage; controller.viewChanged(); };
     zoomOut.onClick = [this] { controller.zoom = std::max (5.0f, controller.zoom / 1.15f); controller.viewChanged(); };
     zoomIn.onClick = [this] { controller.zoom = std::min (24.0f, controller.zoom * 1.15f); controller.viewChanged(); };
 
@@ -112,24 +124,20 @@ void Toolbar::resized()
 {
     auto r = getLocalBounds().reduced (8, 7);
     auto place = [&r] (juce::Component& c, int w, int gap = 4) { c.setBounds (r.removeFromLeft (w)); r.removeFromLeft (gap); };
-    place (newButton, 52); place (openButton, 56); place (saveButton, 52); place (exportButton, 62, 14);
-    place (undoButton, 52); place (redoButton, 52, 14);
+    place (fileButton, 52, 14);
+    place (startButton, 30, 2);
     place (playButton, 60, 2);
+    place (endButton, 30, 6);
     place (followButton, 60, 14);
-    place (inputButton, 92, 6);
     for (auto& d : durations) place (*d, 30, 2);
     r.removeFromLeft (4);
     place (dotButton, 30, 2); place (tripletButton, 30, 2); place (restButton, 30, 6);
     place (voiceButton, 66, 14);
     auto right = r;
-    settingsButton.setBounds (right.removeFromRight (64));
-    right.removeFromRight (10);
     zoomIn.setBounds (right.removeFromRight (28));
     right.removeFromRight (2);
     zoomOut.setBounds (right.removeFromRight (28));
     right.removeFromRight (10);
-    pageButton.setBounds (right.removeFromRight (86));
-    right.removeFromRight (4);
     transposeButton.setBounds (right.removeFromRight (106));
 }
 
@@ -137,11 +145,8 @@ void Toolbar::changeListenerCallback (juce::ChangeBroadcaster*) { refresh(); }
 
 void Toolbar::refresh()
 {
-    undoButton.setEnabled (controller.canUndo());
-    redoButton.setEnabled (controller.canRedo());
     playButton.setButtonText (controller.audio.isPlaying() ? "Stop" : "Play");
     playButton.setToggleState (controller.audio.isPlaying(), juce::dontSendNotification);
-    inputButton.setToggleState (controller.input.noteInput, juce::dontSendNotification);
     followButton.setToggleState (controller.followPlayback, juce::dontSendNotification);
     for (size_t i = 0; i < durations.size(); ++i)
         durations[i]->setToggleState (durationList[i].ticks == controller.input.base, juce::dontSendNotification);
@@ -149,7 +154,6 @@ void Toolbar::refresh()
     tripletButton.setToggleState (controller.input.triplet, juce::dontSendNotification);
     voiceButton.setButtonText ("Voice " + juce::String (controller.input.voice + 1));
     transposeButton.setButtonText (controller.transposedScore ? "Transposed" : "Concert pitch");
-    pageButton.setToggleState (! controller.lightPage, juce::dontSendNotification);
     repaint();
 }
 
@@ -391,138 +395,6 @@ void PartsPanel::showAddMenu()
 
 //==============================================================================
 
-ScorePanel::ScorePanel (Controller& c) : controller (c)
-{
-    for (auto* comp : std::initializer_list<juce::Component*> { &titleLabel, &title, &composerLabel, &composer, &tempoLabel, &tempo,
-                                                                 &meterLabel, &meterNum, &meterDen, &meterApply, &keyLabel, &keyRoot,
-                                                                 &keyScale, &keyApply, &keyDetected, &barsLabel, &insertBar, &deleteBars,
-                                                                 &addBars, &soundLabel, &synthChoice, &audioSettings })
-        addAndMakeVisible (comp);
-    for (auto* l : { &titleLabel, &composerLabel, &tempoLabel, &meterLabel, &keyLabel, &barsLabel, &soundLabel })
-        l->setColour (juce::Label::textColourId, theme::stepNumber);
-
-    title.onReturnKey = title.onFocusLost = [this]
-    {
-        const auto t = title.getText().toStdString();
-        if (t != controller.score.title) controller.edit ("Retitled", [t] (Score& s) { s.title = t; });
-    };
-    composer.onReturnKey = composer.onFocusLost = [this]
-    {
-        const auto t = composer.getText().toStdString();
-        if (t != controller.score.composer) controller.edit ("Changed the composer", [t] (Score& s) { s.composer = t; });
-    };
-
-    tempo.setRange (30.0, 240.0, 1.0);
-    tempo.setTextValueSuffix (" bpm");
-    tempo.setTextBoxStyle (juce::Slider::TextBoxRight, false, 70, 22);
-    tempo.onDragEnd = [this] { controller.setTempo (tempo.getValue()); };
-    tempo.onValueChange = [this] { if (! tempo.isMouseButtonDown()) controller.setTempo (tempo.getValue()); };
-
-    for (int n = 1; n <= 16; ++n) meterNum.addItem (juce::String (n), n);
-    for (int d : { 2, 4, 8, 16 }) meterDen.addItem (juce::String (d), d);
-    meterApply.onClick = [this]
-    {
-        controller.setMeterAt (controller.score.barAt (controller.caret), meterNum.getSelectedId(), meterDen.getSelectedId());
-    };
-
-    for (size_t i = 0; i < scaleview::roots.size(); ++i) keyRoot.addItem (scaleview::roots[i].name, static_cast<int> (i) + 1);
-    for (size_t i = 0; i < scaleview::scales.size(); ++i) keyScale.addItem (scaleview::scales[i].name, static_cast<int> (i) + 1);
-    keyApply.onClick = [this]
-    {
-        controller.setKeyAt (controller.score.barAt (controller.caret), keyRoot.getSelectedId() - 1, keyScale.getSelectedId() - 1);
-    };
-    keyDetected.setTooltip ("Sets the key signature to the scale shown in the Scale lane at the caret");
-    keyDetected.onClick = [this]
-    {
-        for (const auto& k : controller.keys)
-            if (controller.caret >= k.start && controller.caret < k.end)
-            {
-                controller.setKeyAt (controller.score.barAt (k.start), k.root, k.scale);
-                return;
-            }
-        controller.setStatus ("Nothing to hear yet: write or generate some music first.");
-    };
-
-    insertBar.onClick = [this] { controller.insertBarsAtCaret (1); };
-    deleteBars.onClick = [this] { controller.deleteSelectedBars(); };
-    addBars.onClick = [this] { controller.setBars (controller.score.bars + 4); };
-
-    synthChoice.addItem ("Apple General MIDI (macOS)", 1);
-    synthChoice.addItem ("Built-in synth", 2);
-    synthChoice.onChange = [this]
-    {
-        controller.audio.useBuiltInSynth (synthChoice.getSelectedId() == 2);
-        controller.setStatus ("Sound: " + controller.audio.synthName());
-    };
-    audioSettings.onClick = [this] { if (onAudioSettings) onAudioSettings(); };
-
-    controller.addChangeListener (this);
-    refresh();
-}
-
-ScorePanel::~ScorePanel() { controller.removeChangeListener (this); }
-
-void ScorePanel::paint (juce::Graphics& g) { g.fillAll (theme::ground); }
-
-void ScorePanel::resized()
-{
-    auto r = getLocalBounds().reduced (10);
-    auto row = [&r] (int h = 26) { auto x = r.removeFromTop (h); r.removeFromTop (6); return x; };
-    titleLabel.setBounds (row (18)); title.setBounds (row());
-    composerLabel.setBounds (row (18)); composer.setBounds (row());
-    r.removeFromTop (6);
-    tempoLabel.setBounds (row (18)); tempo.setBounds (row());
-    r.removeFromTop (6);
-    meterLabel.setBounds (row (18));
-    {
-        auto x = row();
-        meterNum.setBounds (x.removeFromLeft (60)); x.removeFromLeft (4);
-        meterDen.setBounds (x.removeFromLeft (60)); x.removeFromLeft (8);
-        meterApply.setBounds (x);
-    }
-    r.removeFromTop (6);
-    keyLabel.setBounds (row (18));
-    {
-        auto x = row();
-        keyRoot.setBounds (x.removeFromLeft (64)); x.removeFromLeft (4);
-        keyScale.setBounds (x);
-    }
-    {
-        auto x = row();
-        keyApply.setBounds (x.removeFromLeft (x.getWidth() / 2 - 2)); x.removeFromLeft (4);
-        keyDetected.setBounds (x);
-    }
-    r.removeFromTop (6);
-    barsLabel.setBounds (row (18));
-    insertBar.setBounds (row());
-    deleteBars.setBounds (row());
-    addBars.setBounds (row());
-    r.removeFromTop (6);
-    soundLabel.setBounds (row (18));
-    synthChoice.setBounds (row());
-    audioSettings.setBounds (row());
-}
-
-void ScorePanel::changeListenerCallback (juce::ChangeBroadcaster*) { refresh(); }
-
-void ScorePanel::refresh()
-{
-    if (! title.hasKeyboardFocus (true)) title.setText (controller.score.title, false);
-    if (! composer.hasKeyboardFocus (true)) composer.setText (controller.score.composer, false);
-    if (! tempo.isMouseButtonDown()) tempo.setValue (controller.score.tempos.front().bpm, juce::dontSendNotification);
-    const int bar = controller.score.barAt (controller.caret);
-    const auto& m = controller.score.meterAtBar (bar);
-    meterNum.setSelectedId (m.num, juce::dontSendNotification);
-    meterDen.setSelectedId (m.den, juce::dontSendNotification);
-    const auto& k = controller.score.keyAtBar (bar);
-    keyRoot.setSelectedId (k.root + 1, juce::dontSendNotification);
-    keyScale.setSelectedId (k.scale + 1, juce::dontSendNotification);
-    barsLabel.setText ("Bars - " + juce::String (controller.score.bars) + " in all, caret in bar " + juce::String (bar + 1), juce::dontSendNotification);
-    synthChoice.setSelectedId (controller.audio.usingBuiltInSynth() ? 2 : 1, juce::dontSendNotification);
-}
-
-//==============================================================================
-
 StatusBar::StatusBar (Controller& c) : controller (c)
 {
     controller.addChangeListener (this);
@@ -558,13 +430,18 @@ void StatusBar::paint (juce::Graphics& g)
         if (! controller.selection.empty()) where += "   |   " + juce::String (static_cast<int> (controller.selection.size())) + " selected";
     }
     g.setColour (theme::text);
-    g.drawText (where, r.withTrimmedRight (320), juce::Justification::centred);
+    const auto middle = r.withTrimmedRight (320);
+    g.drawText (where, middle, juce::Justification::centred);
+    // The message on the left stops short of the middle, ending in "..." if
+    // it is too long, rather than running into it.
+    const int whereWidth = juce::roundToInt (juce::GlyphArrangement::getStringWidth (g.getCurrentFont(), where));
+    const int leftEnd = where.isEmpty() ? r.getRight() - 320 : middle.getCentreX() - whereWidth / 2 - 16;
 
     // Left: the last thing that happened, or the mode.
     juce::String left = controller.status;
     if (controller.input.noteInput) left = "NOTE INPUT - click the staff, type A-G (Shift adds to the chord), or play a MIDI keyboard. Esc to stop.";
     g.setColour (controller.input.noteInput ? theme::accent : theme::text);
-    g.drawText (left, r, juce::Justification::centredLeft);
+    g.drawText (left, r.withRight (std::max (r.getX() + 80, leftEnd)), juce::Justification::centredLeft, true);
 }
 
 } // namespace nt

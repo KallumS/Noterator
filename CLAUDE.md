@@ -47,6 +47,7 @@ gets undone.
 | `Source/Core/Xml.*`, `MusicXml.*` | MusicXML in and out with our own small XML reader/writer (0021). |
 | `Source/Engines/LuaEngine.*` | The embedded Lua host. Speaks only to the adapters. No JUCE. |
 | `Source/Engines/Generators.*` | A generator's context, fitting to an instrument, placing a result (0011). |
+| `Source/Engines/Orchestrate.*` | A result shared across chosen parts by instrument: sections, tune, bass and its octave, voice-led inner parts (0040). |
 | `Engines/<app>/` | The family's engines, **copied unchanged** (0003), embedded at build time. |
 | `Engines/adapters/` | The only Lua written here: one adapter per engine, protocol in `common.lua`. |
 | `Source/App/Controller.*` | Owns the score, undo, selection, caret; every window piece asks it. |
@@ -54,8 +55,8 @@ gets undone.
 | `Source/App/ScoreRenderer.*` | The ink: a layout into Bravura glyphs. Shared with `tools/RenderScore.cpp`. |
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
-| `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts and Score tabs, status line, keys and menus (New is grouped by template), colours. |
-| `Tests/Test*.cpp` | Core tests (74), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
+| `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039), colours. |
+| `Tests/Test*.cpp` | Core tests (88), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (13). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -119,9 +120,20 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   lines go into parts silent in those bars, Variator's after the selection.
   A line with chords never goes to a one-note instrument. The exception is
   bars the user chose (0019): Good Idea fills them, Variator replaces them.
+- **Every generated line is fitted to the part it lands in** (0036,
+  `fitToPolyphony`): no more notes at once than the instrument plays. New
+  ways of placing a result must keep `InsertOptions::fitPolyphony` on;
+  only Blocks turn it off.
+- **Who plays what across chosen parts is decided in `orchestrate`** (0040):
+  by section and by each instrument's best register, never by score order.
+  A result's parts are known by name first ("Melody", "Chords", "Bass").
 - **Where a result lands is decided in `Controller::place`**, in this order:
-  chosen bars (0019), a block at the caret (0018), the selection (0011), the
-  caret's bar. Change it there, not in the panels.
+  chosen bars (0019) - one part takes all of it, several share it (0041) -
+  a block at the caret (0018), the selection (0011), and with nothing chosen
+  every part from the caret's bar (0041); a single line goes to one part
+  (`lineTarget`), and chosen bars are filled once, never repeated (0042). Change it there, not in the
+  panels. **No part is ever added** for a result: lines with nowhere to go
+  are named (`InsertReport::unplaced`).
 - **Selecting notes clears the chosen bars** (`select`, `selectAll`,
   `selectNext`, moving, pasting). Code that sets `selection` directly must
   decide whether `range` still holds.
@@ -134,6 +146,8 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   take `% 16`, the audio thread routes by `Sequence::Event::bank`, and
   channels 15 and 16 of bank 0 belong to the keyboard and previews. A new
   synth for a bank is made on the message thread, before it is needed.
+- **Menu ids come in ranges** (`MainComponent.cpp`): every range check names
+  its own end, or it swallows the next range's items (0038).
 - Letters in shortcuts arrive in either case: compare them upper-cased.
 - **No references into temporaries in tests**: `f().front().x` inside
   `CHECK_EQ` dangles. It passed with GCC and failed on the Mac.
@@ -167,8 +181,13 @@ coarsest grid that fits; a drum hit is written to the next hit, at most a beat.
 Working, and tested by the user on their Mac; since then MusicXML in and out,
 chosen bars, the Blocks toolbox, templates up to full orchestra and big band,
 and Follow: the page scrolls smoothly with the music as it plays, or turns a
-page at a time (0033, 0034). Follow is on the branch `ccr-ac8da7d9-3sbl5x`,
-not yet merged into `main`, and not yet tried by the user on a Mac.
+page at a time (0033, 0034); Space from bar 1, Shift+Space from the caret,
+and buttons to the start and the end (0035); generated music fitted to what
+each instrument can play (0036); New, Open, Save and Export under one File
+button (0037), with the Score tab's settings, Undo, Sound, Note input and
+the page's look in it too (0038, 0039); generated music orchestrated across
+the chosen parts, or every part with nothing chosen, a single line to one part (0040-0042). Follow is merged into `main` but not yet tried by
+the user on a Mac; 0035-0040 are on the branch `ccr-ac8da7d9-3sbl5x`.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
 user is likely to want them: a page view; dynamics, articulations and slurs;

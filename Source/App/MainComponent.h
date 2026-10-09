@@ -4,7 +4,8 @@
 
     Keys follow the notation programs people already know: letters write
     notes, numbers choose note values (MuseScore's: 5 is a quarter), the
-    arrows move and transpose, Space plays.
+    arrows move and transpose, Space plays from bar 1 and Shift+Space from
+    the caret, Home and End go to the start and the end.
 */
 
 #pragma once
@@ -56,7 +57,6 @@ private:
     GeneratorPanel generatorPanel { controller };
     BlocksPanel blocksPanel { controller };
     PartsPanel partsPanel { controller };
-    ScorePanel scorePanel { controller };
     StatusBar statusBar { controller };
     std::unique_ptr<juce::FileChooser> chooser;
     juce::ApplicationProperties preferences;   // the page colour and zoom, kept between launches
@@ -66,7 +66,12 @@ private:
     void showNewMenu();
     juce::PopupMenu templateMenu();
     void showExportMenu();
-    void showSettingsMenu();
+    juce::PopupMenu exportMenu();
+    void showFileMenu();
+    void addScoreItems (juce::PopupMenu& m);
+    void titleDialog();
+    void tempoDialog();
+    void meterDialog();
     void openDialog();
     void saveDialog (bool saveAs, std::function<void()> then = {});
     void importDialog();
@@ -74,6 +79,8 @@ private:
     void exportDialog (ExportKind kind, bool selectedBars);
     void audioSettingsDialog();
     void showHelp();
+    void returnToStart();
+    void skipToEnd();
     void updateTitle();
 };
 

@@ -65,6 +65,7 @@ add_library(NoteratorCore STATIC
     Source/Core/MusicXml.cpp
     Source/Engines/LuaEngine.cpp
     Source/Engines/Generators.cpp
+    Source/Engines/Orchestrate.cpp
     ${EMBEDDED_LUA_CPP})
 target_include_directories(NoteratorCore PUBLIC Source/Core Source/Engines)
 target_link_libraries(NoteratorCore PUBLIC NoteratorLua)
@@ -82,6 +83,7 @@ if(NOTERATOR_BUILD_TESTS)
         Tests/TestDetect.cpp
         Tests/TestMidi.cpp
         Tests/TestGenerators.cpp
+        Tests/TestOrchestrate.cpp
         Tests/TestMusicXml.cpp
         Tests/TestTemplates.cpp
         Tests/TestFollow.cpp)

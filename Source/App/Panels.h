@@ -1,5 +1,5 @@
 /*
-    Panels - the toolbar along the top, the Parts and Score panels at the
+    Panels - the toolbar along the top, the Parts panel at the
     side, and the status line along the bottom. Each only shows the
     controller's state and asks the controller for changes.
 */
@@ -26,6 +26,19 @@ private:
     float scale;
 };
 
+// Return to start (|<) and skip to end (>|), drawn rather than typed, so
+// they look the same whatever fonts the Mac has (decision 0035).
+class TransportButton : public juce::Button
+{
+public:
+    enum class Kind { start, end };
+    TransportButton (const juce::String& name, Kind k) : juce::Button (name), kind (k) {}
+    void paintButton (juce::Graphics&, bool highlighted, bool down) override;
+
+private:
+    Kind kind;
+};
+
 class Toolbar : public juce::Component, private juce::ChangeListener
 {
 public:
@@ -34,22 +47,27 @@ public:
     void resized() override;
     void paint (juce::Graphics&) override;
 
-    std::function<void()> onNew, onOpen, onSave, onExport, onSettings;
+    // The File button, for its menu to open under.
+    juce::Component& fileAnchor() { return fileButton; }
+
+    std::function<void()> onFile, onStart, onEnd;
 
 private:
     Controller& controller;
-    juce::TextButton newButton { "New" }, openButton { "Open" }, saveButton { "Save" }, exportButton { "Export" };
-    juce::TextButton undoButton { "Undo" }, redoButton { "Redo" };
-    juce::TextButton playButton { "Play" }, followButton { "Follow" };
-    juce::TextButton inputButton { "Note input" };
+    // New, Open, Save, Export, Undo, the score's settings, the sound, the
+    // input mode and the look: one menu (decisions 0037, 0038, 0039)
+    juce::TextButton fileButton { "File" };
+    TransportButton startButton { "Return to start", TransportButton::Kind::start };
+    juce::TextButton playButton { "Play" };
+    TransportButton endButton { "Skip to end", TransportButton::Kind::end };
+    juce::TextButton followButton { "Follow" };
     std::vector<std::unique_ptr<GlyphButton>> durations;
     GlyphButton dotButton { "Dot", smufl::augmentationDot, 1.6f };
     GlyphButton tripletButton { "Triplet", smufl::tuplet0 + 3, 1.0f };
     GlyphButton restButton { "Rest", smufl::restQuarter, 0.8f };
     juce::TextButton voiceButton { "Voice 1" };
-    juce::TextButton transposeButton { "Concert pitch" }, pageButton { "Dark page" };
+    juce::TextButton transposeButton { "Concert pitch" };
     juce::TextButton zoomOut { "-" }, zoomIn { "+" };
-    juce::TextButton settingsButton { "Sound" };
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void refresh();
@@ -77,38 +95,6 @@ private:
     void rebuild();
     void layoutRows();
     void showAddMenu();
-};
-
-class ScorePanel : public juce::Component, private juce::ChangeListener
-{
-public:
-    explicit ScorePanel (Controller& c);
-    ~ScorePanel() override;
-    void resized() override;
-    void paint (juce::Graphics&) override;
-
-    std::function<void()> onAudioSettings;
-
-private:
-    Controller& controller;
-    juce::Label titleLabel { {}, "Title" }, composerLabel { {}, "Composer" };
-    juce::TextEditor title, composer;
-    juce::Label tempoLabel { {}, "Tempo" };
-    juce::Slider tempo;
-    juce::Label meterLabel { {}, "Time signature" };
-    juce::ComboBox meterNum, meterDen;
-    juce::TextButton meterApply { "Set at caret's bar" };
-    juce::Label keyLabel { {}, "Key" };
-    juce::ComboBox keyRoot, keyScale;
-    juce::TextButton keyApply { "Set at caret's bar" }, keyDetected { "Use the key it hears" };
-    juce::Label barsLabel { {}, "Bars" };
-    juce::TextButton insertBar { "Insert a bar at the caret" }, deleteBars { "Delete selected bars" }, addBars { "Add 4 bars at the end" };
-    juce::Label soundLabel { {}, "Sound" };
-    juce::ComboBox synthChoice;
-    juce::TextButton audioSettings { "Audio and MIDI devices..." };
-
-    void changeListenerCallback (juce::ChangeBroadcaster*) override;
-    void refresh();
 };
 
 class StatusBar : public juce::Component, private juce::ChangeListener, private juce::Timer

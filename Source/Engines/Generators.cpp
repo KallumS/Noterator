@@ -1,4 +1,5 @@
 #include "Generators.h"
+#include "Orchestrate.h"
 
 #include <algorithm>
 #include <cmath>
@@ -90,18 +91,18 @@ GeneratedResult fitToSpan (const GeneratedResult& result, Tick span)
         for (const auto& p : result.parts)
             for (const auto& n : p.notes) len = std::max (len, n.end());
     if (len <= 0) return out;
+    // Played once: cut where the span ends, the rest of a longer span left
+    // empty (decision 0042).
     for (auto& p : out.parts)
     {
         const auto source = p.notes;
         p.notes.clear();
-        for (Tick offset = 0; offset < span; offset += len)
-            for (auto n : source)
-            {
-                n.start += offset;
-                if (n.start >= span) continue;
-                n.length = std::min (n.length, span - n.start);
-                p.notes.push_back (n);
-            }
+        for (auto n : source)
+        {
+            if (n.start >= span) continue;
+            n.length = std::min (n.length, span - n.start);
+            p.notes.push_back (n);
+        }
     }
     out.length = span;
     return out;
@@ -132,87 +133,63 @@ std::vector<std::vector<Note>> spreadChords (const std::vector<Note>& notes, int
     return out;
 }
 
+bool isSingleLine (const GeneratedResult& result)
+{
+    int lines = 0;
+    for (const auto& gp : result.parts)
+    {
+        if (gp.notes.empty()) continue;
+        if (gp.drums) return false;
+        std::string n = gp.name;
+        std::transform (n.begin(), n.end(), n.begin(), [] (unsigned char ch) { return static_cast<char> (std::tolower (ch)); });
+        if (n.find ("chord") != std::string::npos || polyphonyOf (gp.notes) > 2) return false;
+        ++lines;
+    }
+    return lines == 1;
+}
+
+InsertReport insertWhole (Score& score, const GeneratedResult& result, uint32_t partId, Tick at, Tick span,
+                          const InsertOptions& options)
+{
+    InsertReport report;
+    const auto* p = score.partById (partId);
+    if (p == nullptr) return report;
+    const auto& inst = instrumentById (p->instrument);
+    const auto source = span > 0 ? fitToSpan (result, span) : result;
+    std::vector<Note> notes;
+    for (const auto& gp : source.parts)
+    {
+        if (gp.notes.empty()) continue;
+        if (gp.drums != inst.drums) { report.unplaced.push_back (gp.name); continue; }
+        notes.insert (notes.end(), gp.notes.begin(), gp.notes.end());
+    }
+    if (notes.empty()) return report;
+    // Thinned first, so the register is chosen for the line that is played.
+    if (options.fitPolyphony)
+    {
+        int dropped = 0;
+        notes = fitToPolyphony (notes, inst, &dropped);
+        if (dropped > 0) report.thinnedParts.push_back (partId);
+    }
+    if (options.fitToInstrument) notes = fitToInstrument (notes, inst);
+    const Tick length = span > 0 ? span : source.length;
+    const auto ids = pasteNotes (score, partId, at, notes, length, options.replace);
+    report.newNotes.insert (ids.begin(), ids.end());
+    score.fitBars();
+    return report;
+}
+
 InsertReport insertIntoRange (Score& score, const GeneratedResult& result, const std::vector<uint32_t>& parts,
                               Tick from, Tick to, const InsertOptions& options)
 {
     const auto fitted = fitToSpan (result, to - from);
     InsertOptions o = options;
     o.replace = true;
-    if (parts.size() <= 1)
-    {
-        if (const auto* p = parts.empty() ? nullptr : score.partById (parts.front())) o.contextInstrument = p->instrument;
-        return insertResult (score, fitted, parts.empty() ? 0 : parts.front(), from, o);
-    }
+    if (parts.empty()) return {};
+    if (parts.size() == 1) return insertWhole (score, fitted, parts.front(), from, 0, o);
 
-    // Who is who among the selected parts, top to bottom.
-    std::vector<uint32_t> pitched, kits;
-    for (auto id : parts)
-        if (const auto* p = score.partById (id)) (instrumentById (p->instrument).drums ? kits : pitched).push_back (id);
-    if (const auto* p = score.partById (parts.front())) o.contextInstrument = p->instrument;
-
-    auto lower = [] (std::string n) { std::transform (n.begin(), n.end(), n.begin(), [] (unsigned char c) { return static_cast<char> (std::tolower (c)); }); return n; };
-    const GeneratedPart* melody = nullptr;
-    const GeneratedPart* bass = nullptr;
-    const GeneratedPart* chords = nullptr;
-    const GeneratedPart* drums = nullptr;
-    std::vector<const GeneratedPart*> others;
-    for (const auto& gp : fitted.parts)
-    {
-        const auto n = lower (gp.name);
-        if (gp.drums && drums == nullptr) drums = &gp;
-        else if (n.find ("bass") != std::string::npos && bass == nullptr) bass = &gp;
-        else if ((n.find ("chord") != std::string::npos || polyphonyOf (gp.notes) > 1) && chords == nullptr) chords = &gp;
-        else if (melody == nullptr && ! gp.drums) melody = &gp;
-        else others.push_back (&gp);
-    }
-
-    InsertReport report;
-    auto put = [&] (uint32_t partId, std::vector<Note> notes)
-    {
-        const auto* p = score.partById (partId);
-        if (p == nullptr) return;
-        if (o.fitToInstrument) notes = fitToInstrument (notes, instrumentById (p->instrument));
-        const auto ids = pasteNotes (score, partId, from, notes, to - from, true);
-        report.newNotes.insert (ids.begin(), ids.end());
-    };
-
-    GeneratedResult leftover;
-    leftover.length = fitted.length;
-    size_t top = 0, bottom = pitched.size();   // the pitched parts still free: [top, bottom)
-    if (melody != nullptr && top < bottom) put (pitched[top++], melody->notes);
-    else if (melody != nullptr) leftover.parts.push_back (*melody);
-    if (bass != nullptr && bottom > top) put (pitched[--bottom], bass->notes);
-    else if (bass != nullptr) leftover.parts.push_back (*bass);
-    if (chords != nullptr)
-    {
-        std::vector<uint32_t> middle (pitched.begin() + static_cast<long> (top), pitched.begin() + static_cast<long> (bottom));
-        const int poly = polyphonyOf (chords->notes);
-        uint32_t whole = 0;
-        for (auto id : middle)
-            if (instrumentById (score.partById (id)->instrument).poly >= poly) { whole = id; break; }
-        if (whole != 0) put (whole, chords->notes);
-        else if (! middle.empty())
-        {
-            const auto lines = spreadChords (chords->notes, static_cast<int> (middle.size()));
-            for (size_t i = 0; i < middle.size(); ++i) put (middle[i], lines[i]);
-        }
-        else leftover.parts.push_back (*chords);
-    }
-    if (drums != nullptr)
-    {
-        if (! kits.empty()) put (kits.front(), drums->notes);
-        else leftover.parts.push_back (*drums);
-    }
-    for (const auto* gp : others) leftover.parts.push_back (*gp);
-    // Whatever found no selected part goes where it would have gone anyway.
-    if (! leftover.parts.empty())
-    {
-        const auto more = insertResult (score, leftover, 0, from, o);
-        report.newNotes.insert (more.newNotes.begin(), more.newNotes.end());
-        report.newParts = more.newParts;
-    }
-    score.fitBars();
-    return report;
+    // Several parts: shared out by what each instrument is (decision 0040).
+    return orchestrate (score, fitted, parts, from, to, o);
 }
 
 std::string instrumentForGeneratedPart (const GeneratedPart& part, const Instrument& target)
@@ -236,6 +213,47 @@ std::string instrumentForGeneratedPart (const GeneratedPart& part, const Instrum
     if (name.find ("second") != std::string::npos || name.find ("voice") != std::string::npos)
         return target.family == "Strings" ? "vln2" : target.id;
     return target.id;
+}
+
+std::vector<Note> fitToPolyphony (std::vector<Note> notes, const Instrument& inst, int* dropped)
+{
+    if (dropped != nullptr) *dropped = 0;
+    if (inst.drums || notes.empty()) return notes;
+    const size_t most = static_cast<size_t> (std::max (1, inst.poly));
+    const bool keepLow = inst.role == 'B';
+    std::sort (notes.begin(), notes.end(), [] (const Note& a, const Note& b) { return a.start != b.start ? a.start < b.start : a.pitch < b.pitch; });
+    std::vector<Note> kept;
+    kept.reserve (notes.size());
+    for (size_t i = 0; i < notes.size();)
+    {
+        // The notes that start together, low to high.
+        size_t j = i;
+        while (j < notes.size() && notes[j].start == notes[i].start) ++j;
+        const Tick at = notes[i].start;
+        size_t from = i, to = j;
+        if (to - from > most)
+        {
+            if (dropped != nullptr) *dropped += static_cast<int> (to - from - most);
+            if (keepLow) to = from + most;
+            else from = to - most;
+        }
+        // Make room: the notes still sounding that started earliest end here.
+        for (;;)
+        {
+            size_t sounding = 0, earliest = kept.size();
+            for (size_t k = 0; k < kept.size(); ++k)
+                if (kept[k].end() > at)
+                {
+                    ++sounding;
+                    if (earliest == kept.size() || kept[k].start < kept[earliest].start) earliest = k;
+                }
+            if (sounding + (to - from) <= most || earliest == kept.size()) break;
+            kept[earliest].length = at - kept[earliest].start;
+        }
+        for (size_t k = from; k < to; ++k) kept.push_back (notes[k]);
+        i = j;
+    }
+    return kept;
 }
 
 int polyphonyOf (const std::vector<Note>& notes)
@@ -310,6 +328,12 @@ InsertReport insertResult (Score& score, const GeneratedResult& result, uint32_t
         used.push_back (partId);
         auto notes = gp.notes;
         if (options.fitToInstrument) notes = fitToInstrument (notes, instrumentById (instrument));
+        if (options.fitPolyphony)
+        {
+            int dropped = 0;
+            notes = fitToPolyphony (notes, instrumentById (instrument), &dropped);
+            if (dropped > 0) report.thinnedParts.push_back (partId);
+        }
         const auto ids = pasteNotes (score, partId, at, notes, options.replace ? span : 0, options.replace);
         report.newNotes.insert (ids.begin(), ids.end());
     }

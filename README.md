@@ -17,9 +17,17 @@ can read, edit, play and export.
   together line up across every instrument.
 - **Generators built in.** Drag across some bars, choose a generator, press
   Generate, click a result to hear it, press Insert: the music fills exactly
-  those bars, the tune on top, the bass at the bottom, the chords shared out
-  between. The generators are your own engines, unchanged, with every setting
-  they have in REAPER.
+  those bars. Choose several parts and it is orchestrated: in each section
+  the tune goes to the top instrument, the bass to the bottom one (the double
+  bass an octave under the cellos), the chord's other notes to the ones
+  between, each moving as little as it can - choose a whole orchestra and
+  every part plays. Choose nothing and it is shared across every part from
+  the cursor's bar; choose bars of one part and all of it goes there. A tune
+  on its own goes to one part, and chosen bars are filled once - never
+  repeated, never past their end. The generators are your own engines,
+  unchanged, with every setting
+  they have in REAPER. Every instrument gets only what it can play: a violin
+  never gets chords, only their top line.
 - **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run or interval;
   every degree of the key is a button. Click one to see and hear it, Insert to
   put it at the caret - then the next one goes after it. (Drum grooves come
@@ -47,7 +55,7 @@ can read, edit, play and export.
   (with all four AutoCC lanes, for sample libraries), as MusicXML for Dorico,
   Sibelius, MuseScore or Finale, or as WAV audio. Open or drop in a MIDI or
   MusicXML file (.musicxml, .xml, .mxl) to bring one in.
-- **Black on white**, or a dark page if you prefer (the **Dark page** button).
+- **Black on white**, or a dark page if you prefer (**File** > **Dark page**).
 
 ## Installing on a Mac
 
@@ -68,8 +76,8 @@ It needs a Mac with Apple silicon (M1 or later).
 
 | | |
 | --- | --- |
-| Start a score | **New**: a small group, a whole orchestral section, a chamber or full orchestra, or a big band |
-| Bring music in | **Open**, or drop a MIDI or MusicXML file (.mid, .musicxml, .xml, .mxl) on the window |
+| Start a score | **File** > **New**: a small group, a whole orchestral section, a chamber or full orchestra, or a big band |
+| Bring music in | **File** > **Open**, or drop a MIDI or MusicXML file (.mid, .musicxml, .xml, .mxl) on the window |
 | Put the caret in a part | click the staff, or the part's name |
 | Choose bars | click an empty bar; drag across bars and staves for more; drag along the Chords lane for every part; **Esc** lets go |
 | Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the caret's part |
@@ -79,15 +87,17 @@ It needs a Mac with Apple silicon (M1 or later).
 | Add to a chord | **Shift** + letter, or Shift-click |
 | Select | click a note; **Shift**-drag for several; double-click for a whole chord |
 | Change notes | **Up/Down** a semitone, **Cmd+Up/Down** an octave, drag a note up or down, **Delete** |
-| Hear | **Space** plays from the selection or the caret; click any note or chord |
+| Hear | **Space** plays from bar 1; **Shift+Space** (or **Play**) plays from the caret; click any note or chord |
+| Start and end | **\|◀** beside Play (or **Home**) goes back to bar 1; **▶\|** (or **End**) to the end of the music |
 | Follow the music | **Follow** (beside Play) scrolls the page along with the music as it plays, the playhead a third of the way across; click it to keep the page still. To turn a page at a time instead: **Play** menu, **Turn a Page at a Time** |
-| Take it out | **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
-| Light or dark | the page is black on white; **Dark page** turns it round |
-| Undo | **Cmd+Z**, **Shift+Cmd+Z** |
+| Take it out | **File** > **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
+| Light or dark | the page is black on white; **File** > **Dark page** turns it round |
+| Undo | **Cmd+Z**, **Shift+Cmd+Z**, or **File** > **Undo** |
 | All the keys | **H** |
 
 The **Parts** tab adds and removes instruments, and shows what each one can
-do. The **Score** tab sets the title, tempo, time signature and key.
+do. **File** > **This score** sets the title, tempo, time signature, key,
+bars and sound.
 
 ## Where it is going
 
