@@ -33,10 +33,17 @@ reasoning and what it costs; this page is the map.
   pitch. Nothing about the notation is stored.
 - **The page is derived.** `Engrave` turns the score into a layout in staff
   spaces; `ScoreRenderer` inks it. The same renderer draws PNGs with no window.
-- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 65 tests
+- **The music core has no JUCE** (`Source/Core`, `Source/Engines`), so 74 tests
   build and run in seconds. `NoteratorAppTests` covers the JUCE side.
 - **One controller.** Every window piece reads the `Controller` and asks it for
   changes; it keeps undo, re-engraves, re-detects and re-sends to playback.
+- **The page follows the music** (`Follow.h`): smoothly by default, a page
+  at a time on request, the playhead on a steady clock of its own.
+- **Shared with Miderator.** Miderator (KallumS/Miderator) is this app with a
+  piano roll for a page; `Source/Core` (but its `Roll.*`), `Source/Engines`,
+  the engines and the core tests are the same files in both. Changes are made
+  here and copied there. Decisions 0026-0032 are Miderator's; the two apps
+  number decisions in one sequence.
 
 ## The decisions
 
@@ -78,6 +85,8 @@ reasoning and what it costs; this page is the map.
 ### Input and sound
 | | |
 | --- | --- |
+| [0033](decisions/0033-follow-the-playhead-switchable.md) | While it plays, the page follows the playhead; Follow switches it, remembered. |
+| [0034](decisions/0034-follow-scrolls-smoothly.md) | Following scrolls smoothly by default, the playhead a third of the way across, on a steady clock; turning pages is a choice in the Play menu. |
 | [0016](decisions/0016-step-input-with-the-keys-people-know.md) | Step-time input with MuseScore's keys; letters start in the instrument's register; MIDI keys write chords. |
 | [0007](decisions/0007-one-performance-and-the-macs-own-orchestra.md) | One performance feeds playback, WAV and .mid; sound from Apple's General MIDI Audio Unit, a built-in synth elsewhere. |
 | [0008](decisions/0008-general-midi-gets-two-cc-lanes.md) | General MIDI gets AutoCC's CC7 and CC11; a .mid gets all four lanes. |

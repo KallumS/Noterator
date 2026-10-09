@@ -83,7 +83,8 @@ if(NOTERATOR_BUILD_TESTS)
         Tests/TestMidi.cpp
         Tests/TestGenerators.cpp
         Tests/TestMusicXml.cpp
-        Tests/TestTemplates.cpp)
+        Tests/TestTemplates.cpp
+        Tests/TestFollow.cpp)
     target_link_libraries(NoteratorTests PRIVATE NoteratorCore)
     add_test(NAME Core COMMAND NoteratorTests)
 endif()
