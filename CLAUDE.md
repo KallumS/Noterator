@@ -56,7 +56,7 @@ gets undone.
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039), colours. |
-| `Tests/Test*.cpp` | Core tests (88), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (13). |
+| `Tests/Test*.cpp` | Core tests (89), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (14). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -123,7 +123,8 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **Every generated line is fitted to the part it lands in** (0036,
   `fitToPolyphony`): no more notes at once than the instrument plays. New
   ways of placing a result must keep `InsertOptions::fitPolyphony` on;
-  only Blocks turn it off.
+  only Blocks turn it off. An audition is never fitted: every note on a
+  piano, drums on a kit (0043, `addAudition`).
 - **Who plays what across chosen parts is decided in `orchestrate`** (0040):
   by section and by each instrument's best register, never by score order.
   A result's parts are known by name first ("Melody", "Chords", "Bass").
@@ -186,8 +187,9 @@ and buttons to the start and the end (0035); generated music fitted to what
 each instrument can play (0036); New, Open, Save and Export under one File
 button (0037), with the Score tab's settings, Undo, Sound, Note input and
 the page's look in it too (0038, 0039); generated music orchestrated across
-the chosen parts, or every part with nothing chosen, a single line to one part (0040-0042). Follow is merged into `main` but not yet tried by
-the user on a Mac; 0035-0040 are on the branch `ccr-ac8da7d9-3sbl5x`.
+the chosen parts, or every part with nothing chosen, a single line to one part (0040-0042), all merged into `main`; and
+auditions that play every note on a piano (0043), on the branch
+`ccr-ac8da7d9-3sbl5x`. Follow and 0035-0042 not yet tried by the user on a Mac.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
 user is likely to want them: a page view; dynamics, articulations and slurs;
