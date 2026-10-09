@@ -34,7 +34,7 @@ results into a string quartet:
 - **Blocks are left as they were**, at the user's word: a block from the
   toolbox goes in as it is.
 - When a part was given fewer notes than the idea had, the status line says
-  so: "one note at a time for Violin I (the top line)".
+  so: "Violin I: top notes only".
 
 ## Consequences
 

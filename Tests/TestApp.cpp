@@ -307,7 +307,7 @@ TEST ("app: Generate Notes' chords into a violin come one note at a time; Blocks
     c.insertGenerated (out.results.front(), false, "good-idea");
     CHECK (! c.score.parts[0].notes.empty());
     CHECK_EQ (polyphonyOf (c.score.parts[0].notes), 1);
-    CHECK (c.status.contains ("one note at a time"));
+    CHECK (c.status.contains ("Violin I: top notes only"));
 
     // A chord block from the toolbox into the same violin: as it always was.
     Controller d (audio());

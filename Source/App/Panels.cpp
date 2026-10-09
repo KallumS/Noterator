@@ -582,13 +582,18 @@ void StatusBar::paint (juce::Graphics& g)
         if (! controller.selection.empty()) where += "   |   " + juce::String (static_cast<int> (controller.selection.size())) + " selected";
     }
     g.setColour (theme::text);
-    g.drawText (where, r.withTrimmedRight (320), juce::Justification::centred);
+    const auto middle = r.withTrimmedRight (320);
+    g.drawText (where, middle, juce::Justification::centred);
+    // The message on the left stops short of the middle, ending in "..." if
+    // it is too long, rather than running into it.
+    const int whereWidth = juce::roundToInt (juce::GlyphArrangement::getStringWidth (g.getCurrentFont(), where));
+    const int leftEnd = where.isEmpty() ? r.getRight() - 320 : middle.getCentreX() - whereWidth / 2 - 16;
 
     // Left: the last thing that happened, or the mode.
     juce::String left = controller.status;
     if (controller.input.noteInput) left = "NOTE INPUT - click the staff, type A-G (Shift adds to the chord), or play a MIDI keyboard. Esc to stop.";
     g.setColour (controller.input.noteInput ? theme::accent : theme::text);
-    g.drawText (left, r, juce::Justification::centredLeft);
+    g.drawText (left, r.withRight (std::max (r.getX() + 80, leftEnd)), juce::Justification::centredLeft, true);
 }
 
 } // namespace nt

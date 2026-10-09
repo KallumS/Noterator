@@ -808,9 +808,9 @@ void Controller::insertGenerated (const GeneratedResult& r, bool fromSelection, 
     juce::StringArray thinned;
     for (const auto id : report.thinnedParts)
         if (const auto* p = score.partById (id))
-            thinned.addIfNotAlreadyThere (juce::String (p->name) + (instrumentById (p->instrument).role == 'B' ? " (the bottom line)" : " (the top line)"));
+            thinned.addIfNotAlreadyThere (juce::String (p->name) + (instrumentById (p->instrument).role == 'B' ? ": bottom notes only" : ": top notes only"));
     if (! thinned.isEmpty())
-        status += " - one note at a time for " + thinned.joinIntoString (", ");
+        status += " - " + thinned.joinIntoString (", ");
     if (range.active() && (! fromSelection || generatorId == "midi-variator"))
     {
         // The bars stay selected, so another idea can go straight into them.
