@@ -41,6 +41,8 @@ refers to them by number: "(decision 0006)".
 | [0036](0036-one-note-at-a-time-for-one-note-instruments.md) | Generated music gives an instrument no more notes at once than it plays | Accepted |
 | [0037](0037-a-file-menu-button.md) | New, Open, Save and Export under one File button | Accepted |
 | [0038](0038-the-score-tab-moves-into-file.md) | The Score tab's settings move into the File menu | Accepted |
+| [0039](0039-undo-sound-input-and-look-into-file.md) | Undo, Redo, Sound, the input mode and the look move into the File menu | Accepted |
+| [0040](0040-generated-music-orchestrated-across-chosen-parts.md) | Generated music is orchestrated across the chosen parts | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one

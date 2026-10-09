@@ -47,6 +47,7 @@ gets undone.
 | `Source/Core/Xml.*`, `MusicXml.*` | MusicXML in and out with our own small XML reader/writer (0021). |
 | `Source/Engines/LuaEngine.*` | The embedded Lua host. Speaks only to the adapters. No JUCE. |
 | `Source/Engines/Generators.*` | A generator's context, fitting to an instrument, placing a result (0011). |
+| `Source/Engines/Orchestrate.*` | A result shared across chosen parts by instrument: sections, tune, bass and its octave, voice-led inner parts (0040). |
 | `Engines/<app>/` | The family's engines, **copied unchanged** (0003), embedded at build time. |
 | `Engines/adapters/` | The only Lua written here: one adapter per engine, protocol in `common.lua`. |
 | `Source/App/Controller.*` | Owns the score, undo, selection, caret; every window piece asks it. |
@@ -54,8 +55,8 @@ gets undone.
 | `Source/App/ScoreRenderer.*` | The ink: a layout into Bravura glyphs. Shared with `tools/RenderScore.cpp`. |
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
-| `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export and the score's settings, 0037, 0038), colours. |
-| `Tests/Test*.cpp` | Core tests (78), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (11). |
+| `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039), colours. |
+| `Tests/Test*.cpp` | Core tests (85), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (11). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -123,6 +124,9 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   `fitToPolyphony`): no more notes at once than the instrument plays. New
   ways of placing a result must keep `InsertOptions::fitPolyphony` on;
   only Blocks turn it off.
+- **Who plays what across chosen parts is decided in `orchestrate`** (0040):
+  by section and by each instrument's best register, never by score order.
+  A result's parts are known by name first ("Melody", "Chords", "Bass").
 - **Where a result lands is decided in `Controller::place`**, in this order:
   chosen bars (0019), a block at the caret (0018), the selection (0011), the
   caret's bar. Change it there, not in the panels.
@@ -176,9 +180,10 @@ and Follow: the page scrolls smoothly with the music as it plays, or turns a
 page at a time (0033, 0034); Space from bar 1, Shift+Space from the caret,
 and buttons to the start and the end (0035); generated music fitted to what
 each instrument can play (0036); New, Open, Save and Export under one File
-button (0037), with the Score tab's settings in it too (0038). Follow is
-merged into `main` but not yet tried by the user on a Mac; 0035-0038 are on
-the branch `ccr-ac8da7d9-3sbl5x`.
+button (0037), with the Score tab's settings, Undo, Sound, Note input and
+the page's look in it too (0038, 0039); generated music orchestrated across
+the chosen parts (0040). Follow is merged into `main` but not yet tried by
+the user on a Mac; 0035-0040 are on the branch `ccr-ac8da7d9-3sbl5x`.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
 user is likely to want them: a page view; dynamics, articulations and slurs;

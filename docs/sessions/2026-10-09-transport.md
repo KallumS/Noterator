@@ -67,3 +67,24 @@ test (11 now). The same script made the change in Miderator, where it found
 a bug of Miderator's own (its grid range swallowed the new menu ids; see its
 log). Tried in the window: 3/4 at bar 1 reset the staves' signatures, tempo
 88 showed back in the menu.
+
+## Then: more into File, and orchestration (0039, 0040)
+
+Undo, Redo, Sound, the input mode and the look left the toolbar for the File
+menu, in both apps, by one script; the status line still shows the input
+mode. Tried in both windows (Light and Note input from the menu, ticked).
+
+The user asked for generated music to fill every chosen part by range, with
+a string quintet as the example, and sent orchestration books. A helper read
+them (Rimsky-Korsakov's chapter III above all) into a rulebook; the result is
+`Orchestrate.*`, shared, made in Noterator and synced (0040). Measured
+first: Generate Notes' chords are block chords at only ~40% of onsets - the
+rest is a bass alone, broken chords, arpeggios - so the harmony is read with
+`detectChords`, and inner parts strike where the chords strike or hold.
+Mistakes on the way: the first voicing bounded inner parts by the tune's
+octave doubling, squeezing the viola into the bass's register - inner parts
+now go under the tune, starting where the generated chord has their note;
+and a Good Idea tune overlapping by a tick read as chords, so the tune and
+the chords swapped and the piccolo and glockenspiel were thinned - seen in
+Miderator's window, fixed by naming first (the test failed before). The
+full orchestra in the window: all 28 parts filled, nothing thinned. 85 core tests, 11 app tests.
