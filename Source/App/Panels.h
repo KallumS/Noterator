@@ -50,25 +50,24 @@ public:
     // The File button, for its menu to open under.
     juce::Component& fileAnchor() { return fileButton; }
 
-    std::function<void()> onFile, onSettings, onStart, onEnd;
+    std::function<void()> onFile, onStart, onEnd;
 
 private:
     Controller& controller;
-    juce::TextButton fileButton { "File" };   // New, Open, Save, Export: one menu (decision 0037)
-    juce::TextButton undoButton { "Undo" }, redoButton { "Redo" };
+    // New, Open, Save, Export, Undo, the score's settings, the sound, the
+    // input mode and the look: one menu (decisions 0037, 0038, 0039)
+    juce::TextButton fileButton { "File" };
     TransportButton startButton { "Return to start", TransportButton::Kind::start };
     juce::TextButton playButton { "Play" };
     TransportButton endButton { "Skip to end", TransportButton::Kind::end };
     juce::TextButton followButton { "Follow" };
-    juce::TextButton inputButton { "Note input" };
     std::vector<std::unique_ptr<GlyphButton>> durations;
     GlyphButton dotButton { "Dot", smufl::augmentationDot, 1.6f };
     GlyphButton tripletButton { "Triplet", smufl::tuplet0 + 3, 1.0f };
     GlyphButton restButton { "Rest", smufl::restQuarter, 0.8f };
     juce::TextButton voiceButton { "Voice 1" };
-    juce::TextButton transposeButton { "Concert pitch" }, pageButton { "Dark page" };
+    juce::TextButton transposeButton { "Concert pitch" };
     juce::TextButton zoomOut { "-" }, zoomIn { "+" };
-    juce::TextButton settingsButton { "Sound" };
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
     void refresh();

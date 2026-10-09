@@ -68,35 +68,25 @@ const Duration durationList[] = {
 Toolbar::Toolbar (Controller& c) : controller (c)
 {
     for (auto* b : std::initializer_list<juce::Button*> { &startButton, &endButton }) addAndMakeVisible (b);
-    for (auto* b : { &fileButton, &undoButton, &redoButton, &playButton, &followButton,
-                     &inputButton, &voiceButton, &transposeButton, &pageButton, &zoomOut, &zoomIn, &settingsButton })
+    for (auto* b : { &fileButton, &playButton, &followButton,
+                     &voiceButton, &transposeButton, &zoomOut, &zoomIn })
         addAndMakeVisible (b);
 
-    fileButton.setTooltip ("New, Open, Save and Export (Cmd+N, Cmd+O, Cmd+S, Cmd+E)");
-    undoButton.setTooltip ("Undo (Cmd+Z)");
-    redoButton.setTooltip ("Redo (Shift+Cmd+Z)");
+    fileButton.setTooltip ("New, Open, Save, Export, Undo and Redo, the score's settings, the sound, note input and the dark page");
     playButton.setTooltip ("Play from the caret, or stop (Shift+Space; Space plays from bar 1)");
     startButton.setTooltip ("Return to the start (Home) - if it is playing, it plays on from bar 1");
     endButton.setTooltip ("Skip to the end of the music (End)");
     followButton.setTooltip ("Follow: while it plays, the page scrolls along with the music (or turns a page at a time - Play menu)");
-    inputButton.setTooltip ("Note input (N): click a line or space, or type A-G, or play a MIDI keyboard");
     voiceButton.setTooltip ("Which voice notes are written in: 1 stems up, 2 stems down (V changes the selection's)");
     transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");
-    pageButton.setTooltip ("Set the page dark, light ink on dark paper - or back to black on white");
-    settingsButton.setTooltip ("The sound, and audio and MIDI devices");
 
     fileButton.onClick = [this] { if (onFile) onFile(); };
-    settingsButton.onClick = [this] { if (onSettings) onSettings(); };
-    undoButton.onClick = [this] { controller.undo(); };
-    redoButton.onClick = [this] { controller.redo(); };
     playButton.onClick = [this] { controller.togglePlay(); };
     startButton.onClick = [this] { if (onStart) onStart(); };
     endButton.onClick = [this] { if (onEnd) onEnd(); };
     followButton.onClick = [this] { controller.toggleFollow(); };
-    inputButton.onClick = [this] { controller.toggleNoteInput(); };
     voiceButton.onClick = [this] { controller.setVoice (1 - controller.input.voice); };
     transposeButton.onClick = [this] { controller.transposedScore = ! controller.transposedScore; controller.viewChanged(); };
-    pageButton.onClick = [this] { controller.lightPage = ! controller.lightPage; controller.viewChanged(); };
     zoomOut.onClick = [this] { controller.zoom = std::max (5.0f, controller.zoom / 1.15f); controller.viewChanged(); };
     zoomIn.onClick = [this] { controller.zoom = std::min (24.0f, controller.zoom * 1.15f); controller.viewChanged(); };
 
@@ -135,25 +125,19 @@ void Toolbar::resized()
     auto r = getLocalBounds().reduced (8, 7);
     auto place = [&r] (juce::Component& c, int w, int gap = 4) { c.setBounds (r.removeFromLeft (w)); r.removeFromLeft (gap); };
     place (fileButton, 52, 14);
-    place (undoButton, 52); place (redoButton, 52, 14);
     place (startButton, 30, 2);
     place (playButton, 60, 2);
     place (endButton, 30, 6);
     place (followButton, 60, 14);
-    place (inputButton, 92, 6);
     for (auto& d : durations) place (*d, 30, 2);
     r.removeFromLeft (4);
     place (dotButton, 30, 2); place (tripletButton, 30, 2); place (restButton, 30, 6);
     place (voiceButton, 66, 14);
     auto right = r;
-    settingsButton.setBounds (right.removeFromRight (64));
-    right.removeFromRight (10);
     zoomIn.setBounds (right.removeFromRight (28));
     right.removeFromRight (2);
     zoomOut.setBounds (right.removeFromRight (28));
     right.removeFromRight (10);
-    pageButton.setBounds (right.removeFromRight (86));
-    right.removeFromRight (4);
     transposeButton.setBounds (right.removeFromRight (106));
 }
 
@@ -161,11 +145,8 @@ void Toolbar::changeListenerCallback (juce::ChangeBroadcaster*) { refresh(); }
 
 void Toolbar::refresh()
 {
-    undoButton.setEnabled (controller.canUndo());
-    redoButton.setEnabled (controller.canRedo());
     playButton.setButtonText (controller.audio.isPlaying() ? "Stop" : "Play");
     playButton.setToggleState (controller.audio.isPlaying(), juce::dontSendNotification);
-    inputButton.setToggleState (controller.input.noteInput, juce::dontSendNotification);
     followButton.setToggleState (controller.followPlayback, juce::dontSendNotification);
     for (size_t i = 0; i < durations.size(); ++i)
         durations[i]->setToggleState (durationList[i].ticks == controller.input.base, juce::dontSendNotification);
@@ -173,7 +154,6 @@ void Toolbar::refresh()
     tripletButton.setToggleState (controller.input.triplet, juce::dontSendNotification);
     voiceButton.setButtonText ("Voice " + juce::String (controller.input.voice + 1));
     transposeButton.setButtonText (controller.transposedScore ? "Transposed" : "Concert pitch");
-    pageButton.setToggleState (! controller.lightPage, juce::dontSendNotification);
     repaint();
 }
 
