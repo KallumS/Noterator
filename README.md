@@ -22,7 +22,10 @@ can read, edit, play and export.
   bass an octave under the cellos), the chord's other notes to the ones
   between, each moving as little as it can - choose a whole orchestra and
   every part plays. Choose nothing and it is shared across every part from
-  the cursor's bar; choose bars of one part and all of it goes there. The generators are your own engines, unchanged, with every setting
+  the cursor's bar; choose bars of one part and all of it goes there. A tune
+  on its own goes to one part, and chosen bars are filled once - never
+  repeated, never past their end. The generators are your own engines,
+  unchanged, with every setting
   they have in REAPER. Every instrument gets only what it can play: a violin
   never gets chords, only their top line.
 - **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run or interval;
