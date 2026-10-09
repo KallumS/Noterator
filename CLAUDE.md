@@ -56,7 +56,7 @@ gets undone.
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039), colours. |
-| `Tests/Test*.cpp` | Core tests (89), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (15). |
+| `Tests/Test*.cpp` | Core tests (92), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (15). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. `build-mac.command`, at the top, builds the app on the user's Mac (0045). |
 
 ## Working in it
@@ -143,6 +143,11 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   in `Source/Core`. Only `.mxl` unzipping is in the app.
 - **The engraver must stay near-linear.** Anything per element per measure
   goes through the by-measure buckets; the 200-bar test holds it under a second.
+- **A Blocks chord's name comes from its recorded root** (0046,
+  `Score::chordRoots`, `nameFromRoot`): the lane reads notes only where
+  nothing recorded how they were made. New data about a span of the score
+  goes on `Score`, is saved by `ScoreFile` and moved by `insertBars` and
+  `deleteBars`, or it drifts.
 - **General MIDI gets CC7 and CC11 only** from AutoCC; a .mid gets all four (0008).
 - **A part's channel is bank x 16 + channel** (0023). Never assume 0-15: files
   take `% 16`, the audio thread routes by `Sequence::Event::bank`, and
@@ -190,7 +195,8 @@ button (0037), with the Score tab's settings, Undo, Sound, Note input and
 the page's look in it too (0038, 0039); generated music orchestrated across
 the chosen parts, or every part with nothing chosen, a single line to one part (0040-0042), all merged into `main`; and
 auditions that play every note on a piano (0043), a name click that
-lets go of bars chosen elsewhere (0044) and `build-mac.command` (0045), on
+lets go of bars chosen elsewhere (0044), `build-mac.command` (0045) and
+Blocks chords named in the Chords lane from their own root (0046), on
 the branch `ccr-ac8da7d9-3sbl5x`. Follow and 0035-0042 not yet tried by the user on a Mac.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the

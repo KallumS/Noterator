@@ -48,6 +48,7 @@ refers to them by number: "(decision 0006)".
 | [0043](0043-an-audition-plays-every-note-on-a-piano.md) | An audition plays every note, on a piano | Accepted |
 | [0044](0044-a-name-click-lets-go-of-bars-chosen-elsewhere.md) | Clicking a part's name lets go of bars chosen elsewhere | Accepted |
 | [0045](0045-built-on-the-users-own-mac.md) | The Mac app can be built on the user's own Mac | Accepted |
+| [0046](0046-blocks-chords-keep-their-root.md) | Blocks chords keep the root they were made on | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one
