@@ -11,3 +11,4 @@ broken and was not.
 | [2026-10-07, later](2026-10-07-after-testing.md) | After the first test on a Mac: Generate trimmed, Blocks toolbox, choosing bars to generate into, light page default, MusicXML in and out. |
 | [2026-10-07, evening](2026-10-07-templates.md) | Templates for whole sections, full orchestra and big band; a synth per sixteen channels so every part keeps its sound; Bass and Drums out of Blocks; Generate, Suggest and Vary Notes. |
 | [2026-10-09](2026-10-09-follow.md) | Follow: the page turns before the music goes out of view, switchable, shared with Miderator. |
+| [2026-10-09, later](2026-10-09-smooth-follow.md) | Follow scrolls smoothly: the music moves under a playhead a third of the way across, on a steady clock; pages kept as a choice. |

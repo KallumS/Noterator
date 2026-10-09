@@ -55,7 +55,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     undoButton.setTooltip ("Undo (Cmd+Z)");
     redoButton.setTooltip ("Redo (Shift+Cmd+Z)");
     playButton.setTooltip ("Play from the caret or the selection, or stop (Space)");
-    followButton.setTooltip ("Follow: while it plays, the page turns before the music goes out of view");
+    followButton.setTooltip ("Follow: while it plays, the page scrolls along with the music (or turns a page at a time - Play menu)");
     inputButton.setTooltip ("Note input (N): click a line or space, or type A-G, or play a MIDI keyboard");
     voiceButton.setTooltip ("Which voice notes are written in: 1 stems up, 2 stems down (V changes the selection's)");
     transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");

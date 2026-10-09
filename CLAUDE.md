@@ -42,7 +42,7 @@ gets undone.
 | `Source/Core/Spelling.*`, `ScaleModel.h` | Keys, spelling, signatures. `ScaleModel.h` is ScaleView's, **unchanged**. |
 | `Source/Core/Detect.*` | Chords and keys along the score (0014). |
 | `Source/Core/AutoCC.*` | AutoCC's curves, computed for a whole part (0013). |
-| `Source/Core/Follow.h` | When the page turns with the playhead (0033). Shared with Miderator. |
+| `Source/Core/Follow.h` | How the page follows the playhead - scrolling along or a page at a time - and the steady clock that keeps it smooth (0033, 0034). Shared with Miderator. |
 | `Source/Core/Perform.*`, `MidiFile.*`, `ScoreFile.*` | The score as MIDI events (channels in banks, 0023), as a .mid, as a .noterator (JSON). |
 | `Source/Core/Xml.*`, `MusicXml.*` | MusicXML in and out with our own small XML reader/writer (0021). |
 | `Source/Engines/LuaEngine.*` | The embedded Lua host. Speaks only to the adapters. No JUCE. |
@@ -55,7 +55,7 @@ gets undone.
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts and Score tabs, status line, keys and menus (New is grouped by template), colours. |
-| `Tests/Test*.cpp` | Core tests (69), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
+| `Tests/Test*.cpp` | Core tests (74), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -78,7 +78,12 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   run `build/Noterator_artefacts/Release/Noterator` with `DISPLAY=:99`, click
   and type with `xdotool`, screenshot with `import -window root`. Popup menus
   open with the *current* item over the box, so screenshot a menu before
-  clicking into it. There is no sound device in the container.
+  clicking into it. There is no sound device in the container: for playback,
+  `apt-get install pulseaudio libasound2-plugins`, start
+  `pulseaudio -D --exit-idle-time=-1 -n --load="module-null-sink sink_name=silent" --load=module-native-protocol-unix`,
+  and put `pcm.!default { type pulse }` in `~/.asoundrc` - the playhead then
+  moves in real time, silently. Record with ffmpeg's `x11grab` to judge
+  motion; build `RelWithDebInfo` for that (Debug draws too slowly to tell).
 - **The Mac app is built and tested only on CI** (0012). After pushing, check
   the run (GitHub MCP `actions_list` / `get_job_logs`). The Mac test log
   should say "rendering through Apple General MIDI (built into macOS)".

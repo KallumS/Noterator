@@ -14,6 +14,7 @@
 #include "AudioEngine.h"
 #include "Detect.h"
 #include "Edit.h"
+#include "Follow.h"
 #include "Engrave.h"
 #include "Generators.h"
 #include "LuaEngine.h"
@@ -66,7 +67,8 @@ public:
     InputState input;
     bool transposedScore = false;
     bool lightPage = true;        // black on white unless the user asks for dark (decision 0020)
-    bool followPlayback = true;   // the page turns with the playhead (decision 0033)
+    bool followPlayback = true;   // the page moves with the playhead (decision 0033)
+    FollowStyle followStyle = FollowStyle::smooth;   // scrolling along, or a page at a time (decision 0034)
     float zoom = 9.0f;            // pixels per staff space
 
     engrave::Layout layout;
@@ -145,9 +147,11 @@ public:
     // Sound
     void togglePlay();
     void toggleFollow();
+    void setFollowStyle (FollowStyle style);
     void playFrom (Tick t);
     void stop();
     void previewPitches (const std::vector<int>& pitches, uint32_t partId, double seconds = 0.9);
+    // Where the playhead is, carried smoothly between the sound's steps.
     Tick playheadTick() const;
 
     //==========================================================================
@@ -174,6 +178,7 @@ public:
 
 private:
     std::vector<Score> undoStack, redoStack;
+    mutable SmoothClock playheadClock;
     std::vector<Note> clipboard;
     bool clipboardFromDrums = false;
     int lastPitch = 67;

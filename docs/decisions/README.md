@@ -35,7 +35,8 @@ refers to them by number: "(decision 0006)".
 | [0023](0023-a-synth-per-sixteen-channels.md) | A synth for every sixteen channels, so every part has its own | Accepted |
 | [0024](0024-blocks-without-drums-and-bass.md) | The Blocks toolbox offers chords, arpeggios, runs and intervals only | Accepted |
 | [0025](0025-generators-named-for-what-they-do.md) | In the app, the generators are named for what they do | Accepted |
-| [0033](0033-follow-the-playhead-switchable.md) | The page follows the playhead, a page at a time, and can be switched off | Accepted |
+| [0033](0033-follow-the-playhead-switchable.md) | The page follows the playhead, a page at a time, and can be switched off | Accepted; default changed by 0034 |
+| [0034](0034-follow-scrolls-smoothly.md) | Following the playhead scrolls smoothly, by default | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one

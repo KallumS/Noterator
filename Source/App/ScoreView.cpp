@@ -18,7 +18,7 @@ ScoreView::ScoreView (Controller& c) : controller (c)
     hbar.setAutoHide (false);
     vbar.setAutoHide (false);
     controller.addChangeListener (this);
-    startTimerHz (30);
+    startTimerHz (60);   // smooth enough to scroll with the music (decision 0034)
 }
 
 ScoreView::~ScoreView()
@@ -148,10 +148,13 @@ void ScoreView::timerCallback()
         if (t != lastPlayhead)
         {
             lastPlayhead = t;
-            // Keep the playhead on the page, a page at a time (decision 0033).
+            // Keep the playhead on the page: scrolling along with it, or a
+            // page at a time (decisions 0033, 0034). Whole pixels, so the
+            // ink stays crisp as it moves.
             if (controller.followPlayback)
             {
-                const double to = followScroll (controller.layout.xForTick (t) * space(), scrollX, musicArea().getWidth());
+                const double to = std::round (followScroll (controller.layout.playheadX (t) * space(), scrollX,
+                                                             musicArea().getWidth(), controller.followStyle));
                 if (std::abs (to - scrollX) > 0.5) { scrollX = to; updateScrollbars(); }
             }
             lastSounding = controller.audio.soundingNotes();
@@ -191,7 +194,7 @@ void ScoreView::paint (juce::Graphics& g)
 
         if (controller.audio.isPlaying() && ! controller.auditioning && lastPlayhead >= 0)
         {
-            const float x = origin().x + static_cast<float> (controller.layout.xForTick (lastPlayhead)) * space();
+            const float x = origin().x + static_cast<float> (controller.layout.playheadX (lastPlayhead)) * space();
             g.setColour (page.accent);
             g.fillRect (x - 1.0f, static_cast<float> (lanesHeight), 2.0f, static_cast<float> (getHeight() - lanesHeight - 12));
         }
