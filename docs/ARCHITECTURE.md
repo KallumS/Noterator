@@ -78,6 +78,7 @@ reasoning and what it costs; this page is the map.
 ### Input and sound
 | | |
 | --- | --- |
+| [0033](decisions/0033-follow-the-playhead-switchable.md) | While it plays, the page turns before the music goes out of view; Follow switches it, remembered. |
 | [0016](decisions/0016-step-input-with-the-keys-people-know.md) | Step-time input with MuseScore's keys; letters start in the instrument's register; MIDI keys write chords. |
 | [0007](decisions/0007-one-performance-and-the-macs-own-orchestra.md) | One performance feeds playback, WAV and .mid; sound from Apple's General MIDI Audio Unit, a built-in synth elsewhere. |
 | [0008](decisions/0008-general-midi-gets-two-cc-lanes.md) | General MIDI gets AutoCC's CC7 and CC11; a .mid gets all four lanes. |

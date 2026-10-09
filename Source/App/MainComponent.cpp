@@ -13,7 +13,7 @@ enum MenuIds
     menuNew = 1, menuOpen, menuImport, menuSave, menuSaveAs, menuExportMidi, menuExportMidiBars, menuExportAudio, menuExportAudioBars,
     menuExportXml, menuExportXmlBars,
     menuUndo = 100, menuRedo, menuCut, menuCopy, menuPaste, menuDelete, menuSelectAll, menuVoice,
-    menuPlay = 200, menuNoteInput, menuLightPage, menuTransposed, menuZoomIn, menuZoomOut, menuAudioSettings, menuHelp,
+    menuPlay = 200, menuFollow, menuNoteInput, menuLightPage, menuTransposed, menuZoomIn, menuZoomOut, menuAudioSettings, menuHelp,
     menuTemplateBase = 1000
 };
 
@@ -69,6 +69,7 @@ MainComponent::MainComponent()
     if (auto* p = preferences.getUserSettings())
     {
         controller.lightPage = ! p->getBoolValue ("darkPage", false);
+        controller.followPlayback = p->getBoolValue ("followPlayback", true);
         controller.zoom = static_cast<float> (juce::jlimit (5.0, 24.0, p->getDoubleValue ("zoom", controller.zoom)));
         controller.viewChanged();
     }
@@ -107,6 +108,7 @@ void MainComponent::changeListenerCallback (juce::ChangeBroadcaster*)
     if (auto* p = preferences.getUserSettings())
     {
         if (p->getBoolValue ("darkPage", false) == controller.lightPage) p->setValue ("darkPage", ! controller.lightPage);
+        if (p->getBoolValue ("followPlayback", true) != controller.followPlayback) p->setValue ("followPlayback", controller.followPlayback);
         if (std::abs (p->getDoubleValue ("zoom", 0.0) - controller.zoom) > 0.01) p->setValue ("zoom", controller.zoom);
     }
     updateTitle();
@@ -271,6 +273,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
     else if (index == 3)
     {
         item (menuPlay, controller.audio.isPlaying() ? "Stop" : "Play", "Space");
+        m.addItem (menuFollow, "Follow the Playhead", true, controller.followPlayback);
         m.addSeparator();
         item (menuAudioSettings, "Audio and MIDI Devices...");
     }
@@ -316,6 +319,7 @@ void MainComponent::menuItemSelected (int id, int)
         case menuZoomIn: view.zoomBy (1.15f); break;
         case menuZoomOut: view.zoomBy (1.0f / 1.15f); break;
         case menuPlay: c.togglePlay(); break;
+        case menuFollow: c.toggleFollow(); break;
         case menuAudioSettings: audioSettingsDialog(); break;
         case menuHelp: showHelp(); break;
         default: break;
@@ -595,6 +599,7 @@ void MainComponent::showHelp()
         "Cmd+C / X / V  copy, cut, paste at the caret     Cmd+Z  undo\n\n"
         "LISTENING\n"
         "Space  play from the selection or the caret, or stop\n"
+        "Follow (toolbar, Play menu)  the page turns with the music as it plays\n"
         "Click a chord in the Chords lane to hear it, or the Scale lane to hear the scale\n\n"
         "GENERATING\n"
         "Choose some bars (or put the caret in a part), choose a generator, press\n"

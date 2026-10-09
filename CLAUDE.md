@@ -42,6 +42,7 @@ gets undone.
 | `Source/Core/Spelling.*`, `ScaleModel.h` | Keys, spelling, signatures. `ScaleModel.h` is ScaleView's, **unchanged**. |
 | `Source/Core/Detect.*` | Chords and keys along the score (0014). |
 | `Source/Core/AutoCC.*` | AutoCC's curves, computed for a whole part (0013). |
+| `Source/Core/Follow.h` | When the page turns with the playhead (0033). Shared with Miderator. |
 | `Source/Core/Perform.*`, `MidiFile.*`, `ScoreFile.*` | The score as MIDI events (channels in banks, 0023), as a .mid, as a .noterator (JSON). |
 | `Source/Core/Xml.*`, `MusicXml.*` | MusicXML in and out with our own small XML reader/writer (0021). |
 | `Source/Engines/LuaEngine.*` | The embedded Lua host. Speaks only to the adapters. No JUCE. |
@@ -54,7 +55,7 @@ gets undone.
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts and Score tabs, status line, keys and menus (New is grouped by template), colours. |
-| `Tests/Test*.cpp` | Core tests (65), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
+| `Tests/Test*.cpp` | Core tests (69), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (8). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -82,6 +83,11 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   the run (GitHub MCP `actions_list` / `get_job_logs`). The Mac test log
   should say "rendering through Apple General MIDI (built into macOS)".
 - **Commit and push early.** A session's container can restart.
+- **Miderator (KallumS/Miderator) shares this repository's music code**,
+  byte for byte: `Source/Core` (but its own `Roll.*`), `Source/Engines`,
+  `Engines/`, the Generate tab, export and the core tests. A change to them
+  here is copied there with its `tools/sync_from_noterator.sh`. Decision
+  numbers run in one sequence across both apps (0026-0032 are Miderator's).
 - When fixing a bug, have the test fail on the old code first.
 - Build with no warnings: JUCE's recommended flags are strict (`-Wswitch-enum`
   wants every enum case, `-Wfloat-equal`, sign conversions).

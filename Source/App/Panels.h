@@ -40,7 +40,7 @@ private:
     Controller& controller;
     juce::TextButton newButton { "New" }, openButton { "Open" }, saveButton { "Save" }, exportButton { "Export" };
     juce::TextButton undoButton { "Undo" }, redoButton { "Redo" };
-    juce::TextButton playButton { "Play" };
+    juce::TextButton playButton { "Play" }, followButton { "Follow" };
     juce::TextButton inputButton { "Note input" };
     std::vector<std::unique_ptr<GlyphButton>> durations;
     GlyphButton dotButton { "Dot", smufl::augmentationDot, 1.6f };

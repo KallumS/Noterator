@@ -1,5 +1,6 @@
 #include "ScoreView.h"
 
+#include "Follow.h"
 #include "Spelling.h"
 
 namespace nt
@@ -147,10 +148,12 @@ void ScoreView::timerCallback()
         if (t != lastPlayhead)
         {
             lastPlayhead = t;
-            // Keep the playhead on the page, a page at a time.
-            const double x = controller.layout.xForTick (t) * space();
-            const double w = musicArea().getWidth();
-            if (x > scrollX + w - 40 || x < scrollX) { scrollX = std::max (0.0, x - 40); updateScrollbars(); }
+            // Keep the playhead on the page, a page at a time (decision 0033).
+            if (controller.followPlayback)
+            {
+                const double to = followScroll (controller.layout.xForTick (t) * space(), scrollX, musicArea().getWidth());
+                if (std::abs (to - scrollX) > 0.5) { scrollX = to; updateScrollbars(); }
+            }
             lastSounding = controller.audio.soundingNotes();
             repaint();
         }

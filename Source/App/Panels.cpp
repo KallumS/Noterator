@@ -44,7 +44,7 @@ const Duration durationList[] = {
 
 Toolbar::Toolbar (Controller& c) : controller (c)
 {
-    for (auto* b : { &newButton, &openButton, &saveButton, &exportButton, &undoButton, &redoButton, &playButton,
+    for (auto* b : { &newButton, &openButton, &saveButton, &exportButton, &undoButton, &redoButton, &playButton, &followButton,
                      &inputButton, &voiceButton, &transposeButton, &pageButton, &zoomOut, &zoomIn, &settingsButton })
         addAndMakeVisible (b);
 
@@ -55,6 +55,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     undoButton.setTooltip ("Undo (Cmd+Z)");
     redoButton.setTooltip ("Redo (Shift+Cmd+Z)");
     playButton.setTooltip ("Play from the caret or the selection, or stop (Space)");
+    followButton.setTooltip ("Follow: while it plays, the page turns before the music goes out of view");
     inputButton.setTooltip ("Note input (N): click a line or space, or type A-G, or play a MIDI keyboard");
     voiceButton.setTooltip ("Which voice notes are written in: 1 stems up, 2 stems down (V changes the selection's)");
     transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");
@@ -69,6 +70,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     undoButton.onClick = [this] { controller.undo(); };
     redoButton.onClick = [this] { controller.redo(); };
     playButton.onClick = [this] { controller.togglePlay(); };
+    followButton.onClick = [this] { controller.toggleFollow(); };
     inputButton.onClick = [this] { controller.toggleNoteInput(); };
     voiceButton.onClick = [this] { controller.setVoice (1 - controller.input.voice); };
     transposeButton.onClick = [this] { controller.transposedScore = ! controller.transposedScore; controller.viewChanged(); };
@@ -112,7 +114,8 @@ void Toolbar::resized()
     auto place = [&r] (juce::Component& c, int w, int gap = 4) { c.setBounds (r.removeFromLeft (w)); r.removeFromLeft (gap); };
     place (newButton, 52); place (openButton, 56); place (saveButton, 52); place (exportButton, 62, 14);
     place (undoButton, 52); place (redoButton, 52, 14);
-    place (playButton, 60, 14);
+    place (playButton, 60, 2);
+    place (followButton, 60, 14);
     place (inputButton, 92, 6);
     for (auto& d : durations) place (*d, 30, 2);
     r.removeFromLeft (4);
@@ -139,6 +142,7 @@ void Toolbar::refresh()
     playButton.setButtonText (controller.audio.isPlaying() ? "Stop" : "Play");
     playButton.setToggleState (controller.audio.isPlaying(), juce::dontSendNotification);
     inputButton.setToggleState (controller.input.noteInput, juce::dontSendNotification);
+    followButton.setToggleState (controller.followPlayback, juce::dontSendNotification);
     for (size_t i = 0; i < durations.size(); ++i)
         durations[i]->setToggleState (durationList[i].ticks == controller.input.base, juce::dontSendNotification);
     dotButton.setToggleState (controller.input.dotted, juce::dontSendNotification);

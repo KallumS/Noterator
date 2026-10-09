@@ -77,6 +77,7 @@ It needs a Mac with Apple silicon (M1 or later).
 | Select | click a note; **Shift**-drag for several; double-click for a whole chord |
 | Change notes | **Up/Down** a semitone, **Cmd+Up/Down** an octave, drag a note up or down, **Delete** |
 | Hear | **Space** plays from the selection or the caret; click any note or chord |
+| Follow the music | **Follow** (beside Play) turns the page as it plays, just before the music goes out of view; click it to keep the page still |
 | Take it out | **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
 | Light or dark | the page is black on white; **Dark page** turns it round |
 | Undo | **Cmd+Z**, **Shift+Cmd+Z** |
