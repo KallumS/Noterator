@@ -466,17 +466,32 @@ std::vector<ChordSpan> detectChords (const Score& score, Tick from, Tick to,
         std::sort (span.pitches.begin(), span.pitches.end());
         const auto& k = score.keyAtBar (score.barAt (a));
         span.name = nameFromRoot (span.pitches, cr.root, k.root, k.scale);
-        // What the reader found there gives way; around it, it stays.
+        // What the reader found there gives way; around it, it stays - but
+        // rests after the chord go on holding it, as they hold any chord.
+        auto soundsIn = [&notes] (Tick x, Tick y)
+        {
+            for (const auto& n : notes) if (n.start < y && n.start + n.length > x) return true;
+            return false;
+        };
         std::vector<ChordSpan> kept;
         for (const auto& o : out)
         {
             if (o.end <= a || o.start >= b) { kept.push_back (o); continue; }
             if (o.start < a) { auto left = o; left.end = a; kept.push_back (left); }
-            if (o.end > b) { auto right = o; right.start = b; kept.push_back (right); }
+            if (o.end > b)
+            {
+                if (soundsIn (b, o.end)) { auto right = o; right.start = b; kept.push_back (right); }
+                else span.end = std::max (span.end, o.end);
+            }
         }
         kept.push_back (span);
         std::sort (kept.begin(), kept.end(), [] (const ChordSpan& x, const ChordSpan& y) { return x.start < y.start; });
-        out = std::move (kept);
+        out.clear();
+        for (const auto& k2 : kept)
+        {
+            if (! out.empty() && out.back().name == k2.name && out.back().end == k2.start) { out.back().end = k2.end; continue; }
+            out.push_back (k2);
+        }
     }
     return out;
 }

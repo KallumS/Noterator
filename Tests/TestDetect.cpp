@@ -164,6 +164,15 @@ TEST ("detect: a chord made on a known root is named from it, until its notes ch
     CHECK_EQ (named[0].end, 4 * PPQ);
     CHECK_EQ (named[1].name, std::string ("C6"));           // the second bar has no root recorded
 
+    // Rests after a chord hold it: the same chord with nothing after reads
+    // Amin7/C to the end, in one piece.
+    auto alone = withChords ({ { 60, 64, 67, 69 } }, 4 * PPQ);
+    alone.bars = 4;
+    alone.chordRoots.push_back ({ 0, 4 * PPQ, 9, { 0, 4, 7, 9 } });
+    const auto held = detectChords (alone, 0, alone.endTick());
+    CHECK_EQ (held.size(), size_t (1));
+    if (! held.empty()) CHECK_EQ (held.front().name, std::string ("Amin7/C"));
+
     // Edited - the A taken out - it is read like any other chord.
     auto& notes = s.parts[0].notes;
     notes.erase (std::remove_if (notes.begin(), notes.end(), [] (const Note& n) { return n.start == 0 && n.pitch == 69; }), notes.end());
