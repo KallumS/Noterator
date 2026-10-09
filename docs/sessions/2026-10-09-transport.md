@@ -55,3 +55,15 @@ cluttered.
 - **File**: New (the templates), Open, Import, Save, Save As, Export (the
   same sub-menu as before) under one button; tried in the window - New >
   Piano made a piano score, Export opened its list.
+
+## Then: the Score tab into File (0038)
+
+The user asked for the Score tab's contents to go under File too. They are
+now a "This score" section in the File menu (and the Mac's File menu): title
+and composer and tempo in small boxes, time signature and key as sub-menus
+ticked at the caret's bar, bars, and sound; the tab and `ScorePanel` are
+gone, and "use the key it hears" is `Controller::useHeardKey`, with an app
+test (11 now). The same script made the change in Miderator, where it found
+a bug of Miderator's own (its grid range swallowed the new menu ids; see its
+log). Tried in the window: 3/4 at bar 1 reset the staves' signatures, tempo
+88 showed back in the menu.

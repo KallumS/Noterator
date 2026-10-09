@@ -54,8 +54,8 @@ gets undone.
 | `Source/App/ScoreRenderer.*` | The ink: a layout into Bravura glyphs. Shared with `tools/RenderScore.cpp`. |
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
-| `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts and Score tabs, status line, keys and menus (New is grouped by template), colours. |
-| `Tests/Test*.cpp` | Core tests (78), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (10). |
+| `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export and the score's settings, 0037, 0038), colours. |
+| `Tests/Test*.cpp` | Core tests (78), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (11). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -138,6 +138,8 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   take `% 16`, the audio thread routes by `Sequence::Event::bank`, and
   channels 15 and 16 of bank 0 belong to the keyboard and previews. A new
   synth for a bank is made on the message thread, before it is needed.
+- **Menu ids come in ranges** (`MainComponent.cpp`): every range check names
+  its own end, or it swallows the next range's items (0038).
 - Letters in shortcuts arrive in either case: compare them upper-cased.
 - **No references into temporaries in tests**: `f().front().x` inside
   `CHECK_EQ` dangles. It passed with GCC and failed on the Mac.
@@ -174,8 +176,9 @@ and Follow: the page scrolls smoothly with the music as it plays, or turns a
 page at a time (0033, 0034); Space from bar 1, Shift+Space from the caret,
 and buttons to the start and the end (0035); generated music fitted to what
 each instrument can play (0036); New, Open, Save and Export under one File
-button (0037). Follow is merged into `main` but not yet tried by the user on
-a Mac; 0035-0037 are on the branch `ccr-ac8da7d9-3sbl5x`.
+button (0037), with the Score tab's settings in it too (0038). Follow is
+merged into `main` but not yet tried by the user on a Mac; 0035-0038 are on
+the branch `ccr-ac8da7d9-3sbl5x`.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
 user is likely to want them: a page view; dynamics, articulations and slurs;
