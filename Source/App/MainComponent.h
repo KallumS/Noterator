@@ -57,7 +57,6 @@ private:
     GeneratorPanel generatorPanel { controller };
     BlocksPanel blocksPanel { controller };
     PartsPanel partsPanel { controller };
-    ScorePanel scorePanel { controller };
     StatusBar statusBar { controller };
     std::unique_ptr<juce::FileChooser> chooser;
     juce::ApplicationProperties preferences;   // the page colour and zoom, kept between launches
@@ -69,6 +68,10 @@ private:
     void showExportMenu();
     juce::PopupMenu exportMenu();
     void showFileMenu();
+    void addScoreItems (juce::PopupMenu& m);
+    void titleDialog();
+    void tempoDialog();
+    void meterDialog();
     void showSettingsMenu();
     void openDialog();
     void saveDialog (bool saveAs, std::function<void()> then = {});
