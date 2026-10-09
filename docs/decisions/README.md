@@ -43,6 +43,7 @@ refers to them by number: "(decision 0006)".
 | [0038](0038-the-score-tab-moves-into-file.md) | The Score tab's settings move into the File menu | Accepted |
 | [0039](0039-undo-sound-input-and-look-into-file.md) | Undo, Redo, Sound, the input mode and the look move into the File menu | Accepted |
 | [0040](0040-generated-music-orchestrated-across-chosen-parts.md) | Generated music is orchestrated across the chosen parts | Accepted |
+| [0041](0041-where-generated-music-goes.md) | Where generated music goes: every part, one part, or the parts chosen | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one

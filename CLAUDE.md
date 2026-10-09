@@ -56,7 +56,7 @@ gets undone.
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039), colours. |
-| `Tests/Test*.cpp` | Core tests (85), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (11). |
+| `Tests/Test*.cpp` | Core tests (87), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (12). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. |
 
 ## Working in it
@@ -128,8 +128,11 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   by section and by each instrument's best register, never by score order.
   A result's parts are known by name first ("Melody", "Chords", "Bass").
 - **Where a result lands is decided in `Controller::place`**, in this order:
-  chosen bars (0019), a block at the caret (0018), the selection (0011), the
-  caret's bar. Change it there, not in the panels.
+  chosen bars (0019) - one part takes all of it, several share it (0041) -
+  a block at the caret (0018), the selection (0011), and with nothing chosen
+  every part from the caret's bar (0041). Change it there, not in the
+  panels. **No part is ever added** for a result: lines with nowhere to go
+  are named (`InsertReport::unplaced`).
 - **Selecting notes clears the chosen bars** (`select`, `selectAll`,
   `selectNext`, moving, pasting). Code that sets `selection` directly must
   decide whether `range` still holds.
@@ -182,7 +185,7 @@ and buttons to the start and the end (0035); generated music fitted to what
 each instrument can play (0036); New, Open, Save and Export under one File
 button (0037), with the Score tab's settings, Undo, Sound, Note input and
 the page's look in it too (0038, 0039); generated music orchestrated across
-the chosen parts (0040). Follow is merged into `main` but not yet tried by
+the chosen parts, or every part with nothing chosen (0040, 0041). Follow is merged into `main` but not yet tried by
 the user on a Mac; 0035-0040 are on the branch `ccr-ac8da7d9-3sbl5x`.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
