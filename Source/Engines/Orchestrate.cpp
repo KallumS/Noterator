@@ -433,15 +433,26 @@ InsertReport orchestrate (Score& score, const GeneratedResult& fitted, const std
     const GeneratedPart* chords = nullptr;
     const GeneratedPart* drums = nullptr;
     std::vector<const GeneratedPart*> others;
+    // Names first: a tune whose notes overlap by a hair is still the tune.
     for (const auto& gp : fitted.parts)
     {
         const auto n = lower (gp.name);
-        if (gp.drums && drums == nullptr) drums = &gp;
-        else if (n.find ("bass") != std::string::npos && bass == nullptr) bass = &gp;
-        else if (n.find ("second") != std::string::npos && second == nullptr && ! gp.drums) second = &gp;
-        else if ((n.find ("chord") != std::string::npos || polyphonyOf (gp.notes) > 1) && chords == nullptr) chords = &gp;
-        else if (melody == nullptr && ! gp.drums) melody = &gp;
+        const auto has = [&n] (const char* w) { return n.find (w) != std::string::npos; };
+        if (gp.drums) { if (drums == nullptr) drums = &gp; else others.push_back (&gp); }
+        else if (has ("bass") && bass == nullptr) bass = &gp;
+        else if (has ("second") && second == nullptr) second = &gp;
+        else if (has ("chord") && chords == nullptr) chords = &gp;
+        else if ((has ("melody") || has ("tune") || has ("lead")) && melody == nullptr) melody = &gp;
         else others.push_back (&gp);
+    }
+    // Then what the unnamed ones sound like.
+    std::vector<const GeneratedPart*> unnamed;
+    unnamed.swap (others);
+    for (const auto* gp : unnamed)
+    {
+        if (! gp->drums && chords == nullptr && polyphonyOf (gp->notes) > 2) chords = gp;
+        else if (! gp->drums && melody == nullptr) melody = gp;
+        else others.push_back (gp);
     }
 
     const std::vector<Note> none;

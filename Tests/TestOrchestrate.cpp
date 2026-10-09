@@ -185,3 +185,19 @@ TEST ("orchestrate: a tune alone is played in octaves by everyone chosen")
         if (! p.notes.empty()) CHECK_EQ (pcOf (p.notes.front().pitch), 0);
     }
 }
+
+TEST ("orchestrate: a tune whose notes overlap by a hair is still the tune, not chords")
+{
+    // Generate Notes' melodies are legato: each note can run a tick into the next.
+    GeneratedResult r = blockChords ({ { 48, 55, 64 } });
+    GeneratedPart m; m.name = "Melody";
+    for (int i = 0; i < 4; ++i) { Note n; n.start = i * PPQ; n.length = PPQ + 10; n.pitch = 76 + i; m.notes.push_back (n); }
+    r.parts.insert (r.parts.begin(), m);
+    auto s = ensemble ({ "glock", "vln1", "vln2", "vla", "vc" });
+    const auto report = insertIntoRange (s, r, idsOf (s), 0, s.barStart (1));
+    CHECK (report.thinnedParts.empty());                     // nobody given chords they cannot play
+    const auto& v1 = partOf (s, "vln1").notes;
+    CHECK_EQ (v1.size(), size_t (4));                        // the tune, note for note
+    for (size_t i = 0; i < v1.size(); ++i) CHECK_EQ (pcOf (v1[i].pitch), pcOf (76 + static_cast<int> (i)));
+    CHECK_EQ (partOf (s, "glock").notes.size(), size_t (4));
+}
