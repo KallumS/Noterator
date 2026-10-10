@@ -236,7 +236,7 @@ struct PartsPanel::Row : public juce::Component
         autoCC.setToggleState (p->autoCC, juce::dontSendNotification);
         autoCC.setEnabled (instrumentById (p->instrument).cc != CCShape::none);
         volume.setValue (p->volume, juce::dontSendNotification);
-        current = controller.caretPart == partId && ! controller.noPartChosen;
+        current = controller.isPartChosen (partId);
         repaint();
     }
 
@@ -276,7 +276,7 @@ struct PartsPanel::Row : public juce::Component
         volume.setBounds (bottom);
     }
 
-    void mouseDown (const juce::MouseEvent&) override { controller.choosePart (partId); }
+    void mouseDown (const juce::MouseEvent& e) override { controller.clickPart (partId, e.mods.isCommandDown(), e.mods.isShiftDown()); }
 
     Controller& controller;
     uint32_t partId;
@@ -427,7 +427,9 @@ void StatusBar::paint (juce::Graphics& g)
         const Tick inBar = controller.caret - s.barStart (bar);
         const auto beat = s.meterAtBar (bar).beatTicks();
         // With no part chosen (decision 0048) the caret is only a bar and beat.
-        where = (controller.noPartChosen ? juce::String ("Every part") : juce::String (p->name)) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);
+        where = (controller.noPartChosen ? juce::String ("Every part")
+                 : controller.chosenParts.size() > 1 ? juce::String (static_cast<int> (controller.chosenParts.size())) + " parts"
+                 : juce::String (p->name)) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);
         if (! controller.selection.empty()) where += "   |   " + juce::String (static_cast<int> (controller.selection.size())) + " selected";
     }
     g.setColour (theme::text);

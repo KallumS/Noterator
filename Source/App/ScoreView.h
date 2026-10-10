@@ -52,7 +52,7 @@ private:
     juce::Rectangle<int> rubberBand;
     bool dragging = false, draggingNotes = false;
     // Choosing bars: where the drag began, and whether it spans every part.
-    bool selectingBars = false, allParts = false;
+    bool selectingBars = false, allParts = false, addingBars = false;
     int anchorBar = 0, anchorPart = 0;
     juce::Point<float> dragStart;
     int dragPitchFrom = 0, dragSemitones = 0;
@@ -81,6 +81,7 @@ private:
 
     void paintLanes (juce::Graphics&);
     void paintRange (juce::Graphics&);
+    void paintBlock (juce::Graphics&, const Bars& block);
     void paintGutter (juce::Graphics&);
     void paintCaret (juce::Graphics&);
     void paintGhost (juce::Graphics&);

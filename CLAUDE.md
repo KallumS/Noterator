@@ -56,7 +56,7 @@ gets undone.
 | `Source/App/AudioEngine.*`, `Exporter.*` | Playback through a rack of synths, one per 16 channels (0023), previews, MIDI input; MIDI, MusicXML and WAV export (0007). |
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, Parts tab, status line, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039), colours. |
-| `Tests/Test*.cpp` | Core tests (92), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (17). |
+| `Tests/Test*.cpp` | Core tests (92), no JUCE. `Tests/TestApp.cpp` is the JUCE-side test (18). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. `build-mac.command`, at the top, builds the app on the user's Mac (0045). |
 
 ## Working in it
@@ -132,8 +132,9 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **Where a result lands is decided in `Controller::place`**, in this order:
   chosen bars (0019) - one part takes all of it, several share it (0041) -
   a block at the caret (0018), the selection (0011), and with nothing chosen
-  every part from the caret's bar (0041); a single line goes to one part
-  (`lineTarget`), and chosen bars are filled once, never repeated (0042). Change it there, not in the
+  every part from the caret's bar (0041) - or only the parts chosen by name
+  (0050); a single line goes to one part (`lineTarget`: the first chosen),
+  and chosen bars are filled once, never repeated (0042), block by block (0050). Change it there, not in the
   panels. **No part is ever added** for a result: lines with nowhere to go
   are named (`InsertReport::unplaced`).
 - **Selecting notes clears the chosen bars** (`select`, `selectAll`,
@@ -199,7 +200,8 @@ lets go of bars chosen elsewhere (0044), `build-mac.command` (0045),
 Blocks chords named in the Chords lane from their own root (0046) and
 each chord offering the inversions it has (0047), since merged into
 `main`; then Escape letting go of everything, the caret's part too, so an
-idea goes to every part (0048), and Undo bringing back the ideas a Generate replaced (0049), on
+idea goes to every part (0048), and Undo bringing back the ideas a Generate replaced (0049), and several parts
+chosen with Cmd, Shift and Cmd+A, and blocks of bars with Cmd (0050), on
 the branch `claude/adoring-feynman-bihxp2`. Follow and 0035-0042 not yet tried by the user on a Mac.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
