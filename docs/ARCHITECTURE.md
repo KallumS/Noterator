@@ -93,6 +93,11 @@ reasoning and what it costs; this page is the map.
 | [0040](decisions/0040-generated-music-orchestrated-across-chosen-parts.md) | Generated music shared across the chosen parts by instrument: each section the whole harmony, tune on top, bass below doubled an octave down, chord between, voice-led (`Orchestrate.*`). |
 | [0041](decisions/0041-where-generated-music-goes.md) | Nothing chosen: shared across every part; bars of one part: all of it there; bars of several: shared across them. No part is ever added. |
 | [0042](decisions/0042-a-single-line-to-one-part-and-a-span-filled-once.md) | A single line (melody, motif) goes to one part, never shared; chosen bars are filled once, cut or left empty, never repeated. |
+| [0043](decisions/0043-an-audition-plays-every-note-on-a-piano.md) | An audition is the result itself: every note on a piano, drums on a kit, heard where it would go - nothing fitted. |
+| [0044](decisions/0044-a-name-click-lets-go-of-bars-chosen-elsewhere.md) | A click on a part's name lets go of bars chosen in other parts, so the next idea goes to it. |
+| [0045](decisions/0045-built-on-the-users-own-mac.md) | `build-mac.command` builds the app on the user's Mac and puts it in Applications; CI still builds and tests every push. |
+| [0046](decisions/0046-blocks-chords-keep-their-root.md) | A Blocks chord carries its root into the score; the Chords lane names it from there while its notes are unchanged. |
+| [0047](decisions/0047-blocks-offers-a-chords-real-inversions.md) | Blocks offers each chord its own inversions: two for a triad, three for a seventh, up to six for a thirteenth. |
 | [0035](decisions/0035-space-plays-from-the-start.md) | Space plays from bar 1, Shift+Space and Play from the caret; |◀ and ▶| (Home, End) go to the start and the end of the music. |
 | [0034](decisions/0034-follow-scrolls-smoothly.md) | Following scrolls smoothly by default, the playhead a third of the way across, on a steady clock; turning pages is a choice in the Play menu. |
 | [0016](decisions/0016-step-input-with-the-keys-people-know.md) | Step-time input with MuseScore's keys; letters start in the instrument's register; MIDI keys write chords. |
