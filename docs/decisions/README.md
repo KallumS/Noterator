@@ -53,6 +53,7 @@ refers to them by number: "(decision 0006)".
 | [0048](0048-escape-lets-go-of-everything.md) | Escape lets go of everything, the caret's part too | Accepted |
 | [0049](0049-undo-brings-back-generated-ideas.md) | Undo brings back the ideas a Generate replaced | Accepted |
 | [0050](0050-choosing-several-parts-and-blocks-of-bars.md) | Choosing several parts by name, and blocks of bars with Cmd | Accepted |
+| [0051](0051-no-more-button.md) | No More button in the Generate tab | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one
