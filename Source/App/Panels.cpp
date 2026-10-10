@@ -236,7 +236,7 @@ struct PartsPanel::Row : public juce::Component
         autoCC.setToggleState (p->autoCC, juce::dontSendNotification);
         autoCC.setEnabled (instrumentById (p->instrument).cc != CCShape::none);
         volume.setValue (p->volume, juce::dontSendNotification);
-        current = controller.caretPart == partId;
+        current = controller.caretPart == partId && ! controller.noPartChosen;
         repaint();
     }
 
@@ -426,7 +426,8 @@ void StatusBar::paint (juce::Graphics& g)
         const int bar = s.barAt (controller.caret);
         const Tick inBar = controller.caret - s.barStart (bar);
         const auto beat = s.meterAtBar (bar).beatTicks();
-        where = juce::String (p->name) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);
+        // With no part chosen (decision 0048) the caret is only a bar and beat.
+        where = (controller.noPartChosen ? juce::String ("Every part") : juce::String (p->name)) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);
         if (! controller.selection.empty()) where += "   |   " + juce::String (static_cast<int> (controller.selection.size())) + " selected";
     }
     g.setColour (theme::text);

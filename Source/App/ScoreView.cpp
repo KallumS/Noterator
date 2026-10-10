@@ -224,9 +224,11 @@ void ScoreView::paintCaret (juce::Graphics& g)
     const auto page = controller.lightPage ? theme::lightPage() : theme::darkPage();
     const int pi = controller.score.partIndex (controller.caretPart);
     if (pi < 0) return;
+    // With no part chosen (decision 0048) the caret runs down every staff.
+    const bool every = controller.noPartChosen;
     double top = 1e9, bottom = -1e9;
     for (const auto& st : lay.staves)
-        if (st.part == pi) { top = std::min (top, st.top); bottom = std::max (bottom, st.top + 4.0); }
+        if (every || st.part == pi) { top = std::min (top, st.top); bottom = std::max (bottom, st.top + 4.0); }
     if (top > bottom) return;
     const auto o = origin();
     const float x = o.x + static_cast<float> (lay.xForTick (controller.caret)) * space() - 0.6f * space();
@@ -235,7 +237,7 @@ void ScoreView::paintCaret (juce::Graphics& g)
     g.setColour (input ? page.accent : page.dim.withAlpha (0.8f));
     g.fillRect (x, y1, input ? 2.5f : 1.5f, y2 - y1);
     // The part the caret is in, marked down the side.
-    g.fillRect (static_cast<float> (gutter) + 1.0f, y1, 3.0f, y2 - y1);
+    if (! every) g.fillRect (static_cast<float> (gutter) + 1.0f, y1, 3.0f, y2 - y1);
 }
 
 void ScoreView::paintRange (juce::Graphics& g)
@@ -324,8 +326,8 @@ void ScoreView::paintGutter (juce::Graphics& g)
     g.setColour (page.paper);
     g.fillRect (0, lanesHeight, gutter, getHeight());
     ScoreRenderer::drawNames (g, lay, controller.score, style, static_cast<float> (gutter) - 10.0f, o.y, false);
-    // The caret's part, marked.
-    const int pi = controller.score.partIndex (controller.caretPart);
+    // The caret's part, marked - unless Escape let go of it (decision 0048).
+    const int pi = controller.noPartChosen ? -1 : controller.score.partIndex (controller.caretPart);
     for (const auto& st : lay.staves)
         if (st.part == pi && st.staffInPart == 0)
         {
@@ -481,6 +483,7 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
         else if (sel.count (head->noteId) == 0) sel = { head->noteId };
         const auto& part = controller.score.parts[static_cast<size_t> (lay.staves[static_cast<size_t> (staffIndex)].part)];
         controller.caretPart = part.id;
+        controller.noPartChosen = false;
         controller.caret = el.at;
         controller.select (sel);
         controller.previewPitches ({ head->pitch }, part.id, 0.6);
@@ -580,7 +583,7 @@ void ScoreView::mouseUp (const juce::MouseEvent&)
                         if (firstPart == 0) firstPart = controller.score.parts[static_cast<size_t> (st.part)].id;
                     }
                 }
-        if (firstPart != 0) controller.caretPart = firstPart;
+        if (firstPart != 0) { controller.caretPart = firstPart; controller.noPartChosen = false; }
         controller.select (sel);
         controller.setStatus (juce::String (static_cast<int> (sel.size())) + " notes selected");
     }

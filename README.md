@@ -100,6 +100,7 @@ keeps working for every future version.
 | Put the caret in a part | click the staff, or the part's name |
 | Choose bars | click an empty bar; drag across bars and staves for more; drag along the Chords lane for every part; **Esc** lets go |
 | Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the caret's part |
+| Every instrument at once | **Esc** lets go of everything - notes, bars and the instrument - so the next idea goes to every part (a single melody to the top one); click a name to choose one again |
 | Blocks | **Blocks** tab: choose a kind, click a degree to see and hear it, **Insert** at the caret |
 | Write notes | **N** for note input, then click the staff, type **A-G**, or play a MIDI keyboard |
 | Note values | **1-7** (5 is a quarter, 6 a half, 4 an eighth), **.** dot, **T** triplet, **0** rest |

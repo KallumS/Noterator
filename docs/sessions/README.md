@@ -13,3 +13,4 @@ broken and was not.
 | [2026-10-09](2026-10-09-follow.md) | Follow: the page turns before the music goes out of view, switchable, shared with Miderator. |
 | [2026-10-09, later](2026-10-09-smooth-follow.md) | Follow scrolls smoothly: the music moves under a playhead a third of the way across, on a steady clock; pages kept as a choice. |
 | [2026-10-09, evening](2026-10-09-transport.md) | Space plays from bar 1, Shift+Space from the caret; buttons to the start and the end, in both apps. |
+| [2026-10-10, Escape](2026-10-10-escape.md) | Escape lets go of everything - notes, bars and the caret's part - so an idea goes to every part, a single line to the top one (0048). Both apps. |

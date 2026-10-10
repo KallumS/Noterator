@@ -63,6 +63,7 @@ public:
     Selection selection;
     BarRange range;               // set: the selection is everything in these bars
     uint32_t caretPart = 0;
+    bool noPartChosen = false;    // Escape let go of the caret's part too (decision 0048)
     Tick caret = 0;
     InputState input;
     bool transposedScore = false;
@@ -100,6 +101,11 @@ public:
     // other parts are let go, so the next idea goes to the part clicked
     // (decision 0044). Bars chosen that include it stay chosen.
     void choosePart (uint32_t partId);
+    // Escape: playing and note input stop, and every choice is let go -
+    // the selection, chosen bars and the caret's part - so the next idea
+    // goes to every part, a single line to the top one (decision 0048).
+    // Choosing a part again, by name, by click or by keys, ends it.
+    void letGoOfEverything();
     void moveCaret (int direction);
     void caretToPart (int direction);
     void typeLetter (int letter, bool addToChord);   // 0..6 is C..B
@@ -131,7 +137,8 @@ public:
     void selectRange (int a, int b, int fromPart, int toPart);
     // "Bars 2-5, Violin I to Cello", for whatever shows the range.
     // The part a single line of music goes to (decision 0042): the caret's,
-    // or with bars chosen the caret's among them, else the top one.
+    // or with bars chosen the caret's among them, else the top one - and
+    // the top one when Escape let go of every part (0048).
     uint32_t lineTarget() const;
     juce::String rangeText() const;
     // The bars the range or the selection covers, or the caret's bar.
