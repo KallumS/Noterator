@@ -198,3 +198,24 @@ before it failed with the 0046 test reading an empty name where Linux read
 `C6`. The test was the fault: `detectChords (...).front().name` inside
 `CHECK_EQ` read a temporary already destroyed - the rule in CLAUDE.md, broken
 a second time. Held in a variable (`006bd88`). 92 core tests, 15 app tests.
+
+## Then: each chord offers the inversions it has (0047)
+
+The user set out how inversions work - a triad two, a seventh three, an
+extended chord one per note after the root - and Blocks offered Root to 3rd
+on everything. Made in Starting Blocks (its 0007, `2facd93`), copied into
+Starting Blocks Notation (its 0015, `79b71f4`) and vendored here; the
+adapter's Inversion menu is now the chord's own (`dynamic`).
+
+**What looked broken and was not, then was:** writing the engine's sweep
+found two faults the old fixed row hid. The notes lifted under an inversion
+went on the end, so an Up arpeggio of an inverted ninth fell back down at
+the top; and a lifted note went up one octave only, which leaves a wide
+chord's root under its new bass (Cmaj9's 4th inversion would have kept C
+under D, and the Elektra, Farben and Mystic chords' 3rd did already).
+
+Measured through the real insert path, every Blocks chord in all 288 keys
+and every inversion it has: 735,822 chords (65,574 of them 4th to 6th
+inversions, new), the right note in the bass and the Chords lane naming
+each on Blocks' root over it. The lane test now walks each chord's own
+inversions. 92 core tests, 15 app tests.

@@ -195,8 +195,9 @@ button (0037), with the Score tab's settings, Undo, Sound, Note input and
 the page's look in it too (0038, 0039); generated music orchestrated across
 the chosen parts, or every part with nothing chosen, a single line to one part (0040-0042), all merged into `main`; and
 auditions that play every note on a piano (0043), a name click that
-lets go of bars chosen elsewhere (0044), `build-mac.command` (0045) and
-Blocks chords named in the Chords lane from their own root (0046), on
+lets go of bars chosen elsewhere (0044), `build-mac.command` (0045),
+Blocks chords named in the Chords lane from their own root (0046) and
+each chord offering the inversions it has (0047), on
 the branch `ccr-ac8da7d9-3sbl5x`. Follow and 0035-0042 not yet tried by the user on a Mac.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
