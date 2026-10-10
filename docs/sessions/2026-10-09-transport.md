@@ -219,3 +219,21 @@ and every inversion it has: 735,822 chords (65,574 of them 4th to 6th
 inversions, new), the right note in the bass and the Chords lane naming
 each on Blocks' root over it. The lane test now walks each chord's own
 inversions. 92 core tests, 15 app tests.
+
+## At the end of the session
+
+Asked whether ScaleView Pro could read Blocks chords nearer 100% without a
+recorded root: measured (ScaleView-for-Reaper's session log of 2026-10-10),
+it names 100% of the key's own chords and of every chord whose notes are all
+in the key as Blocks would, and 90.35% of all Blocks chords; the rest have
+notes outside the key. The user chose to leave it there. In these apps a
+chord inserted from Blocks reads right regardless (0046).
+
+Not done yet, from this stretch:
+
+- Nothing of 0043-0047 has been tried by the user on a Mac.
+- The eight `ccr-ac8da7d9-3sbl5x` branches (listed in docs/NEXT-SESSION.md)
+  are not merged, and ScaleView Pro, Midi Suggester and Midi Variator are
+  not released through ReaPack.
+- Neither Starting Blocks script has been run in REAPER with the new
+  Inversion row.
