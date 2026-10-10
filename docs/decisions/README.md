@@ -51,6 +51,7 @@ refers to them by number: "(decision 0006)".
 | [0046](0046-blocks-chords-keep-their-root.md) | Blocks chords keep the root they were made on | Accepted |
 | [0047](0047-blocks-offers-a-chords-real-inversions.md) | Blocks offers each chord the inversions it has | Accepted |
 | [0048](0048-escape-lets-go-of-everything.md) | Escape lets go of everything, the caret's part too | Accepted |
+| [0049](0049-undo-brings-back-generated-ideas.md) | Undo brings back the ideas a Generate replaced | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one
