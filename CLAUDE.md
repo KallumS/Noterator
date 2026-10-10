@@ -120,7 +120,8 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **A result never overwrites the music it came from** (0011): Suggester's
   lines go into parts silent in those bars, Variator's after the selection.
   A line with chords never goes to a one-note instrument. The exception is
-  bars the user chose (0019): Good Idea fills them, Variator replaces them.
+  bars the user chose (0019): Good Idea fills them, Variator replaces them -
+  one part's; on several parts it goes after them, across them (0052).
 - **Every generated line is fitted to the part it lands in** (0036,
   `fitToPolyphony`): no more notes at once than the instrument plays. New
   ways of placing a result must keep `InsertOptions::fitPolyphony` on;
@@ -201,7 +202,8 @@ Blocks chords named in the Chords lane from their own root (0046) and
 each chord offering the inversions it has (0047), since merged into
 `main`; then Escape letting go of everything, the caret's part too, so an
 idea goes to every part (0048), and Undo bringing back the ideas a Generate replaced (0049), and several parts
-chosen with Cmd, Shift and Cmd+A, and blocks of bars with Cmd (0050), and no More button (0051), on
+chosen with Cmd, Shift and Cmd+A, and blocks of bars with Cmd (0050), no More button (0051), and Vary Notes on several parts going
+after the music, across them (0052), on
 the branch `claude/adoring-feynman-bihxp2`. Follow and 0035-0042 not yet tried by the user on a Mac.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
