@@ -158,6 +158,10 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **Menu ids come in ranges** (`MainComponent.cpp`): every range check names
   its own end, or it swallows the next range's items (0038).
 - Letters in shortcuts arrive in either case: compare them upper-cased.
+- **Text on screen follows Apple's writing guidelines** (0053): title-style
+  menus, buttons and dialog titles, `…` when more input follows, sentence-style
+  messages and tooltips, "cursor" not "caret", Mac key symbols. Any literal
+  beyond ASCII goes through `ui()`; `tools/check_ui_text.py` must pass.
 - **No references into temporaries in tests**: `f().front().x` inside
   `CHECK_EQ` dangles. It passed with GCC and failed on the Mac.
 - Instrument ids are stored in files: never rename one.
@@ -203,7 +207,8 @@ each chord offering the inversions it has (0047), since merged into
 `main`; then Escape letting go of everything, the caret's part too, so an
 idea goes to every part (0048), and Undo bringing back the ideas a Generate replaced (0049), and several parts
 chosen with Cmd, Shift and Cmd+A, and blocks of bars with Cmd (0050), no More button (0051), and Vary Notes on several parts going
-after the music, across them (0052), on
+after the music, across them (0052), and every word to Apple's writing
+guidelines (0053), on
 the branch `claude/adoring-feynman-bihxp2`. Follow and 0035-0042 not yet tried by the user on a Mac.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the

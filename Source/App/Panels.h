@@ -8,6 +8,7 @@
 
 #include "Controller.h"
 #include "ScoreRenderer.h"
+#include "Theme.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -57,16 +58,16 @@ private:
     // New, Open, Save, Export, Undo, the score's settings, the sound, the
     // input mode and the look: one menu (decisions 0037, 0038, 0039)
     juce::TextButton fileButton { "File" };
-    TransportButton startButton { "Return to start", TransportButton::Kind::start };
+    TransportButton startButton { "Go to Start", TransportButton::Kind::start };
     juce::TextButton playButton { "Play" };
-    TransportButton endButton { "Skip to end", TransportButton::Kind::end };
+    TransportButton endButton { "Go to End", TransportButton::Kind::end };
     juce::TextButton followButton { "Follow" };
     std::vector<std::unique_ptr<GlyphButton>> durations;
     GlyphButton dotButton { "Dot", smufl::augmentationDot, 1.6f };
     GlyphButton tripletButton { "Triplet", smufl::tuplet0 + 3, 1.0f };
     GlyphButton restButton { "Rest", smufl::restQuarter, 0.8f };
     juce::TextButton voiceButton { "Voice 1" };
-    juce::TextButton transposeButton { "Concert pitch" };
+    juce::TextButton transposeButton { "Concert Pitch" };
     juce::TextButton zoomOut { "-" }, zoomIn { "+" };
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
@@ -87,7 +88,7 @@ private:
     juce::Viewport viewport;
     juce::Component rows;
     std::vector<std::unique_ptr<Row>> rowList;
-    juce::TextButton addButton { "Add instrument..." };
+    juce::TextButton addButton { ui ("Add Instrument…") };
     juce::Label info;
     size_t lastCount = 0;
 

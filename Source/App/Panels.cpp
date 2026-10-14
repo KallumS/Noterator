@@ -1,6 +1,7 @@
 #include "Panels.h"
 
 #include "Spelling.h"
+#include "Theme.h"
 
 namespace nt
 {
@@ -72,13 +73,13 @@ Toolbar::Toolbar (Controller& c) : controller (c)
                      &voiceButton, &transposeButton, &zoomOut, &zoomIn })
         addAndMakeVisible (b);
 
-    fileButton.setTooltip ("New, Open, Save, Export, Undo and Redo, the score's settings, the sound, note input and the dark page");
-    playButton.setTooltip ("Play from the caret, or stop (Shift+Space; Space plays from bar 1)");
-    startButton.setTooltip ("Return to the start (Home) - if it is playing, it plays on from bar 1");
-    endButton.setTooltip ("Skip to the end of the music (End)");
-    followButton.setTooltip ("Follow: while it plays, the page scrolls along with the music (or turns a page at a time - Play menu)");
-    voiceButton.setTooltip ("Which voice notes are written in: 1 stems up, 2 stems down (V changes the selection's)");
-    transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");
+    fileButton.setTooltip ("New, Open, Save, Export, Undo and Redo, score settings, sound, Note Input and Dark Page");
+    playButton.setTooltip (ui ("Play from the cursor, or stop (⇧Space). Space plays from bar 1."));
+    startButton.setTooltip (ui ("Go to the start (Home). If the music is playing, it plays on from bar 1."));
+    endButton.setTooltip ("Go to the end of the music (End).");
+    followButton.setTooltip ("Scroll the page with the music as it plays. To turn a page at a time, use the Play menu.");
+    voiceButton.setTooltip ("Choose the voice to write in: 1 has stems up, 2 has stems down. Press V to swap the selection's voice.");
+    transposeButton.setTooltip ("Show the score at concert pitch, or as transposing instruments read it.");
 
     fileButton.onClick = [this] { if (onFile) onFile(); };
     playButton.onClick = [this] { controller.togglePlay(); };
@@ -100,9 +101,9 @@ Toolbar::Toolbar (Controller& c) : controller (c)
         durations.push_back (std::move (b));
     }
     for (auto* b : { &dotButton, &tripletButton, &restButton }) addAndMakeVisible (b);
-    dotButton.setTooltip ("Dotted (.)");
+    dotButton.setTooltip ("Dot (.)");
     tripletButton.setTooltip ("Triplet (T)");
-    restButton.setTooltip ("Write a rest at the caret (0)");
+    restButton.setTooltip ("Write a rest at the cursor (0)");
     dotButton.onClick = [this] { controller.toggleDot(); };
     tripletButton.onClick = [this] { controller.toggleTriplet(); };
     restButton.onClick = [this] { controller.typeRest(); };
@@ -153,7 +154,7 @@ void Toolbar::refresh()
     dotButton.setToggleState (controller.input.dotted, juce::dontSendNotification);
     tripletButton.setToggleState (controller.input.triplet, juce::dontSendNotification);
     voiceButton.setButtonText ("Voice " + juce::String (controller.input.voice + 1));
-    transposeButton.setButtonText (controller.transposedScore ? "Transposed" : "Concert pitch");
+    transposeButton.setButtonText (controller.transposedScore ? "Transposed" : "Concert Pitch");
     repaint();
 }
 
@@ -190,7 +191,7 @@ struct PartsPanel::Row : public juce::Component
         autoCC.setButtonText ("AutoCC");
         mute.setTooltip ("Mute");
         solo.setTooltip ("Solo");
-        autoCC.setTooltip ("Draw this part's dynamics, expression and vibrato curves automatically (AutoCC)");
+        autoCC.setTooltip ("Draw this part's dynamics, expression and vibrato curves automatically.");
         mute.onClick = [this] { toggle ([] (Part& p) { p.mute = ! p.mute; }); };
         solo.onClick = [this] { toggle ([] (Part& p) { p.solo = ! p.solo; }); };
         autoCC.onClick = [this] { toggle ([] (Part& p) { p.autoCC = ! p.autoCC; }); };
@@ -210,9 +211,15 @@ struct PartsPanel::Row : public juce::Component
             const auto* p = controller.score.partById (partId);
             if (p == nullptr) return;
             if (p->notes.empty()) { controller.removePart (partId); return; }
-            juce::NativeMessageBox::showOkCancelBox (juce::MessageBoxIconType::QuestionIcon, "Remove " + juce::String (p->name) + "?",
-                                                     "Its notes go with it. Undo brings them back.", this,
-                                                     juce::ModalCallbackFunction::create ([this] (int r) { if (r != 0) controller.removePart (partId); }));
+            // The button says what it does (decision 0053).
+            auto opts = juce::MessageBoxOptions()
+                            .withIconType (juce::MessageBoxIconType::QuestionIcon)
+                            .withTitle (ui ("Remove “") + juce::String (p->name) + ui ("”?"))
+                            .withMessage ("Its notes are removed too. You can undo this.")
+                            .withButton ("Remove")
+                            .withButton ("Cancel")
+                            .withAssociatedComponent (this);
+            juce::AlertWindow::showAsync (opts, [this] (int r) { if (r == 1) controller.removePart (partId); });
         };
         up.setTooltip ("Move up");
         down.setTooltip ("Move down");
@@ -369,7 +376,7 @@ void PartsPanel::changeListenerCallback (juce::ChangeBroadcaster*)
         if (inst.transposition != 0) lines.add ("Transposing instrument " + juce::String (inst.transposedName));
         if (inst.octave != 0) lines.add (juce::String ("Written an octave ") + (inst.octave > 0 ? "above" : "below") + " where it sounds");
         const char* cc = inst.cc == CCShape::strings ? "Strings" : inst.cc == CCShape::brass ? "Brass" : inst.cc == CCShape::woodwinds ? "Woodwinds"
-                       : inst.cc == CCShape::neutral ? "Default" : "none - it does not swell";
+                       : inst.cc == CCShape::neutral ? "Default" : "None (it doesn't swell)";
         lines.add ("AutoCC shape: " + juce::String (cc));
         info.setText (lines.joinIntoString ("\n"), juce::dontSendNotification);
     }
@@ -414,7 +421,7 @@ void StatusBar::paint (juce::Graphics& g)
     // Right: what is making the sound and what is listening.
     const int midiIns = juce::MidiInput::getAvailableDevices().size();
     const juce::String right = controller.audio.synthName() + "   |   "
-                             + (midiIns == 0 ? juce::String ("no MIDI keyboard") : juce::String (midiIns) + " MIDI input" + (midiIns > 1 ? "s" : ""));
+                             + (midiIns == 0 ? juce::String ("No MIDI keyboard") : juce::String (midiIns) + " MIDI input" + (midiIns > 1 ? "s" : ""));
     g.setColour (theme::textDim);
     g.drawText (right, r, juce::Justification::centredRight);
 
@@ -442,7 +449,7 @@ void StatusBar::paint (juce::Graphics& g)
 
     // Left: the last thing that happened, or the mode.
     juce::String left = controller.status;
-    if (controller.input.noteInput) left = "NOTE INPUT - click the staff, type A-G (Shift adds to the chord), or play a MIDI keyboard. Esc to stop.";
+    if (controller.input.noteInput) left = ui ("Note input: click the staff, type A–G (⇧ adds to the chord) or play a MIDI keyboard. Press Esc to stop.");
     g.setColour (controller.input.noteInput ? theme::accent : theme::text);
     g.drawText (left, r.withRight (std::max (r.getX() + 80, leftEnd)), juce::Justification::centredLeft, true);
 }

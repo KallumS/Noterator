@@ -2,6 +2,7 @@
 
 #include "Follow.h"
 #include "Spelling.h"
+#include "Theme.h"
 
 namespace nt
 {
@@ -435,7 +436,7 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
             {
                 controller.audio.preview (c.pitches, "pno", 1.2, 90);
                 controller.select (notesInRange (controller.score, c.start, c.end));
-                controller.setStatus (juce::String (c.name) + " - bar " + juce::String (controller.score.barAt (c.start) + 1));
+                controller.setStatus (juce::String (c.name) + ui (" — bar ") + juce::String (controller.score.barAt (c.start) + 1));
                 return;
             }
         return;
@@ -525,7 +526,7 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
     if (addingBars) controller.addRange (bar, bar, partIndex, partIndex);
     else controller.selectRange (bar, bar, partIndex, partIndex);
     controller.caret = at;
-    controller.setStatus (controller.rangeText() + " chosen - drag to choose more, Generate fills them");
+    controller.setStatus (controller.rangeText() + " chosen. Drag to choose more; Generate fills them.");
 }
 
 void ScoreView::mouseDrag (const juce::MouseEvent& e)
@@ -542,7 +543,7 @@ void ScoreView::mouseDrag (const juce::MouseEvent& e)
         if (semis != dragSemitones)
         {
             dragSemitones = semis;
-            controller.setStatus ("Moving by " + juce::String (semis) + " semitones - let go to place");
+            controller.setStatus ("Moving by " + juce::String (semis) + " semitones. Release to place the notes.");
         }
         return;
     }
@@ -576,7 +577,7 @@ void ScoreView::mouseUp (const juce::MouseEvent&)
     draggingNotes = false;
     dragSemitones = 0;
     if (selectingBars && controller.range.active())
-        controller.setStatus (controller.rangeText() + " chosen - Generate fills them; Esc lets go");
+        controller.setStatus (controller.rangeText() + " chosen. Generate fills them; Esc lets go.");
     selectingBars = allParts = addingBars = false;
     if (dragging && ! rubberBand.isEmpty())
     {
@@ -681,7 +682,7 @@ juce::String ScoreView::tooltipAt (juce::Point<float> p) const
     const auto ctx = keyContext (k.root, k.scale);
     juce::StringArray lines;
     lines.add (juce::String (pitchName (h->pitch, ctx)) + (h->written != h->pitch ? " (written " + juce::String (pitchName (h->written, ctx)) + ")" : juce::String())
-               + "  -  " + juce::String (part.name) + ", bar " + juce::String (el.measure + 1));
+               + ui (" — ") + juce::String (part.name) + ", bar " + juce::String (el.measure + 1));
     if (h->outOfRange)
         lines.add ("Out of the " + juce::String (inst.name) + "'s range (" + juce::String (pitchName (inst.low, ctx)) + " to "
                    + juce::String (pitchName (inst.high, ctx)) + ").");

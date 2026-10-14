@@ -55,6 +55,7 @@ refers to them by number: "(decision 0006)".
 | [0050](0050-choosing-several-parts-and-blocks-of-bars.md) | Choosing several parts by name, and blocks of bars with Cmd | Accepted |
 | [0051](0051-no-more-button.md) | No More button in the Generate tab | Accepted |
 | [0052](0052-vary-notes-across-parts-goes-after.md) | Vary Notes on several parts goes after the music, across those parts | Accepted |
+| [0053](0053-writing-the-way-the-mac-does.md) | The apps' text follows Apple's writing guidelines | Accepted |
 
 0026-0032 are Miderator's (KallumS/Miderator, Noterator with a piano roll),
 which shares this music code; the two apps number their decisions in one
