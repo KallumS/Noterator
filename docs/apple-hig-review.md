@@ -33,6 +33,8 @@ guideline about colours, focus and names had to be met by hand.
 | **Writing: clear next steps in empty places** | The results list was blank until something was generated. | "Press Generate to make some ideas, then click one to hear it." |
 | **Writing: be accurate** | The Generate button's tooltip promised a G key (G writes a note) and Insert promised Return (it did nothing). | Return inserts the chosen result; the G is gone from the tooltip. |
 
+![Play reached with the Tab key, ringed in the text colour](window-keyboard.png)
+
 ## Already met
 
 - **Purpose and simplicity.** One window for one job; the rarely used
