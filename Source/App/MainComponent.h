@@ -26,7 +26,8 @@ class MainComponent : public juce::Component,
                       public juce::MenuBarModel,
                       public juce::FileDragAndDropTarget,
                       private juce::ChangeListener,
-                      private juce::Timer
+                      private juce::Timer,
+                      private juce::FocusChangeListener
 {
 public:
     MainComponent();
@@ -84,6 +85,10 @@ private:
     // The Mac's Increase Contrast and Reduce Motion, checked every second or
     // so, since there is no notice of a change that reaches a JUCE app.
     void timerCallback() override;
+    // A control repaints as the keyboard reaches it and leaves it, so its
+    // ring comes and goes (JUCE's buttons do not repaint on their own).
+    void globalFocusChanged (juce::Component* focused) override;
+    juce::Component::SafePointer<juce::Component> lastFocused;
     void readSystemSettings();
     void showError (const juce::String& title, const juce::String& message);
     void showNewMenu();

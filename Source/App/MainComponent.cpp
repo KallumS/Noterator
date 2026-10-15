@@ -16,8 +16,8 @@ enum MenuIds
     menuExportXml, menuExportXmlBars,
     menuUndo = 100, menuRedo, menuCut, menuCopy, menuPaste, menuDelete, menuSelectAll, menuVoice,
     menuPlay = 200, menuPlayCaret, menuToStart, menuToEnd, menuFollow, menuFollowSmooth, menuFollowPage, menuNoteInput, menuLightPage, menuTransposed, menuZoomIn, menuZoomOut, menuAudioSettings, menuHelp,
-    menuScaleBase = 300,         // + index into interfaceScales()
-    menuTabBase = 320,           // + the side panel's tab
+    menuScaleBase = 340,         // + index into interfaceScales()
+    menuTabBase = 360,           // + the side panel's tab
     menuTitle = 400, menuTempo, menuMeterOther, menuKeyHeard, menuInsertBar, menuDeleteBars, menuAddBars, menuSoundApple, menuSoundBuiltIn,
     menuMeterBase = 500,
     menuTemplateBase = 1000,
@@ -95,6 +95,7 @@ MainComponent::MainComponent()
     }
     readSystemSettings();
     startTimer (1500);
+    juce::Desktop::getInstance().addFocusChangeListener (this);
 
     controller.addChangeListener (this);
     setWantsKeyboardFocus (true);
@@ -113,6 +114,7 @@ MainComponent::~MainComponent()
    #if JUCE_MAC
     juce::MenuBarModel::setMacMainMenu (nullptr);
    #endif
+    juce::Desktop::getInstance().removeFocusChangeListener (this);
     controller.removeChangeListener (this);
     audio.stop();
 }
@@ -186,6 +188,23 @@ void MainComponent::readSystemSettings()
 }
 
 void MainComponent::timerCallback() { readSystemSettings(); }
+
+void MainComponent::globalFocusChanged (juce::Component* focused)
+{
+    if (lastFocused != nullptr) lastFocused->repaint();
+    if (focused != nullptr) focused->repaint();
+    lastFocused = focused;
+    // A setting reached with Tab scrolls into view.
+    if (focused == nullptr) return;
+    if (auto* port = focused->findParentComponentOfClass<juce::Viewport>())
+        if (auto* inside = port->getViewedComponent(); inside != nullptr && inside->isParentOf (focused))
+        {
+            const auto b = inside->getLocalArea (focused, focused->getLocalBounds());
+            const auto shown = port->getViewArea();
+            if (b.getY() < shown.getY()) port->setViewPosition (shown.getX(), b.getY());
+            else if (b.getBottom() > shown.getBottom()) port->setViewPosition (shown.getX(), b.getBottom() - shown.getHeight());
+        }
+}
 
 void MainComponent::showError (const juce::String& title, const juce::String& message)
 {
@@ -263,6 +282,22 @@ bool MainComponent::keyPressed (const juce::KeyPress& k)
         if (code == juce::KeyPress::upKey) { c.transposeSelection (12); return true; }
         if (code == juce::KeyPress::downKey) { c.transposeSelection (-12); return true; }
         return false;
+    }
+
+    // Tab and Shift+Tab: the score, then every control in reading order, and
+    // round to the score again (decision 0048). JUCE's own order would step out
+    // to the window itself.
+    if (code == juce::KeyPress::tabKey && ! cmd && ! mods.isAltDown())
+    {
+        auto list = juce::KeyboardFocusTraverser().getAllComponents (this);
+        list.erase (std::remove_if (list.begin(), list.end(), [] (juce::Component* x) { return ! x->isShowing() || ! x->isEnabled(); }),
+                    list.end());
+        list.insert (list.begin(), this);
+        const auto at = std::find (list.begin(), list.end(), juce::Component::getCurrentlyFocusedComponent());
+        const int n = static_cast<int> (list.size());
+        const int from = at == list.end() ? 0 : static_cast<int> (at - list.begin());
+        list[static_cast<size_t> ((from + (mods.isShiftDown() ? n - 1 : 1)) % n)]->grabKeyboardFocus();
+        return true;
     }
 
     // A control Tab has reached: Space presses it, as Return does, and Esc
@@ -862,7 +897,7 @@ void MainComponent::exportDialog (ExportKind kind, bool selectedBars)
         struct Render : public juce::ThreadWithProgressWindow
         {
             Render (const Score& s, ExportRange r, std::unique_ptr<SynthRack> sy, juce::String d, juce::File fl, Controller& c)
-                : juce::ThreadWithProgressWindow ("Exporting audio...", true, true),
+                : juce::ThreadWithProgressWindow ("Exporting audio" + dots, true, true),
                   score (s), range (r), synth (std::move (sy)), desc (std::move (d)), file (fl), controller (c) {}
             void run() override
             {

@@ -1,6 +1,6 @@
 /*
     Panels - the toolbar along the top, the Parts panel at the
-    side, and the status line along the bottom. Each only shows the
+    side, and the status line under the toolbar. Each only shows the
     controller's state and asks the controller for changes.
 */
 

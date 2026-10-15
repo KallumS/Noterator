@@ -30,6 +30,14 @@ public:
         content->grabKeyboardFocus();
     }
 
+    // When the window itself is given the keyboard - as it opens, or comes
+    // back to the front - it hands it to the score, so the keys and Tab work at
+    // once rather than after a click (decision 0048).
+    void focusGained (FocusChangeType) override
+    {
+        if (content != nullptr) content->grabKeyboardFocus();
+    }
+
     void closeButtonPressed() override
     {
         content->checkSaved ([] { juce::JUCEApplication::getInstance()->systemRequestedQuit(); });

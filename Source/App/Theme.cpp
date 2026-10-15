@@ -31,6 +31,8 @@ juce::Rectangle<float> focusRing (juce::Graphics& g, juce::Component& c, juce::R
 void clicksKeepFocus (juce::Component& c)
 {
     if (dynamic_cast<juce::TextEditor*> (&c) != nullptr || dynamic_cast<juce::ListBox*> (&c) != nullptr) return;
+    // A scrolling list is not a stop of its own for Tab: what is in it is.
+    if (auto* port = dynamic_cast<juce::Viewport*> (&c)) port->setWantsKeyboardFocus (false);
     if (dynamic_cast<juce::Button*> (&c) != nullptr || dynamic_cast<juce::ComboBox*> (&c) != nullptr
         || dynamic_cast<juce::Slider*> (&c) != nullptr)
         c.setMouseClickGrabsKeyboardFocus (false);
