@@ -24,8 +24,8 @@ public:
         content = new MainComponent();
         setContentOwned (content, true);
         setResizable (true, true);
-        setResizeLimits (980, 600, 10000, 10000);
         centreWithSize (getWidth(), getHeight());
+        content->windowReady();
         setVisible (true);
         content->grabKeyboardFocus();
     }

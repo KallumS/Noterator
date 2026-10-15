@@ -25,7 +25,8 @@ namespace nt
 class MainComponent : public juce::Component,
                       public juce::MenuBarModel,
                       public juce::FileDragAndDropTarget,
-                      private juce::ChangeListener
+                      private juce::ChangeListener,
+                      private juce::Timer
 {
 public:
     MainComponent();
@@ -48,12 +49,29 @@ public:
     void openFile (const juce::File& f);
     Controller& getController() { return controller; }
 
+    // Once the window is up: its smallest size for the interface size, and
+    // a size that fits the screen.
+    void windowReady();
+    // Interface size, 100% to 200% (decision 0048): everything in the window
+    // drawn larger, the layout reflowing to fit.
+    void setInterfaceScale (float scale);
+    static const std::vector<float>& interfaceScales();
+
 private:
     AudioEngine audio;
     Controller controller { audio };
     Toolbar toolbar { controller };
     ScoreView view { controller };
-    juce::TabbedComponent tabs { juce::TabbedButtonBar::TabsAtTop };
+    // The side panel's tabs. Choosing one leaves the keyboard with the score
+    // (JUCE would hand it to the first button inside); Cmd+1 to 3 choose
+    // them from the keyboard (decision 0048).
+    struct SideTabs : public juce::TabbedComponent
+    {
+        SideTabs() : juce::TabbedComponent (juce::TabbedButtonBar::TabsAtTop) {}
+        std::function<void()> onTabChanged;
+        void currentTabChanged (int, const juce::String&) override { if (onTabChanged) onTabChanged(); }
+    };
+    SideTabs tabs;
     GeneratorPanel generatorPanel { controller };
     BlocksPanel blocksPanel { controller };
     PartsPanel partsPanel { controller };
@@ -63,6 +81,11 @@ private:
     juce::File lastFolder;
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
+    // The Mac's Increase Contrast and Reduce Motion, checked every second or
+    // so, since there is no notice of a change that reaches a JUCE app.
+    void timerCallback() override;
+    void readSystemSettings();
+    void showError (const juce::String& title, const juce::String& message);
     void showNewMenu();
     juce::PopupMenu templateMenu();
     void showExportMenu();
