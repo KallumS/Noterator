@@ -55,7 +55,7 @@ can read, edit, play and export.
   (with all four AutoCC lanes, for sample libraries), as MusicXML for Dorico,
   Sibelius, MuseScore or Finale, or as WAV audio. Open or drop in a MIDI or
   MusicXML file (.musicxml, .xml, .mxl) to bring one in.
-- **Black on white**, or a dark page if you prefer (**File** > **Dark page**).
+- **Black on white**, or a dark page if you prefer (**File** > **Dark Page**).
 
 ## Installing on a Mac
 
@@ -110,13 +110,27 @@ keeps working for every future version.
 | Start and end | **\|◀** beside Play (or **Home**) goes back to bar 1; **▶\|** (or **End**) to the end of the music |
 | Follow the music | **Follow** (beside Play) scrolls the page along with the music as it plays, the playhead a third of the way across; click it to keep the page still. To turn a page at a time instead: **Play** menu, **Turn a Page at a Time** |
 | Take it out | **File** > **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
-| Light or dark | the page is black on white; **File** > **Dark page** turns it round |
+| Light or dark | the page is black on white; **File** > **Dark Page** turns it round |
 | Undo | **Cmd+Z**, **Shift+Cmd+Z**, or **File** > **Undo** |
+| Without the mouse | **Tab** and **Shift+Tab** go through every button and menu (the one reached has a light ring), **Space** or **Return** presses it, **Esc** goes back to the score; **Cmd+1, 2, 3** the Generate, Blocks and Parts tabs |
+| Larger | **View** > **Interface Size**: 125%, 150%, 175% or 200% |
 | All the keys | **H** |
 
 The **Parts** tab adds and removes instruments, and shows what each one can
 do. **File** > **This score** sets the title, tempo, time signature, key,
 bars and sound.
+
+## Apple's guidelines
+
+The window follows Apple's Human Interface Guidelines (decision 0048): text
+clear enough to read (7:1), the Mac's **Increase Contrast** and **Reduce
+Motion** settings respected, every control reachable from the keyboard and
+named for VoiceOver, nothing important along the bottom edge of the window,
+and the Mac's own alerts. [docs/apple-hig-review.md](docs/apple-hig-review.md)
+goes through every page of the guidelines: what changed, what was already
+so, and what is not done yet.
+
+![The window: the status line under the toolbar, Play reached with the Tab key](docs/window.png)
 
 ## Where it is going
 

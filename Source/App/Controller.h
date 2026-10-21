@@ -69,6 +69,8 @@ public:
     bool lightPage = true;        // black on white unless the user asks for dark (decision 0020)
     bool followPlayback = true;   // the page moves with the playhead (decision 0033)
     FollowStyle followStyle = FollowStyle::smooth;   // scrolling along, or a page at a time (decision 0034)
+    bool reduceMotion = false;    // the Mac's Reduce Motion: smooth following turns pages instead (decision 0048)
+    FollowStyle followStyleNow() const { return reduceMotion ? FollowStyle::page : followStyle; }
     float zoom = 9.0f;            // pixels per staff space
 
     engrave::Layout layout;
@@ -92,6 +94,9 @@ public:
     void selectionChanged();
     void viewChanged();           // zoom, page colour, transposition: a relayout, no undo
     void setStatus (const juce::String& s);
+    // The page in words, for VoiceOver: the score, where the caret is, what
+    // is selected (decision 0048).
+    juce::String describe() const;
 
     //==========================================================================
     // Writing

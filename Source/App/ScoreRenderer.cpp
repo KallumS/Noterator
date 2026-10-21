@@ -1,5 +1,7 @@
 #include "ScoreRenderer.h"
 
+#include <algorithm>
+
 #include "BinaryData.h"
 
 #include <cmath>
@@ -353,7 +355,10 @@ void ScoreRenderer::draw (juce::Graphics& g, const Layout& lay, const Score&, co
                 }
             }
 
-            if (style.showWarnings && (el.tooManyNotes || el.tooFast || el.tooWide))
+            // A note out of the instrument's range is red and marked as well,
+            // so the warning is not in the colour alone (decision 0048).
+            const bool outOfRange = std::any_of (el.heads.begin(), el.heads.end(), [] (const auto& h) { return h.outOfRange; });
+            if (style.showWarnings && (el.tooManyNotes || el.tooFast || el.tooWide || outOfRange))
             {
                 g.setColour (page.warn);
                 const float cx = X (el.x + w * 0.5), cy = Y (-1.6);

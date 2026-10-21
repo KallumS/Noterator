@@ -39,6 +39,7 @@ public:
     void mouseExit (const juce::MouseEvent&) override;
     void mouseDoubleClick (const juce::MouseEvent&) override;
     void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails&) override;
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
     void scrollToTick (Tick t);
     // Scrolls so `t` sits `fraction` of the way across the page.
