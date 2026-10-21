@@ -211,7 +211,7 @@ struct PartsPanel::Row : public juce::Component
             const auto* p = controller.score.partById (partId);
             if (p == nullptr) return;
             if (p->notes.empty()) { controller.removePart (partId); return; }
-            // The button says what it does (decision 0053).
+            // The button says what it does (decision 0054).
             auto opts = juce::MessageBoxOptions()
                             .withIconType (juce::MessageBoxIconType::QuestionIcon)
                             .withTitle (ui ("Remove “") + juce::String (p->name) + ui ("”?"))
@@ -433,7 +433,7 @@ void StatusBar::paint (juce::Graphics& g)
         const int bar = s.barAt (controller.caret);
         const Tick inBar = controller.caret - s.barStart (bar);
         const auto beat = s.meterAtBar (bar).beatTicks();
-        // With no part chosen (decision 0048) the caret is only a bar and beat.
+        // With no part chosen (decision 0049) the caret is only a bar and beat.
         where = (controller.noPartChosen ? juce::String ("Every part")
                  : controller.chosenParts.size() > 1 ? juce::String (static_cast<int> (controller.chosenParts.size())) + " parts"
                  : juce::String (p->name)) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);

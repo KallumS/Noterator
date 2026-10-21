@@ -225,8 +225,8 @@ void ScoreView::paintCaret (juce::Graphics& g)
     const auto page = controller.lightPage ? theme::lightPage() : theme::darkPage();
     const int pi = controller.score.partIndex (controller.caretPart);
     if (pi < 0) return;
-    // With no part chosen (decision 0048) the caret runs down every staff;
-    // with several chosen (0050), down theirs.
+    // With no part chosen (decision 0049) the caret runs down every staff;
+    // with several chosen (0051), down theirs.
     const bool every = controller.noPartChosen;
     const bool several = controller.chosenParts.size() > 1;
     double top = 1e9, bottom = -1e9;
@@ -247,7 +247,7 @@ void ScoreView::paintRange (juce::Graphics& g)
 {
     const auto& lay = controller.layout;
     if (lay.measures.empty()) return;
-    // Every block of bars chosen (decision 0050).
+    // Every block of bars chosen (decision 0051).
     for (const auto& range : controller.range.blocks()) paintBlock (g, range);
 }
 
@@ -335,7 +335,7 @@ void ScoreView::paintGutter (juce::Graphics& g)
     g.setColour (page.paper);
     g.fillRect (0, lanesHeight, gutter, getHeight());
     ScoreRenderer::drawNames (g, lay, controller.score, style, static_cast<float> (gutter) - 10.0f, o.y, false);
-    // The parts chosen, marked - none once Escape let go of them (decisions 0048, 0050).
+    // The parts chosen, marked - none once Escape let go of them (decisions 0049, 0051).
     for (const auto& st : lay.staves)
         if (st.staffInPart == 0 && controller.isPartChosen (controller.score.parts[static_cast<size_t> (st.part)].id))
         {
@@ -448,7 +448,7 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
         if (lay.staves.empty()) return;
         const int staff = lay.staffAtY (toLayout (p).y);
         // Cmd adds a part to those chosen, Shift every part from the one
-        // clicked before (decision 0050).
+        // clicked before (decision 0051).
         controller.clickPart (controller.score.parts[static_cast<size_t> (staffPart (staff))].id,
                               e.mods.isCommandDown(), e.mods.isShiftDown());
         return;
@@ -521,7 +521,7 @@ void ScoreView::mouseDown (const juce::MouseEvent& e)
     anchorPart = partIndex;
     allParts = false;
     selectingBars = true;
-    // Cmd adds these bars to those chosen (decision 0050).
+    // Cmd adds these bars to those chosen (decision 0051).
     addingBars = e.mods.isCommandDown();
     if (addingBars) controller.addRange (bar, bar, partIndex, partIndex);
     else controller.selectRange (bar, bar, partIndex, partIndex);
