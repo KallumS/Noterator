@@ -70,7 +70,7 @@ public:
     bool followPlayback = true;   // the page moves with the playhead (decision 0033)
     FollowStyle followStyle = FollowStyle::smooth;   // scrolling along, or a page at a time (decision 0034)
     // Vary Notes puts its variation after the selection, or in its place
-    // (decision 0049) - the user's choice, kept between launches.
+    // (decision 0055) - the user's choice, kept between launches.
     bool varyReplaces = false;
     bool reduceMotion = false;    // the Mac's Reduce Motion: smooth following turns pages instead (decision 0048)
     FollowStyle followStyleNow() const { return reduceMotion ? FollowStyle::page : followStyle; }
@@ -161,7 +161,7 @@ public:
     void insertBarsAtCaret (int count);
     void deleteSelectedBars();
     // Every note out of every part, the parts, tempo, key and bars kept
-    // (decision 0051). One step to undo.
+    // (decision 0057). One step to undo.
     void clearAllNotes();
 
     //==========================================================================

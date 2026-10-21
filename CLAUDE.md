@@ -122,7 +122,7 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
   lines go into parts silent in those bars, Variator's after the selection.
   A line with chords never goes to a one-note instrument. The exceptions are
   bars the user chose (0019), which Good Idea fills, and Vary Notes set to
-  **In place of the selection** (0049, `varyReplaces`), which replaces the
+  **In place of the selection** (0055, `varyReplaces`), which replaces the
   notes or bars it varied; it is off at first.
 - **Every generated line is fitted to the part it lands in** (0036,
   `fitToPolyphony`): no more notes at once than the instrument plays. New
@@ -220,8 +220,8 @@ Blocks chords named in the Chords lane from their own root (0046) and
 each chord offering the inversions it has (0047), merged into `main`;
 then the window checked against Apple's Human Interface Guidelines (0048),
 merged into `main`; then Vary Notes after or in place of the selection
-(0049), Voicing starting on Any (0050) and Clear All (0051), on the branch
-`claude/blissful-bohr-lqwr1j`. Follow and 0035-0051 not yet tried by the
+(0055), Voicing starting on Any (0056) and Clear All (0057), on the branch
+`claude/blissful-bohr-lqwr1j`. Follow and 0035-0057 not yet tried by the
 user on a Mac.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the

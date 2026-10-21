@@ -107,7 +107,7 @@ private:
     void exportDialog (ExportKind kind, bool selectedBars);
     void audioSettingsDialog();
     void showHelp();
-    // Asks, then clears every note (decision 0051).
+    // Asks, then clears every note (decision 0057).
     void clearAllDialog();
     void returnToStart();
     void skipToEnd();
