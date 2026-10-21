@@ -22,6 +22,8 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include <algorithm>
+
 namespace nt
 {
 
@@ -44,12 +46,29 @@ struct InputState
 
 // Whole bars across some parts, chosen by dragging over the page: where a
 // generator's music goes (decision 0019).
-struct BarRange
+struct Bars
 {
     int first = -1, last = -1;
     std::vector<uint32_t> parts;   // top to bottom
     bool active() const { return first >= 0 && last >= first && ! parts.empty(); }
     int bars() const { return active() ? last - first + 1 : 0; }
+    bool has (uint32_t partId) const { return std::find (parts.begin(), parts.end(), partId) != parts.end(); }
+};
+
+// The bars chosen: the block chosen last, and any chosen before it with Cmd
+// held (decision 0051). Each block is filled on its own.
+struct BarRange : Bars
+{
+    std::vector<Bars> more;
+    // Every block: those added first, this one last.
+    std::vector<Bars> blocks() const
+    {
+        std::vector<Bars> all;
+        for (const auto& b : more)
+            if (b.active()) all.push_back (b);
+        if (active()) all.push_back (static_cast<const Bars&> (*this));
+        return all;
+    }
 };
 
 class Controller : public juce::ChangeBroadcaster
@@ -63,12 +82,19 @@ public:
     Selection selection;
     BarRange range;               // set: the selection is everything in these bars
     uint32_t caretPart = 0;
+    bool noPartChosen = false;    // Escape let go of the caret's part too (decision 0049)
+    // Two or more parts chosen by name, in the order chosen (decision 0051);
+    // empty: the caret's part alone, or none.
+    std::vector<uint32_t> chosenParts;
     Tick caret = 0;
     InputState input;
     bool transposedScore = false;
     bool lightPage = true;        // black on white unless the user asks for dark (decision 0020)
     bool followPlayback = true;   // the page moves with the playhead (decision 0033)
     FollowStyle followStyle = FollowStyle::smooth;   // scrolling along, or a page at a time (decision 0034)
+    // Vary Notes puts its variation after the selection, or in its place
+    // (decision 0055) - the user's choice, kept between launches.
+    bool varyReplaces = false;
     bool reduceMotion = false;    // the Mac's Reduce Motion: smooth following turns pages instead (decision 0048)
     FollowStyle followStyleNow() const { return reduceMotion ? FollowStyle::page : followStyle; }
     float zoom = 9.0f;            // pixels per staff space
@@ -91,6 +117,11 @@ public:
     bool canRedo() const { return ! redoStack.empty(); }
     void undo();
     void redo();
+    // A Generate is a step of its own in Undo (decision 0050): undoing it
+    // brings back the ideas listed before it, redoing it the ones after.
+    // The Generate tab keeps the lists and is told to step through them.
+    void generated();
+    std::function<void (int direction)> stepResults;   // -1 back, +1 forward
     void selectionChanged();
     void viewChanged();           // zoom, page colour, transposition: a relayout, no undo
     void setStatus (const juce::String& s);
@@ -105,6 +136,23 @@ public:
     // other parts are let go, so the next idea goes to the part clicked
     // (decision 0044). Bars chosen that include it stay chosen.
     void choosePart (uint32_t partId);
+    // Escape: playing and note input stop, and every choice is let go -
+    // the selection, chosen bars and the caret's part - so the next idea
+    // goes to every part, a single line to the top one (decision 0049).
+    // Choosing a part again, by name, by click or by keys, ends it.
+    void letGoOfEverything();
+    // A part's name clicked with Cmd (add it, or take it away) or Shift
+    // (every part from the one clicked before) held (decision 0051). An
+    // idea then goes to the parts chosen, a single line to the first chosen.
+    void clickPart (uint32_t partId, bool add, bool extend);
+    // The parts chosen, in the order chosen: several, the caret's, or none.
+    std::vector<uint32_t> partsChosen() const;
+    bool isPartChosen (uint32_t partId) const;
+    // "every part", or the parts chosen by name - for the Generate tab.
+    juce::String partsText() const;
+    // A note clicked, drawn or written there: that part is chosen, unless it
+    // is already one of several chosen.
+    void workIn (uint32_t partId);
     void moveCaret (int direction);
     void caretToPart (int direction);
     void typeLetter (int letter, bool addToChord);   // 0..6 is C..B
@@ -133,11 +181,22 @@ public:
     void previewSelection();
     // Bars `a` to `b` across the parts at indices `fromPart` to `toPart`,
     // in either order; the notes in them become the selection.
-    void selectRange (int a, int b, int fromPart, int toPart);
+    // `keepOthers`: the blocks added with Cmd stay chosen (decision 0051).
+    void selectRange (int a, int b, int fromPart, int toPart, bool keepOthers = false);
+    // Bars added to those chosen, with Cmd held (0051). The same single bar
+    // again takes it away.
+    void addRange (int a, int b, int fromPart, int toPart);
     // "Bars 2-5, Violin I to Cello", for whatever shows the range.
     // The part a single line of music goes to (decision 0042): the caret's,
-    // or with bars chosen the caret's among them, else the top one.
+    // or with bars chosen the caret's among them, else the top one - and
+    // the top one when Escape let go of every part (0049).
     uint32_t lineTarget() const;
+    uint32_t lineTargetIn (const Bars& block) const;
+    // The parts with notes selected, top to bottom.
+    std::vector<uint32_t> partsWithSelection() const;
+    // Vary Notes on music in several parts: the variation goes after it,
+    // shared across those parts as if they were chosen (decision 0053).
+    bool variesAcrossParts (const std::string& generatorId) const;
     juce::String rangeText() const;
     // The bars the range or the selection covers, or the caret's bar.
     std::pair<int, int> selectedBars() const;
@@ -157,6 +216,9 @@ public:
     void setBars (int bars);
     void insertBarsAtCaret (int count);
     void deleteSelectedBars();
+    // Every note out of every part, the parts, tempo, key and bars kept
+    // (decision 0057). One step to undo.
+    void clearAllNotes();
 
     //==========================================================================
     // Sound
@@ -208,7 +270,13 @@ public:
     int keyRootAt (Tick t) const { return score.keyAtBar (score.barAt (t)).root; }
 
 private:
-    std::vector<Score> undoStack, redoStack;
+    // The score as it was before an edit - or, marked `results`, a Generate.
+    struct Step { bool results = false; Score score; };
+    std::vector<Step> undoStack, redoStack;
+    void pushUndo (Step step);
+    uint32_t partAnchor = 0;      // the part a Shift-click on a name counts from
+    void setChosen (const std::vector<uint32_t>& parts, uint32_t shown);
+    Selection notesInBlocks() const;
     mutable SmoothClock playheadClock;
     std::vector<Note> clipboard;
     bool clipboardFromDrums = false;
