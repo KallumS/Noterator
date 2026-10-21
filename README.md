@@ -100,6 +100,7 @@ keeps working for every future version.
 | Put the caret in a part | click the staff, or the part's name |
 | Choose bars | click an empty bar; drag across bars and staves for more; drag along the Chords lane for every part; **Esc** lets go |
 | Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the caret's part |
+| Vary Notes | **Put it**: **After the selection** (the original stays) or **In place of the selection** (the variation replaces it) |
 | Blocks | **Blocks** tab: choose a kind, click a degree to see and hear it, **Insert** at the caret |
 | Write notes | **N** for note input, then click the staff, type **A-G**, or play a MIDI keyboard |
 | Note values | **1-7** (5 is a quarter, 6 a half, 4 an eighth), **.** dot, **T** triplet, **0** rest |
@@ -112,6 +113,7 @@ keeps working for every future version.
 | Take it out | **File** > **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
 | Light or dark | the page is black on white; **File** > **Dark Page** turns it round |
 | Undo | **Cmd+Z**, **Shift+Cmd+Z**, or **File** > **Undo** |
+| Start again | **Clear All** (toolbar, right) takes every note out of every part and keeps the parts; it asks first, and **Cmd+Z** brings them back |
 | Without the mouse | **Tab** and **Shift+Tab** go through every button and menu (the one reached has a light ring), **Space** or **Return** presses it, **Esc** goes back to the score; **Cmd+1, 2, 3** the Generate, Blocks and Parts tabs |
 | Larger | **View** > **Interface Size**: 125%, 150%, 175% or 200% |
 | All the keys | **H** |
