@@ -43,3 +43,22 @@ button to clear the timeline. Done in both apps on `claude/blissful-bohr-lqwr1j`
 ## Not done yet
 
 - None of 0055-0057 tried by the user on a Mac.
+
+## Then: the two lines of work brought together
+
+The user could not merge PR #9 (`claude/adoring-feynman-bihxp2`, work from
+2026-10-10 to 10-15: Escape, Undo for Generate, several parts, no More
+button, Vary Notes across parts, Apple's writing guidelines). It had started
+from `main` before 0048 was merged, and numbered its decisions from 0048 too.
+
+- Its decisions renumbered 0049-0054 on a copy of it (one perl pass, so
+  0048 to 0049 could not cascade), today's 0055-0057; then that copy merged
+  into this branch, so PR #9's commits are all here and its branch untouched.
+- Conflicts resolved by meaning: their wording everywhere (0054) with 0048's
+  structure kept - the Mac's own alerts with their titles, Reduce Motion in
+  their Play menu, Clear All in their Edit menu, the status line's layout
+  with their "Every part" and "N parts". Escape first hands the keyboard
+  back from a control (0048), then lets go of everything (0049).
+- Vary Notes: their across-parts rule (0053) and Put it (0055) combined - in
+  place across several parts takes those bars of those parts; a test for it.
+- The Generate tooltip's "(G)" dropped again: G writes a note in Noterator.

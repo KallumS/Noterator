@@ -57,7 +57,7 @@ gets undone.
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, the status line under it, Parts tab, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039; View holds Interface Size, 0048), colours, the keyboard's ring. |
 | `Source/App/SystemSettings.*` | The Mac's Increase Contrast and Reduce Motion, read through the Objective-C runtime (0048). |
-| `Tests/Test*.cpp` | Core tests (93), no JUCE. `Tests/TestApp.cpp` and `Tests/TestWindow.cpp` are the JUCE-side tests (24); `TestWindow` holds the window to Apple's guidelines (0048). |
+| `Tests/Test*.cpp` | Core tests (93), no JUCE. `Tests/TestApp.cpp` and `Tests/TestWindow.cpp` are the JUCE-side tests (29); `TestWindow` holds the window to Apple's guidelines (0048). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. `build-mac.command`, at the top, builds the app on the user's Mac (0045). |
 
 ## Working in it
@@ -121,9 +121,10 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **A result never overwrites the music it came from** (0011): Suggester's
   lines go into parts silent in those bars, Variator's after the selection.
   A line with chords never goes to a one-note instrument. The exceptions are
-  bars the user chose (0019), which Good Idea fills, and Vary Notes set to
-  **In place of the selection** (0055, `varyReplaces`), which replaces the
-  notes or bars it varied; it is off at first.
+  bars the user chose (0019), which Good Idea fills, and Vary Notes: one
+  part's music gets its variation after it, several parts' after it shared
+  across them (0053) - or, set to **In place of the selection** (0055,
+  `varyReplaces`, off at first), in its place.
 - **Every generated line is fitted to the part it lands in** (0036,
   `fitToPolyphony`): no more notes at once than the instrument plays. New
   ways of placing a result must keep `InsertOptions::fitPolyphony` on;
@@ -135,8 +136,9 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **Where a result lands is decided in `Controller::place`**, in this order:
   chosen bars (0019) - one part takes all of it, several share it (0041) -
   a block at the caret (0018), the selection (0011), and with nothing chosen
-  every part from the caret's bar (0041); a single line goes to one part
-  (`lineTarget`), and chosen bars are filled once, never repeated (0042). Change it there, not in the
+  every part from the caret's bar (0041) - or only the parts chosen by name
+  (0051); a single line goes to one part (`lineTarget`: the first chosen),
+  and chosen bars are filled once, never repeated (0042), block by block (0051). Change it there, not in the
   panels. **No part is ever added** for a result: lines with nowhere to go
   are named (`InsertReport::unplaced`).
 - **Selecting notes clears the chosen bars** (`select`, `selectAll`,
@@ -159,6 +161,10 @@ cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 - **Menu ids come in ranges** (`MainComponent.cpp`): every range check names
   its own end, or it swallows the next range's items (0038).
 - Letters in shortcuts arrive in either case: compare them upper-cased.
+- **Text on screen follows Apple's writing guidelines** (0054): title-style
+  menus, buttons and dialog titles, `…` when more input follows, sentence-style
+  messages and tooltips, "cursor" not "caret", Mac key symbols. Any literal
+  beyond ASCII goes through `ui()`; `tools/check_ui_text.py` must pass.
 - **No references into temporaries in tests**: `f().front().x` inside
   `CHECK_EQ` dangles. It passed with GCC and failed on the Mac.
 - Instrument ids are stored in files: never rename one.
@@ -219,10 +225,16 @@ lets go of bars chosen elsewhere (0044), `build-mac.command` (0045),
 Blocks chords named in the Chords lane from their own root (0046) and
 each chord offering the inversions it has (0047), merged into `main`;
 then the window checked against Apple's Human Interface Guidelines (0048),
-merged into `main`; then Vary Notes after or in place of the selection
-(0055), Voicing starting on Any (0056) and Clear All (0057), on the branch
-`claude/blissful-bohr-lqwr1j`. Follow and 0035-0057 not yet tried by the
-user on a Mac.
+merged into `main`. Then, from two sessions: Escape letting go of
+everything, the caret's part too (0049), Undo bringing back the ideas a
+Generate replaced (0050), several parts chosen with Cmd, Shift and Cmd+A and
+blocks of bars with Cmd (0051), no More button (0052), Vary Notes on several
+parts going after the music, across them (0053), every word to Apple's
+writing guidelines (0054) - on `claude/adoring-feynman-bihxp2` - and Vary
+Notes after or in place of the selection (0055), Voicing starting on Any
+(0056) and Clear All (0057), all brought together on
+`claude/blissful-bohr-lqwr1j`. The user tested 0049 on a Mac; Follow and
+0035-0057 otherwise not yet.
 Miderator (KallumS/Miderator), this app with a piano roll, was copied from
 here the same day and shares the music code. Not built yet, roughly in the order the
 user is likely to want them: a page view; dynamics, articulations and slurs;
