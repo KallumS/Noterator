@@ -539,6 +539,20 @@ void Controller::deleteSelectedBars()
     edit ("Deleted bars", [&, a = a, b = b] (Score& s) { deleteBars (s, a, b - a + 1); });
 }
 
+void Controller::clearAllNotes()
+{
+    // A clean slate to generate into (decision 0051): the parts, tempo, keys
+    // and bars stay; the notes, and the roots Blocks recorded for them, go.
+    edit ("Cleared every note", [] (Score& s)
+    {
+        for (auto& p : s.parts) p.notes.clear();
+        s.chordRoots.clear();
+    });
+    selection.clear();
+    range = {};
+    setStatus ("Cleared every note. Undo (Cmd+Z) brings them back.");
+}
+
 //==============================================================================
 
 void Controller::togglePlay (bool fromStart)
@@ -802,7 +816,8 @@ Tick Controller::place (Score& s, const GeneratedResult& r, bool fromSelection, 
         }
         if (generatorId == "midi-variator" && ! selection.empty())
         {
-            // A variation of the bars takes their place, in the part it came from.
+            // A variation of the bars, in the part it came from: in their
+            // place, or in as many bars after them (decision 0049).
             uint32_t source = range.parts.front();
             for (const auto& p : s.parts)
                 for (const auto& n : p.notes)
@@ -810,8 +825,9 @@ Tick Controller::place (Score& s, const GeneratedResult& r, bool fromSelection, 
             const auto* sp = s.partById (source);
             InsertOptions o = base;
             o.contextInstrument = sp != nullptr ? sp->instrument : std::string ("pno");
-            report = insertResult (s, fitToSpan (r, to - from), source, from, o);
-            return from;
+            const Tick at = varyReplaces ? from : to;
+            report = insertResult (s, fitToSpan (r, to - from), source, at, o);
+            return at;
         }
     }
     if (! fromSelection || selection.empty())
@@ -844,6 +860,16 @@ Tick Controller::place (Score& s, const GeneratedResult& r, bool fromSelection, 
 
     if (generatorId == "midi-variator")
     {
+        if (varyReplaces)
+        {
+            // In place of the notes selected (decision 0049): they go, and the
+            // variation goes where they began, beside anything else there.
+            deleteNotes (s, selection);
+            o.replace = false;
+            const Tick at = s.barStart (first);
+            report = insertResult (s, r, source, at, o);
+            return at;
+        }
         // A variation follows its original, in the same part.
         const Tick at = s.barStart (last + 1);
         report = insertResult (s, r, source, at, o);
@@ -881,9 +907,10 @@ void Controller::insertGenerated (const GeneratedResult& r, bool fromSelection, 
     for (const auto& name : report.unplaced) left.addIfNotAlreadyThere (juce::String (name));
     if (! left.isEmpty())
         status += " - " + left.joinIntoString (", ") + " left out: no part for " + (left.size() == 1 ? "it" : "them");
-    if (range.active() && (! fromSelection || generatorId == "midi-variator"))
+    if (range.active() && (! fromSelection || (generatorId == "midi-variator" && varyReplaces)))
     {
         // The bars stay selected, so another idea can go straight into them.
+        // (A variation after them is selected itself, below, to vary again.)
         const int top = score.partIndex (range.parts.front()), bottom = score.partIndex (range.parts.back());
         selectRange (range.first, range.last, top, bottom);
         return;
@@ -916,7 +943,7 @@ Score Controller::auditionScore (const GeneratedResult& r, bool fromSelection, c
                                               [id] (const Part& p) { return p.id == id; }), temp.parts.end());
         Tick length = std::max<Tick> (r.length, PPQ);
         if (range.active() && (! fromSelection || generatorId == "midi-variator"))
-            length = score.barStart (range.last + 1) - at;
+            length = score.barStart (range.last + 1) - score.barStart (range.first);
         addAudition (temp, r, at, length);
         temp.normalise();
         from = at;

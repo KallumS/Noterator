@@ -14,7 +14,7 @@ enum MenuIds
 {
     menuNew = 1, menuOpen, menuImport, menuSave, menuSaveAs, menuExportMidi, menuExportMidiBars, menuExportAudio, menuExportAudioBars,
     menuExportXml, menuExportXmlBars,
-    menuUndo = 100, menuRedo, menuCut, menuCopy, menuPaste, menuDelete, menuSelectAll, menuVoice,
+    menuUndo = 100, menuRedo, menuCut, menuCopy, menuPaste, menuDelete, menuSelectAll, menuVoice, menuClearAll,
     menuPlay = 200, menuPlayCaret, menuToStart, menuToEnd, menuFollow, menuFollowSmooth, menuFollowPage, menuNoteInput, menuLightPage, menuTransposed, menuZoomIn, menuZoomOut, menuAudioSettings, menuHelp,
     menuScaleBase = 340,         // + index into interfaceScales()
     menuTabBase = 360,           // + the side panel's tab
@@ -63,6 +63,7 @@ MainComponent::MainComponent()
     toolbar.onFile = [this] { showFileMenu(); };
     toolbar.onStart = [this] { returnToStart(); };
     toolbar.onEnd = [this] { skipToEnd(); };
+    toolbar.onClear = [this] { clearAllDialog(); };
 
     // A MIDI keyboard writes in note input, and is always heard.
     audio.onMidiInput = [this] (const juce::MidiMessage& m)
@@ -87,6 +88,7 @@ MainComponent::MainComponent()
         controller.lightPage = ! p->getBoolValue ("darkPage", false);
         controller.followPlayback = p->getBoolValue ("followPlayback", true);
         controller.followStyle = p->getValue ("followStyle", "smooth") == "page" ? FollowStyle::page : FollowStyle::smooth;
+        controller.varyReplaces = p->getBoolValue ("varyReplaces", false);
         controller.zoom = static_cast<float> (juce::jlimit (5.0, 24.0, p->getDoubleValue ("zoom", controller.zoom)));
         const auto scale = static_cast<float> (p->getDoubleValue ("interfaceScale", 1.0));
         for (auto s : interfaceScales())
@@ -224,6 +226,7 @@ void MainComponent::changeListenerCallback (juce::ChangeBroadcaster*)
     {
         if (p->getBoolValue ("darkPage", false) == controller.lightPage) p->setValue ("darkPage", ! controller.lightPage);
         if (p->getBoolValue ("followPlayback", true) != controller.followPlayback) p->setValue ("followPlayback", controller.followPlayback);
+        if (p->getBoolValue ("varyReplaces", false) != controller.varyReplaces) p->setValue ("varyReplaces", controller.varyReplaces);
         const juce::String style = controller.followStyle == FollowStyle::page ? "page" : "smooth";
         if (p->getValue ("followStyle", "smooth") != style) p->setValue ("followStyle", style);
         if (std::abs (p->getDoubleValue ("zoom", 0.0) - controller.zoom) > 0.01) p->setValue ("zoom", controller.zoom);
@@ -422,6 +425,8 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         item (menuSelectAll, "Select All", "Cmd+A");
         m.addSeparator();
         item (menuVoice, "Swap Voice of Selection", "V", ! controller.selection.empty());
+        m.addSeparator();
+        item (menuClearAll, "Clear All Notes" + dots, {}, controller.score.lastNoteEnd() > 0);
     }
     else if (index == 2)
     {
@@ -519,6 +524,7 @@ void MainComponent::menuItemSelected (int id, int)
         case menuDelete: c.deleteSelection(); break;
         case menuSelectAll: c.selectAll(); break;
         case menuVoice: c.toggleVoiceOfSelection(); break;
+        case menuClearAll: clearAllDialog(); break;
         case menuNoteInput: c.toggleNoteInput(); break;
         case menuLightPage: c.lightPage = ! c.lightPage; c.viewChanged(); break;
         case menuTransposed: c.transposedScore = ! c.transposedScore; c.viewChanged(); break;
@@ -609,6 +615,7 @@ void MainComponent::showFileMenu()
         r.isEnabled = controller.canRedo();
         r.shortcutKeyDescription = key ("Shift+Cmd+Z");
         m.addItem (r);
+        m.addItem (menuClearAll, "Clear All Notes" + dots, controller.score.lastNoteEnd() > 0);
     }
     addScoreItems (m);
     m.addSeparator();
@@ -970,6 +977,23 @@ void MainComponent::audioSettingsDialog()
     o.launchAsync();
 }
 
+void MainComponent::clearAllDialog()
+{
+    if (controller.score.lastNoteEnd() <= 0) { controller.setStatus ("There are no notes to clear."); return; }
+    // It asks, as removing a part with notes in it does; Undo is there too.
+    const auto options = juce::MessageBoxOptions()
+                             .withIconType (juce::MessageBoxIconType::QuestionIcon)
+                             .withTitle ("Clear every note?")
+                             .withMessage ("Every part keeps its instrument, and the tempo, key and bars stay. Undo brings the notes back.")
+                             .withButton ("Clear")
+                             .withButton ("Cancel")
+                             .withAssociatedComponent (this);
+    juce::NativeMessageBox::showAsync (options, [safe = juce::Component::SafePointer<MainComponent> (this)] (int r)
+    {
+        if (safe != nullptr && r == 0) safe->controller.clearAllNotes();
+    });
+}
+
 void MainComponent::returnToStart()
 {
     controller.returnToStart();
@@ -1000,7 +1024,8 @@ void MainComponent::showHelp()
         "Up / Down  a semitone     Cmd+Up / Down  an octave\n"
         "Left / Right  the next note (Shift extends)     Alt+Left / Right  move the selection\n"
         "[ and ]  halve or double     V  swap voice     Delete  remove\n"
-        "Cmd+C / X / V  copy, cut, paste at the caret     Cmd+Z  undo\n\n"
+        "Cmd+C / X / V  copy, cut, paste at the caret     Cmd+Z  undo\n"
+        "Clear All (toolbar)  every note out of every part, after asking\n\n"
         "LISTENING\n"
         "Space  play from bar 1, or stop     Shift+Space  play from the caret\n"
         "Home  back to the start     End  on to the end of the music\n"

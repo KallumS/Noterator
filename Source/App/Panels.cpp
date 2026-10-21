@@ -116,7 +116,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
 {
     for (auto* b : std::initializer_list<juce::Button*> { &startButton, &endButton }) addAndMakeVisible (b);
     for (auto* b : std::initializer_list<juce::Component*> { &fileButton, &playButton, &followButton,
-                     &voiceButton, &transposeButton, &zoomOut, &zoomIn })
+                     &voiceButton, &transposeButton, &clearButton, &zoomOut, &zoomIn })
         addAndMakeVisible (b);
 
     fileButton.setTooltip ("New, Open, Save, Export, Undo and Redo, the score's settings, the sound, note input and the dark page");
@@ -128,6 +128,9 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");
     zoomIn.setTooltip ("Zoom in (Cmd+=)");
     zoomOut.setTooltip ("Zoom out (Cmd+-)");
+    clearButton.setTooltip ("Clear the timeline: every note out of every part, the parts, tempo, key and bars kept. It asks first; Undo brings them back.");
+    clearButton.setTitle ("Clear All Notes");
+    clearButton.onClick = [this] { if (onClear) onClear(); };
     // What VoiceOver says for buttons whose face is a picture or a sign.
     zoomIn.setTitle ("Zoom In");
     zoomOut.setTitle ("Zoom Out");
@@ -181,7 +184,7 @@ void Toolbar::paint (juce::Graphics& g)
 // The writing tools - note values, dot, triplet, rest, voice - are the
 // second row when one row is not wide enough.
 int Toolbar::leftWidth() const { return 66 + 30 + 2 + 72 + 2 + 30 + 6 + 60 + 14; }
-int Toolbar::rightWidth() const { return 106 + 10 + 28 + 2 + 28; }
+int Toolbar::rightWidth() const { return 76 + 10 + 106 + 10 + 28 + 2 + 28; }
 
 namespace { constexpr int toolsWidth = 6 * 32 + 4 + 3 * 32 + 4 + 66; }
 
@@ -207,6 +210,8 @@ void Toolbar::resized()
     zoomOut.setBounds (right.removeFromRight (28));
     right.removeFromRight (10);
     transposeButton.setBounds (right.removeFromRight (106));
+    right.removeFromRight (10);
+    clearButton.setBounds (right.removeFromRight (76));
 
     auto tools = twoRows ? all.withTrimmedTop (6) : r;
     for (auto& d : durations) place (tools, *d, 30, 2);

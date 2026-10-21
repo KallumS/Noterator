@@ -63,7 +63,7 @@ public:
     // is large (decision 0048).
     int heightFor (int width) const;
 
-    std::function<void()> onFile, onStart, onEnd;
+    std::function<void()> onFile, onStart, onEnd, onClear;
 
 private:
     Controller& controller;
@@ -80,6 +80,7 @@ private:
     GlyphButton restButton { "Rest", smufl::restQuarter, 0.8f };
     juce::TextButton voiceButton { "Voice 1" };
     juce::TextButton transposeButton { "Concert Pitch" };
+    juce::TextButton clearButton { "Clear All" };   // every note out (decision 0051)
     juce::TextButton zoomOut { juce::String::charToString (0x2212) }, zoomIn { "+" };
 
     static constexpr int rowHeight = 46;
