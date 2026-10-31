@@ -394,18 +394,18 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
     if (index == 0)
     {
         m.addSubMenu ("New", templateMenu());
-        item (menuOpen, ui ("Open…"), "Cmd+O");
-        item (menuImport, ui ("Import MIDI or MusicXML…"));
+        item (menuOpen, "Open" + dots, "Cmd+O");
+        item (menuImport, "Import MIDI or MusicXML" + dots);
         m.addSeparator();
         item (menuSave, "Save", "Cmd+S");
-        item (menuSaveAs, ui ("Save As…"), "Shift+Cmd+S");
+        item (menuSaveAs, "Save As" + dots, "Shift+Cmd+S");
         m.addSeparator();
-        item (menuExportMidi, ui ("Export Score as MIDI…"));
-        item (menuExportMidiBars, ui ("Export Selected Bars as MIDI…"));
-        item (menuExportAudio, ui ("Export Score as Audio (WAV)…"));
-        item (menuExportAudioBars, ui ("Export Selected Bars as Audio (WAV)…"));
-        item (menuExportXml, ui ("Export Score as MusicXML…"));
-        item (menuExportXmlBars, ui ("Export Selected Bars as MusicXML…"));
+        item (menuExportMidi, "Export Score as MIDI" + dots);
+        item (menuExportMidiBars, "Export Selected Bars as MIDI" + dots);
+        item (menuExportAudio, "Export Score as Audio (WAV)" + dots);
+        item (menuExportAudioBars, "Export Selected Bars as Audio (WAV)" + dots);
+        item (menuExportXml, "Export Score as MusicXML" + dots);
+        item (menuExportXmlBars, "Export Selected Bars as MusicXML" + dots);
         addScoreItems (m);
     }
     else if (index == 1)
@@ -460,7 +460,7 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         m.addItem (menuFollowPage, "    Turn a Page at a Time", true, controller.followPlayback && controller.followStyleNow() == FollowStyle::page);
         if (controller.reduceMotion) m.addItem (-1, ui ("    (Reduce Motion is on in the Mac’s settings)"), false);
         m.addSeparator();
-        item (menuAudioSettings, ui ("Audio and MIDI Devices…"));
+        item (menuAudioSettings, "Audio and MIDI Devices" + dots);
     }
     else
     {
@@ -591,11 +591,11 @@ void MainComponent::showFileMenu()
         m.addItem (i);
     };
     m.addSubMenu ("New", templateMenu());
-    item (menuOpen, ui ("Open…"), "Cmd+O");
-    item (menuImport, ui ("Import MIDI or MusicXML…"));
+    item (menuOpen, "Open" + dots, "Cmd+O");
+    item (menuImport, "Import MIDI or MusicXML" + dots);
     m.addSeparator();
     item (menuSave, "Save", "Cmd+S");
-    item (menuSaveAs, ui ("Save As…"), "Shift+Cmd+S");
+    item (menuSaveAs, "Save As" + dots, "Shift+Cmd+S");
     m.addSeparator();
     m.addSubMenu ("Export", exportMenu());
     m.addSeparator();
@@ -634,9 +634,9 @@ void MainComponent::addScoreItems (juce::PopupMenu& m)
     const auto& s = controller.score;
     const int bar = s.barAt (controller.caret);
     m.addSeparator();
-    m.addSectionHeader ("Score Settings");
-    m.addItem (menuTitle, ui ("Title and Composer…"));
-    m.addItem (menuTempo, "Tempo (" + juce::String (juce::roundToInt (s.tempos.front().bpm)) + ui (" bpm)…"));
+    m.addSectionHeader ("This Score");
+    m.addItem (menuTitle, "Title and Composer" + dots);
+    m.addItem (menuTempo, "Tempo (" + juce::String (juce::roundToInt (s.tempos.front().bpm)) + " BPM)" + dots);
 
     const auto& meter = s.meterAtBar (bar);
     juce::PopupMenu meters;
@@ -649,12 +649,12 @@ void MainComponent::addScoreItems (juce::PopupMenu& m)
         meters.addItem (menuMeterBase + static_cast<int> (i), juce::String (num) + "/" + juce::String (den), true, on);
     }
     meters.addSeparator();
-    meters.addItem (menuMeterOther, ui ("Other…"), true, ! listed);
+    meters.addItem (menuMeterOther, "Other" + dots, true, ! listed);
     m.addSubMenu ("Time Signature at Bar " + juce::String (bar + 1) + " (" + juce::String (meter.num) + "/" + juce::String (meter.den) + ")", meters);
 
     const auto& k = s.keyAtBar (bar);
     juce::PopupMenu keys;
-    keys.addItem (menuKeyHeard, "Detect Key from the Notes");
+    keys.addItem (menuKeyHeard, "Use the Key It Hears");
     keys.addSeparator();
     for (size_t r = 0; r < scaleview::roots.size(); ++r)
     {
@@ -671,17 +671,17 @@ void MainComponent::addScoreItems (juce::PopupMenu& m)
 
     juce::PopupMenu bars;
     const auto [a, b] = controller.selectedBars();
-    bars.addItem (menuInsertBar, "Insert Bar Before Bar " + juce::String (bar + 1));
-    bars.addItem (menuDeleteBars, a == b ? "Delete Bar " + juce::String (a + 1) : "Delete Bars " + juce::String (a + 1) + ui ("–") + juce::String (b + 1));
+    bars.addItem (menuInsertBar, "Insert a Bar at the Caret (Before Bar " + juce::String (bar + 1) + ")");
+    bars.addItem (menuDeleteBars, a == b ? "Delete Bar " + juce::String (a + 1) : "Delete Bars " + juce::String (a + 1) + "-" + juce::String (b + 1));
     bars.addItem (menuAddBars, "Add 4 Bars at the End");
-    m.addSubMenu ("Bars (" + juce::String (s.bars) + ")", bars);
+    m.addSubMenu ("Bars (" + juce::String (s.bars) + " in All)", bars);
 
     m.addSeparator();
     juce::PopupMenu sound;
     sound.addItem (menuSoundApple, "Apple General MIDI (macOS)", true, ! audio.usingBuiltInSynth());
     sound.addItem (menuSoundBuiltIn, "Built-in Synth", true, audio.usingBuiltInSynth());
     sound.addSeparator();
-    sound.addItem (menuAudioSettings, ui ("Audio and MIDI Devices…"));
+    sound.addItem (menuAudioSettings, "Audio and MIDI Devices" + dots);
     m.addSubMenu ("Sound", sound);
 }
 
@@ -727,7 +727,7 @@ void MainComponent::tempoDialog()
     [this] (juce::AlertWindow& w)
     {
         const int bpm = w.getTextEditorContents ("bpm").getIntValue();
-        if (bpm < 30 || bpm > 240) { controller.setStatus ("Enter a tempo from 30 to 240 beats per minute."); return; }
+        if (bpm < 30 || bpm > 240) { controller.setStatus ("The tempo is unchanged. Choose a tempo from 30 to 240 beats a minute."); return; }
         controller.setTempo (bpm);
     });
 }
@@ -762,15 +762,15 @@ juce::PopupMenu MainComponent::exportMenu()
 {
     juce::PopupMenu m;
     const auto [a, b] = controller.selectedBars();
-    const juce::String bars = a == b ? "Bar " + juce::String (a + 1) : "Bars " + juce::String (a + 1) + ui ("–") + juce::String (b + 1);
-    m.addItem (menuExportMidi, ui ("Score as MIDI…"));
-    m.addItem (menuExportMidiBars, bars + ui (" as MIDI…"));
+    const juce::String bars = a == b ? "bar " + juce::String (a + 1) : "bars " + juce::String (a + 1) + "-" + juce::String (b + 1);
+    m.addItem (menuExportMidi, "Score as MIDI" + dots);
+    m.addItem (menuExportMidiBars, "Selection (" + bars + ") as MIDI" + dots);
     m.addSeparator();
-    m.addItem (menuExportAudio, ui ("Score as Audio (WAV)…"));
-    m.addItem (menuExportAudioBars, bars + ui (" as Audio (WAV)…"));
+    m.addItem (menuExportAudio, "Score as Audio (WAV)" + dots);
+    m.addItem (menuExportAudioBars, "Selection (" + bars + ") as Audio (WAV)" + dots);
     m.addSeparator();
-    m.addItem (menuExportXml, ui ("Score as MusicXML (for Dorico, MuseScore, Sibelius)…"));
-    m.addItem (menuExportXmlBars, bars + ui (" as MusicXML…"));
+    m.addItem (menuExportXml, "Score as MusicXML (for Dorico, MuseScore, Sibelius)" + dots);
+    m.addItem (menuExportXmlBars, "Selection (" + bars + ") as MusicXML" + dots);
     return m;
 }
 
@@ -783,8 +783,8 @@ void MainComponent::checkSaved (std::function<void()> then)
     // The Mac's own question, in its own words (decision 0048).
     auto opts = juce::MessageBoxOptions()
                     .withIconType (juce::MessageBoxIconType::QuestionIcon)
-                    .withTitle (ui ("Do you want to save the changes to “") + juce::String (controller.score.title) + ui ("”?"))
-                    .withMessage (ui ("Your changes will be lost if you don’t save them."))
+                    .withTitle ("Do you want to save the changes you made to " + juce::String (controller.score.title) + "?")
+                    .withMessage ("Your changes will be lost if you don't save them.")
                     .withButton ("Save")
                     .withButton (ui ("Don’t Save"))
                     .withButton ("Cancel")
@@ -899,7 +899,7 @@ void MainComponent::exportDialog (ExportKind kind, bool selectedBars)
         struct Render : public juce::ThreadWithProgressWindow
         {
             Render (const Score& s, ExportRange r, std::unique_ptr<SynthRack> sy, juce::String d, juce::File fl, Controller& c)
-                : juce::ThreadWithProgressWindow (ui ("Exporting Audio…"), true, true),
+                : juce::ThreadWithProgressWindow ("Exporting audio" + dots, true, true),
                   score (s), range (r), synth (std::move (sy)), desc (std::move (d)), file (fl), controller (c) {}
             void run() override
             {
