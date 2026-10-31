@@ -117,18 +117,21 @@ Toolbar::Toolbar (Controller& c) : controller (c)
 {
     for (auto* b : std::initializer_list<juce::Button*> { &startButton, &endButton }) addAndMakeVisible (b);
     for (auto* b : std::initializer_list<juce::Component*> { &fileButton, &playButton, &followButton,
-                     &voiceButton, &transposeButton, &zoomOut, &zoomIn })
+                     &voiceButton, &transposeButton, &clearButton, &zoomOut, &zoomIn })
         addAndMakeVisible (b);
 
-    fileButton.setTooltip ("New, Open, Save, Export, Undo and Redo, the score's settings, the sound, note input and the dark page");
-    playButton.setTooltip ("Play from the caret, or stop (Shift+Space; Space plays from bar 1)");
-    startButton.setTooltip ("Return to the start (Home). If it is playing, it plays on from bar 1.");
-    endButton.setTooltip ("Skip to the end of the music (End)");
-    followButton.setTooltip ("Follow: while it plays, the page scrolls along with the music, or turns a page at a time (Play menu)");
-    voiceButton.setTooltip ("Which voice notes are written in: 1 stems up, 2 stems down (V changes the selection's)");
-    transposeButton.setTooltip ("Show the score at concert pitch, or as the transposing instruments read it");
-    zoomIn.setTooltip ("Zoom in (Cmd+=)");
-    zoomOut.setTooltip ("Zoom out (Cmd+-)");
+    fileButton.setTooltip ("New, Open, Save, Export, Undo and Redo, score settings, sound, Note Input and Dark Page");
+    playButton.setTooltip (ui ("Play from the cursor, or stop (⇧Space). Space plays from bar 1."));
+    startButton.setTooltip (ui ("Go to the start (Home). If the music is playing, it plays on from bar 1."));
+    endButton.setTooltip ("Go to the end of the music (End).");
+    followButton.setTooltip ("Scroll the page with the music as it plays. To turn a page at a time, use the Play menu.");
+    voiceButton.setTooltip ("Choose the voice to write in: 1 has stems up, 2 has stems down. Press V to swap the selection's voice.");
+    transposeButton.setTooltip ("Show the score at concert pitch, or as transposing instruments read it.");
+    zoomIn.setTooltip (ui ("Zoom in (⌘=)."));
+    zoomOut.setTooltip (ui ("Zoom out (⌘−)."));
+    clearButton.setTooltip ("Clear every note from every part. The parts, tempo, key and bars stay. It asks first, and you can undo it.");
+    clearButton.setTitle ("Clear All Notes");
+    clearButton.onClick = [this] { if (onClear) onClear(); };
     // What VoiceOver says for buttons whose face is a picture or a sign.
     zoomIn.setTitle ("Zoom In");
     zoomOut.setTitle ("Zoom Out");
@@ -158,7 +161,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     for (auto* b : { &dotButton, &tripletButton, &restButton }) addAndMakeVisible (b);
     dotButton.setToggleable (true);
     tripletButton.setToggleable (true);
-    dotButton.setTooltip ("Dotted (.)");
+    dotButton.setTooltip ("Dot (.)");
     tripletButton.setTooltip ("Triplet (T)");
     restButton.setTooltip ("Write a rest at the cursor (0)");
     dotButton.onClick = [this] { controller.toggleDot(); };
@@ -182,7 +185,7 @@ void Toolbar::paint (juce::Graphics& g)
 // The writing tools - note values, dot, triplet, rest, voice - are the
 // second row when one row is not wide enough.
 int Toolbar::leftWidth() const { return 66 + 30 + 2 + 72 + 2 + 30 + 6 + 60 + 14; }
-int Toolbar::rightWidth() const { return 106 + 10 + 28 + 2 + 28; }
+int Toolbar::rightWidth() const { return 76 + 10 + 106 + 10 + 28 + 2 + 28; }
 
 namespace { constexpr int toolsWidth = 6 * 32 + 4 + 3 * 32 + 4 + 66; }
 
@@ -208,6 +211,8 @@ void Toolbar::resized()
     zoomOut.setBounds (right.removeFromRight (28));
     right.removeFromRight (10);
     transposeButton.setBounds (right.removeFromRight (106));
+    right.removeFromRight (10);
+    clearButton.setBounds (right.removeFromRight (76));
 
     auto tools = twoRows ? all.withTrimmedTop (6) : r;
     for (auto& d : durations) place (tools, *d, 30, 2);
@@ -273,7 +278,7 @@ struct PartsPanel::Row : public juce::Component
         volume.setTitle ("Volume");
         mute.setToggleable (true);
         solo.setToggleable (true);
-        autoCC.setTooltip ("Draw this part's dynamics, expression and vibrato curves automatically (AutoCC)");
+        autoCC.setTooltip ("Draw this part's dynamics, expression and vibrato curves automatically.");
         mute.onClick = [this] { toggle ([] (Part& p) { p.mute = ! p.mute; }); };
         solo.onClick = [this] { toggle ([] (Part& p) { p.solo = ! p.solo; }); };
         autoCC.onClick = [this] { toggle ([] (Part& p) { p.autoCC = ! p.autoCC; }); };
@@ -291,11 +296,11 @@ struct PartsPanel::Row : public juce::Component
             const auto* p = controller.score.partById (partId);
             if (p == nullptr) return;
             if (p->notes.empty()) { controller.removePart (partId); return; }
-            // The Mac's own alert, its button saying what it does (decision 0048).
+            // The Mac's own alert (0048), its button saying what it does (0054).
             const auto options = juce::MessageBoxOptions()
                                      .withIconType (juce::MessageBoxIconType::QuestionIcon)
-                                     .withTitle ("Remove " + juce::String (p->name) + "?")
-                                     .withMessage ("Its notes go with it. Undo brings them back.")
+                                     .withTitle (ui ("Remove “") + juce::String (p->name) + ui ("”?"))
+                                     .withMessage ("Its notes are removed too. You can undo this.")
                                      .withButton ("Remove")
                                      .withButton ("Cancel")
                                      .withAssociatedComponent (this);
@@ -511,7 +516,7 @@ StatusBar::~StatusBar() { controller.removeChangeListener (this); }
 juce::String StatusBar::message() const
 {
     if (controller.input.noteInput)
-        return "Note input: click the staff, type A to G (Shift adds to the chord) or play a MIDI keyboard. Esc stops it.";
+        return ui ("Note input: click the staff, type A–G (⇧ adds to the chord) or play a MIDI keyboard. Press Esc to stop.");
     return controller.status;
 }
 
@@ -563,7 +568,7 @@ void StatusBar::paint (juce::Graphics& g)
         const int bar = s.barAt (controller.caret);
         const Tick inBar = controller.caret - s.barStart (bar);
         const auto beat = s.meterAtBar (bar).beatTicks();
-        // With no part chosen (decision 0048) the caret is only a bar and beat.
+        // With no part chosen (decision 0049) the caret is only a bar and beat.
         where = (controller.noPartChosen ? juce::String ("Every part")
                  : controller.chosenParts.size() > 1 ? juce::String (static_cast<int> (controller.chosenParts.size())) + " parts"
                  : juce::String (p->name)) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);
@@ -572,8 +577,8 @@ void StatusBar::paint (juce::Graphics& g)
 
     // Left: the last thing that happened, or the mode. It comes first: when
     // the line is short of room - a narrow window, a large interface - the
-    // sound goes, then the caret moves over, before the message is cut
-    // (and the whole of it is the line's tooltip).
+    // sound goes, then the cursor's place moves over, before the message is
+    // cut (and the whole of it is the line's tooltip).
     const auto left = message();
     const auto& font = g.getCurrentFont();
     // Measured with some to spare: text drawn at 150% or 200% runs a little wider.
@@ -587,7 +592,7 @@ void StatusBar::paint (juce::Graphics& g)
         g.drawText (right, rest.removeFromRight (rightW), juce::Justification::centredRight);
         rest.removeFromRight (gap);
     }
-    // The caret in the middle when there is room, at the right when not.
+    // Where the cursor is: in the middle when there is room, at the right when not.
     auto middle = r.withSizeKeepingCentre (whereW, r.getHeight());
     if (middle.getX() < r.getX() + leftW + gap || middle.getRight() > rest.getRight())
         middle = rest.withLeft (std::max (rest.getX(), rest.getRight() - whereW));

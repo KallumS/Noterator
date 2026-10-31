@@ -13,4 +13,9 @@ broken and was not.
 | [2026-10-09](2026-10-09-follow.md) | Follow: the page turns before the music goes out of view, switchable, shared with Miderator. |
 | [2026-10-09, later](2026-10-09-smooth-follow.md) | Follow scrolls smoothly: the music moves under a playhead a third of the way across, on a steady clock; pages kept as a choice. |
 | [2026-10-09, evening](2026-10-09-transport.md) | Space plays from bar 1, Shift+Space from the caret; buttons to the start and the end, in both apps. |
+| [2026-10-10, Escape](2026-10-10-escape.md) | Escape lets go of everything - notes, bars and the caret's part - so an idea goes to every part, a single line to the top one (0049). Both apps. |
+| [2026-10-10, Undo](2026-10-10-undo-generate.md) | Undo brings back the ideas a Generate replaced (0050). Both apps. |
+| [2026-10-10, choosing](2026-10-10-choosing-parts.md) | Several parts chosen with Cmd, Shift and Cmd+A; blocks of bars with Cmd (0051). Both apps. |
+| [2026-10-14](2026-10-14-apple-writing.md) | Every word in both apps to Apple's writing guidelines (0054). |
 | [2026-10-15](2026-10-15-apple-guidelines.md) | The window against Apple's Human Interface Guidelines (0048): contrast, the keyboard, VoiceOver, the status line under the toolbar, Interface Size, the Mac's alerts. |
+| [2026-10-21](2026-10-21-vary-voicing-clear.md) | Vary Notes after or in place of the selection (0055), Voicing starting on Any (0056), Clear All (0057). |
