@@ -41,7 +41,7 @@ gets undone.
 | `Source/Core/Templates.*` | The ensembles a new score starts from, in score order (0022). |
 | `Source/Core/Spelling.*`, `ScaleModel.h` | Keys, spelling, signatures. `ScaleModel.h` is ScaleView's, **unchanged**. |
 | `Source/Core/Detect.*` | Chords and keys along the score (0014). |
-| `Source/Core/AutoCC.*` | AutoCC's curves, computed for a whole part (0013). |
+| `Source/Core/AutoCC.*` | AutoCC's curves, computed for a whole part (0013), as of AutoCC 1.3: fitted to Lorne Balfe's mock-ups (0049). |
 | `Source/Core/Follow.h` | How the page follows the playhead - scrolling along or a page at a time - and the steady clock that keeps it smooth (0033, 0034). Shared with Miderator. |
 | `Source/Core/Perform.*`, `MidiFile.*`, `ScoreFile.*` | The score as MIDI events (channels in banks, 0023), as a .mid, as a .noterator (JSON). |
 | `Source/Core/Xml.*`, `MusicXml.*` | MusicXML in and out with our own small XML reader/writer (0021). |
@@ -57,7 +57,7 @@ gets undone.
 | `Source/App/GeneratorPanel.*`, `BlocksPanel.*`, `SettingsList.*` | The Generate tab (0017), the Blocks toolbox (0018, 0024), and the settings menus both draw from an adapter. |
 | `Source/App/Panels.*`, `MainComponent.*`, `Theme.*` | Toolbar, the status line under it, Parts tab, keys and menus (File holds New, Open, Save, Export, Undo, the score's settings, Sound, Note input and Dark page, 0037-0039; View holds Interface Size, 0048), colours, the keyboard's ring. |
 | `Source/App/SystemSettings.*` | The Mac's Increase Contrast and Reduce Motion, read through the Objective-C runtime (0048). |
-| `Tests/Test*.cpp` | Core tests (92), no JUCE. `Tests/TestApp.cpp` and `Tests/TestWindow.cpp` are the JUCE-side tests (21); `TestWindow` holds the window to Apple's guidelines (0048). |
+| `Tests/Test*.cpp` | Core tests (95), no JUCE. `Tests/TestApp.cpp` and `Tests/TestWindow.cpp` are the JUCE-side tests (21); `TestWindow` holds the window to Apple's guidelines (0048). |
 | `tools/` | `RenderScore.cpp` (PNG renderer), `try_generators.lua`, `sync_engines.sh`. `build-mac.command`, at the top, builds the app on the user's Mac (0045). |
 
 ## Working in it
