@@ -146,7 +146,14 @@ void ScoreView::zoomBy (float factor)
 void ScoreView::changeListenerCallback (juce::ChangeBroadcaster*)
 {
     updateScrollbars();
+    setDescription (controller.describe());
     repaint();
+}
+
+std::unique_ptr<juce::AccessibilityHandler> ScoreView::createAccessibilityHandler()
+{
+    // One element to VoiceOver, titled "Score", described in words.
+    return std::make_unique<juce::AccessibilityHandler> (*this, juce::AccessibilityRole::group);
 }
 
 void ScoreView::timerCallback()
@@ -163,7 +170,7 @@ void ScoreView::timerCallback()
             if (controller.followPlayback)
             {
                 const double to = std::round (followScroll (controller.layout.playheadX (t) * space(), scrollX,
-                                                             musicArea().getWidth(), controller.followStyle));
+                                                             musicArea().getWidth(), controller.followStyleNow()));
                 if (std::abs (to - scrollX) > 0.5) { scrollX = to; updateScrollbars(); }
             }
             lastSounding = controller.audio.soundingNotes();

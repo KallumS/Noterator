@@ -134,6 +134,7 @@ target_sources(Noterator PRIVATE
     Source/App/BlocksPanel.cpp
     Source/App/AudioEngine.cpp
     Source/App/Exporter.cpp
+    Source/App/SystemSettings.cpp
     ${NOTERATOR_SHARED_UI})
 
 target_compile_definitions(Noterator PRIVATE
@@ -179,17 +180,20 @@ if(NOTERATOR_BUILD_TESTS)
     juce_add_console_app(NoteratorAppTests PRODUCT_NAME "NoteratorAppTests")
     target_sources(NoteratorAppTests PRIVATE
         Tests/TestApp.cpp
+        Tests/TestWindow.cpp
         Source/App/Controller.cpp
         Source/App/AudioEngine.cpp
         Source/App/Exporter.cpp
+        Source/App/Panels.cpp
         Source/App/GeneratorPanel.cpp
         Source/App/SettingsList.cpp
-        Source/App/Theme.cpp)
+        Source/App/BlocksPanel.cpp
+        ${NOTERATOR_SHARED_UI})
     target_include_directories(NoteratorAppTests PRIVATE Source/App Tests)
     target_compile_definitions(NoteratorAppTests PRIVATE
         JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_PLUGINHOST_AU=1 JUCE_PLUGINHOST_VST3=0)
     target_link_libraries(NoteratorAppTests
-        PRIVATE NoteratorCore juce::juce_audio_utils juce::juce_audio_processors
+        PRIVATE NoteratorCore NoteratorAssets juce::juce_audio_utils juce::juce_audio_processors
         PUBLIC juce::juce_recommended_config_flags)
     add_test(NAME App COMMAND NoteratorAppTests)
 endif()
