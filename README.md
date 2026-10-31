@@ -30,7 +30,7 @@ can read, edit, play and export.
   never gets chords, only their top line.
 - **Starting Blocks as a toolbox.** Pick a chord, arpeggio, run or interval;
   every degree of the key is a button. Click one to see and hear it, Insert to
-  put it at the caret - then the next one goes after it. (Drum grooves come
+  put it at the cursor - then the next one goes after it. (Drum grooves come
   from Generate Notes.)
 - **Start from an ensemble.** New offers small groups (string quartet, wind
   and brass quintets, choir, band, jazz combo), whole orchestral sections
@@ -97,16 +97,20 @@ keeps working for every future version.
 | --- | --- |
 | Start a score | **File** > **New**: a small group, a whole orchestral section, a chamber or full orchestra, or a big band |
 | Bring music in | **File** > **Open**, or drop a MIDI or MusicXML file (.mid, .musicxml, .xml, .mxl) on the window |
-| Put the caret in a part | click the staff, or the part's name |
+| Put the cursor in a part | click the staff, or the part's name |
 | Choose bars | click an empty bar; drag across bars and staves for more; drag along the Chords lane for every part; **Esc** lets go |
-| Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the caret's part |
-| Blocks | **Blocks** tab: choose a kind, click a degree to see and hear it, **Insert** at the caret |
+| Generate | **Generate** tab: choose a generator, **Generate**, click a result to hear it, **Insert** - into the chosen bars, or the cursor's part |
+| Every instrument at once | **Esc** lets go of everything - notes, bars and the instrument - so the next idea goes to every part (a single melody to the top one); click a name to choose one again |
+| Lost an idea? | **Cmd+Z** after a **Generate** brings back the ideas listed before it; **Shift+Cmd+Z** goes forward again |
+| Several instruments | **Cmd**-click names to add or take away one; **Shift**-click to choose every one in between; **Cmd+A** chooses every instrument (press it again for every note too). An idea goes to the instruments chosen, a single melody to the first chosen |
+| Bars here and there | **Cmd**-click (or Cmd-drag) bars to add them to the chosen bars; each block is filled on its own |
+| Blocks | **Blocks** tab: choose a kind, click a degree to see and hear it, **Insert** at the cursor |
 | Write notes | **N** for note input, then click the staff, type **A-G**, or play a MIDI keyboard |
 | Note values | **1-7** (5 is a quarter, 6 a half, 4 an eighth), **.** dot, **T** triplet, **0** rest |
 | Add to a chord | **Shift** + letter, or Shift-click |
 | Select | click a note; **Shift**-drag for several; double-click for a whole chord |
 | Change notes | **Up/Down** a semitone, **Cmd+Up/Down** an octave, drag a note up or down, **Delete** |
-| Hear | **Space** plays from bar 1; **Shift+Space** (or **Play**) plays from the caret; click any note or chord |
+| Hear | **Space** plays from bar 1; **Shift+Space** (or **Play**) plays from the cursor; click any note or chord |
 | Start and end | **\|◀** beside Play (or **Home**) goes back to bar 1; **▶\|** (or **End**) to the end of the music |
 | Follow the music | **Follow** (beside Play) scrolls the page along with the music as it plays, the playhead a third of the way across; click it to keep the page still. To turn a page at a time instead: **Play** menu, **Turn a Page at a Time** |
 | Take it out | **File** > **Export**: the score or the chosen bars as MIDI, MusicXML or WAV |
@@ -117,7 +121,7 @@ keeps working for every future version.
 | All the keys | **H** |
 
 The **Parts** tab adds and removes instruments, and shows what each one can
-do. **File** > **This score** sets the title, tempo, time signature, key,
+do. **File** > **Score Settings** sets the title, tempo, time signature, key,
 bars and sound.
 
 ## Apple's guidelines

@@ -1,6 +1,7 @@
 #include "Panels.h"
 
 #include "Spelling.h"
+#include "Theme.h"
 
 namespace nt
 {
@@ -159,7 +160,7 @@ Toolbar::Toolbar (Controller& c) : controller (c)
     tripletButton.setToggleable (true);
     dotButton.setTooltip ("Dotted (.)");
     tripletButton.setTooltip ("Triplet (T)");
-    restButton.setTooltip ("Write a rest at the caret (0)");
+    restButton.setTooltip ("Write a rest at the cursor (0)");
     dotButton.onClick = [this] { controller.toggleDot(); };
     tripletButton.onClick = [this] { controller.toggleTriplet(); };
     restButton.onClick = [this] { controller.typeRest(); };
@@ -334,7 +335,7 @@ struct PartsPanel::Row : public juce::Component
         autoCC.setToggleState (p->autoCC, juce::dontSendNotification);
         autoCC.setEnabled (instrumentById (p->instrument).cc != CCShape::none);
         volume.setValue (p->volume, juce::dontSendNotification);
-        current = controller.caretPart == partId;
+        current = controller.isPartChosen (partId);
         repaint();
     }
 
@@ -374,7 +375,7 @@ struct PartsPanel::Row : public juce::Component
         volume.setBounds (bottom);
     }
 
-    void mouseDown (const juce::MouseEvent&) override { controller.choosePart (partId); }
+    void mouseDown (const juce::MouseEvent& e) override { controller.clickPart (partId, e.mods.isCommandDown(), e.mods.isShiftDown()); }
 
     Controller& controller;
     uint32_t partId;
@@ -472,7 +473,7 @@ void PartsPanel::changeListenerCallback (juce::ChangeBroadcaster*)
         if (inst.transposition != 0) lines.add ("Transposing instrument " + juce::String (inst.transposedName));
         if (inst.octave != 0) lines.add (juce::String ("Written an octave ") + (inst.octave > 0 ? "above" : "below") + " where it sounds");
         const char* cc = inst.cc == CCShape::strings ? "Strings" : inst.cc == CCShape::brass ? "Brass" : inst.cc == CCShape::woodwinds ? "Woodwinds"
-                       : inst.cc == CCShape::neutral ? "Default" : "none - it does not swell";
+                       : inst.cc == CCShape::neutral ? "Default" : "None (it doesn't swell)";
         lines.add ("AutoCC shape: " + juce::String (cc));
         info.setText (lines.joinIntoString ("\n"), juce::dontSendNotification);
     }
@@ -562,7 +563,10 @@ void StatusBar::paint (juce::Graphics& g)
         const int bar = s.barAt (controller.caret);
         const Tick inBar = controller.caret - s.barStart (bar);
         const auto beat = s.meterAtBar (bar).beatTicks();
-        where = juce::String (p->name) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);
+        // With no part chosen (decision 0048) the caret is only a bar and beat.
+        where = (controller.noPartChosen ? juce::String ("Every part")
+                 : controller.chosenParts.size() > 1 ? juce::String (static_cast<int> (controller.chosenParts.size())) + " parts"
+                 : juce::String (p->name)) + ", bar " + juce::String (bar + 1) + " beat " + juce::String (1.0 + static_cast<double> (inBar) / static_cast<double> (beat), 2);
         if (! controller.selection.empty()) where += "   |   " + juce::String (static_cast<int> (controller.selection.size())) + " selected";
     }
 

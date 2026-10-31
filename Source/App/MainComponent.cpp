@@ -4,6 +4,7 @@
 #include "ScaleModel.h"
 #include "SystemSettings.h"
 #include "Templates.h"
+#include "Theme.h"
 
 namespace nt
 {
@@ -38,7 +39,8 @@ const juce::String dots = juce::String::charToString (0x2026);
 juce::String key (const juce::String& k)
 {
    #if JUCE_MAC
-    return k.replace ("Cmd", juce::String::charToString (0x2318));
+    if (k == "Delete") return ui ("⌫");
+    return k.replace ("Ctrl+", ui ("⌃")).replace ("Alt+", ui ("⌥")).replace ("Shift+", ui ("⇧")).replace ("Cmd+", ui ("⌘"));
    #else
     return k.replace ("Cmd", "Ctrl");
    #endif
@@ -316,13 +318,8 @@ bool MainComponent::keyPressed (const juce::KeyPress& k)
     if (code == juce::KeyPress::spaceKey) { c.togglePlay (! mods.isShiftDown()); return true; }
     if (code == juce::KeyPress::homeKey) { returnToStart(); return true; }
     if (code == juce::KeyPress::endKey) { skipToEnd(); return true; }
-    if (code == juce::KeyPress::escapeKey)
-    {
-        if (c.audio.isPlaying()) c.stop();
-        else if (c.input.noteInput) c.toggleNoteInput();
-        else c.select ({});
-        return true;
-    }
+    // Escape lets go of everything, the caret's part too (decision 0048).
+    if (code == juce::KeyPress::escapeKey) { c.letGoOfEverything(); return true; }
     if (code == juce::KeyPress::deleteKey || code == juce::KeyPress::backspaceKey) { c.deleteSelection(); return true; }
     if (code == juce::KeyPress::upKey)
     {
@@ -417,11 +414,11 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         m.addSeparator();
         item (menuCut, "Cut", "Cmd+X", ! controller.selection.empty());
         item (menuCopy, "Copy", "Cmd+C", ! controller.selection.empty());
-        item (menuPaste, "Paste at the Caret", "Cmd+V");
+        item (menuPaste, "Paste", "Cmd+V");
         item (menuDelete, "Delete", "Delete", ! controller.selection.empty());
         item (menuSelectAll, "Select All", "Cmd+A");
         m.addSeparator();
-        item (menuVoice, "Swap Voice of Selection", "V", ! controller.selection.empty());
+        item (menuVoice, "Swap Voice", "V", ! controller.selection.empty());
     }
     else if (index == 2)
     {
@@ -447,8 +444,8 @@ juce::PopupMenu MainComponent::getMenuForIndex (int index, const juce::String&)
         if (controller.audio.isPlaying()) item (menuPlay, "Stop", "Space");
         else
         {
-            item (menuPlay, "Play from the Start", "Space");
-            item (menuPlayCaret, "Play from the Caret", "Shift+Space");
+            item (menuPlay, "Play from Start", "Space");
+            item (menuPlayCaret, "Play from Cursor", "Shift+Space");
         }
         item (menuToStart, "Return to Start", "Home");
         item (menuToEnd, "Skip to End", "End");
@@ -717,7 +714,7 @@ void MainComponent::titleDialog()
 
 void MainComponent::tempoDialog()
 {
-    askFor ("Tempo", "Beats a minute, 30 to 240", [this] (juce::AlertWindow& w)
+    askFor ("Tempo", ui ("Beats per minute, from 30 to 240."), [this] (juce::AlertWindow& w)
     {
         w.addTextEditor ("bpm", juce::String (juce::roundToInt (controller.score.tempos.front().bpm)), "Tempo");
         if (auto* e = w.getTextEditor ("bpm")) e->setInputRestrictions (3, "0123456789");
@@ -738,8 +735,8 @@ void MainComponent::meterDialog()
         const auto& m = controller.score.meterAtBar (bar);
         juce::StringArray nums, dens { "2", "4", "8", "16" };
         for (int n = 1; n <= 16; ++n) nums.add (juce::String (n));
-        w.addComboBox ("num", nums, "Beats in a bar");
-        w.addComboBox ("den", dens, "Each beat a");
+        w.addComboBox ("num", nums, "Beats per bar");
+        w.addComboBox ("den", dens, "Beat value");
         if (auto* b = w.getComboBoxComponent ("num")) b->setText (juce::String (m.num), juce::dontSendNotification);
         if (auto* b = w.getComboBoxComponent ("den")) b->setText (juce::String (m.den), juce::dontSendNotification);
     },
@@ -784,7 +781,7 @@ void MainComponent::checkSaved (std::function<void()> then)
                     .withTitle ("Do you want to save the changes you made to " + juce::String (controller.score.title) + "?")
                     .withMessage ("Your changes will be lost if you don't save them.")
                     .withButton ("Save")
-                    .withButton ("Don't Save")
+                    .withButton (ui ("Don’t Save"))
                     .withButton ("Cancel")
                     .withAssociatedComponent (this);
     juce::NativeMessageBox::showAsync (opts, [this, then] (int r)
@@ -806,7 +803,7 @@ void MainComponent::openDialog()
 {
     checkSaved ([this]
     {
-        chooser = std::make_unique<juce::FileChooser> ("Open a score, a MIDI file or a MusicXML file", lastFolder,
+        chooser = std::make_unique<juce::FileChooser> ("Open a Score, MIDI File or MusicXML File", lastFolder,
                                                       "*.noterator;*.mid;*.midi;*.musicxml;*.mxl;*.xml");
         chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc)
         {
@@ -818,7 +815,7 @@ void MainComponent::openDialog()
 
 void MainComponent::importDialog()
 {
-    chooser = std::make_unique<juce::FileChooser> ("Import a MIDI or MusicXML file into this score, at the caret's bar", lastFolder,
+    chooser = std::make_unique<juce::FileChooser> ("Import a MIDI or MusicXML File at the Cursor", lastFolder,
                                                   "*.mid;*.midi;*.musicxml;*.mxl;*.xml");
     chooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc)
     {
@@ -842,7 +839,7 @@ void MainComponent::saveDialog (bool saveAs, std::function<void()> then)
     }
     const auto suggested = (lastFolder.isDirectory() ? lastFolder : juce::File::getSpecialLocation (juce::File::userDocumentsDirectory))
                                .getChildFile (juce::File::createLegalFileName (controller.score.title) + ".noterator");
-    chooser = std::make_unique<juce::FileChooser> ("Save the score", suggested, "*.noterator");
+    chooser = std::make_unique<juce::FileChooser> ("Save Score", suggested, "*.noterator");
     chooser->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
                           [this, then] (const juce::FileChooser& fc)
     {
@@ -864,13 +861,13 @@ void MainComponent::exportDialog (ExportKind kind, bool selectedBars)
         const auto [a, b] = controller.selectedBars();
         range.from = controller.score.barStart (a);
         range.to = controller.score.barStart (b + 1);
-        suffix = a == b ? " bar " + juce::String (a + 1) : " bars " + juce::String (a + 1) + "-" + juce::String (b + 1);
+        suffix = a == b ? " bar " + juce::String (a + 1) : " bars " + juce::String (a + 1) + "-" + juce::String (b + 1);   // a file name: plain hyphen
     }
     const bool audioFile = kind == ExportKind::audio;
     const juce::String ext = audioFile ? "wav" : kind == ExportKind::musicXml ? "musicxml" : "mid";
     const auto suggested = (lastFolder.isDirectory() ? lastFolder : juce::File::getSpecialLocation (juce::File::userDocumentsDirectory))
                                .getChildFile (juce::File::createLegalFileName (juce::String (controller.score.title) + suffix) + "." + ext);
-    chooser = std::make_unique<juce::FileChooser> (audioFile ? "Export audio" : kind == ExportKind::musicXml ? "Export MusicXML" : "Export MIDI",
+    chooser = std::make_unique<juce::FileChooser> (audioFile ? "Export Audio" : kind == ExportKind::musicXml ? "Export MusicXML" : "Export MIDI",
                                                    suggested, "*." + ext);
     chooser->launchAsync (juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::warnAboutOverwriting,
                           [this, kind, audioFile, range, ext] (const juce::FileChooser& fc)
@@ -905,7 +902,7 @@ void MainComponent::exportDialog (ExportKind kind, bool selectedBars)
             }
             void threadComplete (bool cancelled) override
             {
-                if (ok) controller.setStatus ("Exported " + file.getFileName() + " through " + desc);
+                if (ok) controller.setStatus ("Exported " + file.getFileName() + " using " + desc);
                 else if (! cancelled)
                     juce::NativeMessageBox::showAsync (juce::MessageBoxOptions()
                                                            .withIconType (juce::MessageBoxIconType::WarningIcon)
@@ -962,7 +959,7 @@ void MainComponent::audioSettingsDialog()
     selector->setSize (520, 420);
     juce::DialogWindow::LaunchOptions o;
     o.content.setOwned (selector);
-    o.dialogTitle = "Audio and MIDI devices";
+    o.dialogTitle = "Audio and MIDI Devices";
     o.dialogBackgroundColour = theme::ground;
     o.escapeKeyTriggersCloseButton = true;
     o.useNativeTitleBar = true;
@@ -985,33 +982,45 @@ void MainComponent::skipToEnd()
 
 void MainComponent::showHelp()
 {
-    const juce::String text =
+    // The keys in the Mac's own symbols, and plain sentences (decision 0053).
+    const juce::String text = ui (
         "WRITING\n"
-        "N or Return  note input on and off\n"
-        "A - G  write that note at the caret (Shift adds it to the chord)\n"
-        "0  a rest     1 - 7  note values (5 is a quarter)     .  dot     T  triplet\n"
-        "Click a line or space in note input to write the note the key gives it.\n"
-        "A MIDI keyboard writes in note input, and always plays.\n\n"
+        "N or Return    Turn note input on or off\n"
+        "A–G    Write that note at the cursor (⇧ adds it to the chord)\n"
+        "0    Write a rest\n"
+        "1–7    Choose a note value (5 is a quarter note)\n"
+        ".  and  T    Dot and triplet\n"
+        "In note input, click a line or space to write a note there. A MIDI keyboard writes in note input and always plays.\n"
+        "\n"
         "EDITING\n"
-        "Click a note to select and hear it; double-click for its whole chord\n"
-        "Click an empty bar to choose it; drag across bars and parts to choose more\n"
-        "(drag along the Chords lane for every part; Shift+click stretches the choice)\n"
-        "Shift+drag picks out notes; drag a note up or down to move it\n"
-        "Up / Down  a semitone     Cmd+Up / Down  an octave\n"
-        "Left / Right  the next note (Shift extends)     Alt+Left / Right  move the selection\n"
-        "[ and ]  halve or double     V  swap voice     Delete  remove\n"
-        "Cmd+C / X / V  copy, cut, paste at the caret     Cmd+Z  undo\n\n"
+        "Click a note to select and hear it. Double-click to select its whole chord.\n"
+        "Click an empty bar to choose it. Drag across bars and parts to choose more, or along the Chords lane to choose every part. ⇧-click extends the choice.\n"
+        "⇧-drag selects notes. Drag a note up or down to move it.\n"
+        "↑ ↓    Move up or down a semitone (⌘ for an octave)\n"
+        "← →    Select the next note (⇧ extends the selection)\n"
+        "⌥← ⌥→    Move the selection\n"
+        "[  ]    Halve or double the note values\n"
+        "V    Swap voice\n"
+        "⌫    Delete\n"
+        "⌘C  ⌘X  ⌘V    Copy, cut and paste at the cursor\n"
+        "⌘Z  ⇧⌘Z    Undo and redo\n"
+        "\n"
         "LISTENING\n"
-        "Space  play from bar 1, or stop     Shift+Space  play from the caret\n"
-        "Home  back to the start     End  on to the end of the music\n"
-        "Follow (toolbar, Play menu)  the page scrolls along with the music as it plays\n"
-        "(or turns a page at a time: Play menu)\n"
-        "Click a chord in the Chords lane to hear it, or the Scale lane to hear the scale\n\n"
+        "Space    Play from bar 1, or stop\n"
+        "⇧Space    Play from the cursor\n"
+        "Home  End    Go to the start or the end of the music\n"
+        "Follow (toolbar or Play menu) scrolls the page with the music as it plays.\n"
+        "Click a chord in the Chords lane to hear it, or the Scale lane to hear the scale.\n"
+        "\n"
         "GENERATING\n"
-        "Choose some bars (or put the caret in a part), choose a generator, press\n"
-        "Generate, click a result to hear it, and Insert to put it in.\n"
-        "Generate Notes fills the bars chosen: the tune on top, the bass below,\n"
-        "chords between. Suggest Notes and Vary Notes work on the music you select.\n\n"
+        "Choose some bars or parts, choose a generator, click Generate, click an idea to hear it, then click Insert.\n"
+        "Generate Notes fills the chosen bars: the tune on top, the bass below and the chords between. Suggest Notes and Vary Notes work on the music you select.\n"
+        "Esc    Let go of everything, so the next idea goes to every part\n"
+        "⌘Z    After Generate, bring back the ideas it replaced\n"
+        "⌘-click    Add a part (by its name) or bars to the choice\n"
+        "⇧-click    Choose every part between two names\n"
+        "⌘A    Choose every part; press again to select every note too\n"
+        "\n"
         "BLOCKS\n"
         "Pick a chord, arpeggio, run or interval, click a degree\n"
         "to see and hear it, and Insert to put it at the caret - the caret moves\n"

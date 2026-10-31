@@ -8,6 +8,7 @@
 
 #include "Controller.h"
 #include "ScoreRenderer.h"
+#include "Theme.h"
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
