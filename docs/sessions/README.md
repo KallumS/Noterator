@@ -19,3 +19,4 @@ broken and was not.
 | [2026-10-14](2026-10-14-apple-writing.md) | Every word in both apps to Apple's writing guidelines (0054). |
 | [2026-10-15](2026-10-15-apple-guidelines.md) | The window against Apple's Human Interface Guidelines (0048): contrast, the keyboard, VoiceOver, the status line under the toolbar, Interface Size, the Mac's alerts. |
 | [2026-10-21](2026-10-21-vary-voicing-clear.md) | Vary Notes after or in place of the selection (0055), Voicing starting on Any (0056), Clear All (0057). |
+| [2026-11-01](2026-11-01-merge-mended.md) | What the last merge of `main` undid put back: 0054's menu wording, 0049-0057 in the docs; AutoCC 1.3's decision renumbered 0058. |
