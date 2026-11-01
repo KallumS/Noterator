@@ -106,7 +106,7 @@ private:
     juce::Viewport viewport;
     juce::Component rows;
     std::vector<std::unique_ptr<Row>> rowList;
-    juce::TextButton addButton { juce::String ("Add Instrument") + juce::String::charToString (0x2026) };
+    juce::TextButton addButton { ui ("Add Instrument…") };
     juce::Label info;
     size_t lastCount = 0;
 
